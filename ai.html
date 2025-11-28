@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple DeepSeek Chat</title>
+</head>
+<body>
+
+<h2>Simple Chat with DeepSeek</h2>
+
+<input id="userInput" type="text" placeholder="Enter your question..." style="width:300px;">
+<button id="sendBtn">Send</button>
+
+<pre id="output"></pre>
+
+<script type="module">
+    import Client from 'https://g4f.dev/dist/js/client.js';
+
+    const client = new Client();
+
+    async function sendMessage() {
+        const text = document.getElementById("userInput").value;
+        if (!text) return;
+
+        const result = await client.chat.completions.create({
+            model: 'deepseek-v3',
+            messages: [{ role: 'user', content: text }]
+        });
+
+        document.getElementById("output").textContent =
+            result.choices[0].message.content;
+    }
+
+    document.getElementById("sendBtn").addEventListener("click", sendMessage);
+</script>
+
+</body>
+</html>
