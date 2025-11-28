@@ -1,37 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Simple DeepSeek Chat</title>
-</head>
+<html>
 <body>
 
-<h2>Simple Chat with DeepSeek</h2>
+<h3>Free AI (DuckDuckGo GPT)</h3>
 
-<input id="userInput" type="text" placeholder="Enter your question..." style="width:300px;">
-<button id="sendBtn">Send</button>
+<input id="q" placeholder="Ask something..." style="width:300px;">
+<button onclick="ask()">Send</button>
 
-<pre id="output"></pre>
+<pre id="out"></pre>
 
-<script type="module">
-    import Client from 'https://g4f.dev/dist/js/client.js';
+<script>
+async function ask() {
+    const question = document.getElementById("q").value;
 
-    const client = new Client();
+    const res = await fetch("https://duckduckgo.com/ai.js?q=" + encodeURIComponent(question));
 
-    async function sendMessage() {
-        const text = document.getElementById("userInput").value;
-        if (!text) return;
+    const data = await res.json();
 
-        const result = await client.chat.completions.create({
-            model: 'deepseek-v3',
-            messages: [{ role: 'user', content: text }]
-        });
-
-        document.getElementById("output").textContent =
-            result.choices[0].message.content;
-    }
-
-    document.getElementById("sendBtn").addEventListener("click", sendMessage);
+    // выводим ответ
+    document.getElementById("out").textContent = data.answer || "No answer";
+}
 </script>
 
 </body>
