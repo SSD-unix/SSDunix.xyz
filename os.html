@@ -4,92 +4,107 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SDUX OS</title>
+
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-        color: white;
-        text-align: center;
-    }
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    color: white;
+    text-align: center;
+}
 
-    header {
-        padding: 60px 20px;
-    }
+header {
+    padding: 60px 20px;
+}
 
-    h1 {
-        font-size: 3rem;
-        letter-spacing: 3px;
-        margin-bottom: 10px;
-    }
+h1 {
+    font-size: 3rem;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+}
 
-    h2 {
-        font-weight: normal;
-        color: #aaa;
-    }
+h2 {
+    font-weight: normal;
+    color: #aaa;
+}
 
-    .flag {
-        width: 300px;
-        margin: 30px auto;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 0 25px rgba(255,255,255,0.1);
-    }
+.flag {
+    width: 300px;
+    margin: 30px auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(255,255,255,0.1);
+}
 
-    .stripe {
-        height: 60px;
-    }
+.stripe { height: 60px; }
+.red { background: #D90012; }
+.blue { background: #0033A0; }
+.orange { background: #F2A800; }
 
-    .red { background: #D90012; }
-    .blue { background: #0033A0; }
-    .orange { background: #F2A800; }
+.section {
+    padding: 60px 20px;
+    max-width: 900px;
+    margin: auto;
+}
 
-    .section {
-        padding: 60px 20px;
-        max-width: 900px;
-        margin: auto;
-    }
+.card {
+    background: rgba(255,255,255,0.05);
+    padding: 25px;
+    border-radius: 15px;
+    margin: 20px 0;
+    transition: 0.3s;
+}
 
-    .card {
-        background: rgba(255,255,255,0.05);
-        padding: 25px;
-        border-radius: 15px;
-        margin: 20px 0;
-        transition: 0.3s;
-    }
+.card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.08);
+}
 
-    .card:hover {
-        transform: translateY(-5px);
-        background: rgba(255,255,255,0.08);
-    }
+.buttons {
+    margin-top: 25px;
+}
 
-    footer {
-        padding: 30px;
-        font-size: 0.9rem;
-        color: #777;
-    }
+.btn {
+    display: inline-block;
+    margin: 10px;
+    padding: 14px 28px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
 
-    .btn {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 12px 25px;
-        border-radius: 30px;
-        background: #0033A0;
-        color: white;
-        text-decoration: none;
-        transition: 0.3s;
-    }
+.download {
+    background: #F2A800;
+    color: black;
+}
 
-    .btn:hover {
-        background: #0055ff;
-    }
+.download:hover {
+    background: #ffbe33;
+}
+
+.github {
+    background: #0033A0;
+    color: white;
+}
+
+.github:hover {
+    background: #0055ff;
+}
+
+footer {
+    padding: 30px;
+    font-size: 0.9rem;
+    color: #777;
+}
 </style>
 </head>
 <body>
 
 <header>
     <h1>SDUX OS</h1>
-    <h2>A Future Experimental Operating System</h2>
+    <h2>Experimental Future Operating System</h2>
 
     <div class="flag">
         <div class="stripe red"></div>
@@ -99,12 +114,12 @@
 </header>
 
 <section class="section">
+
     <div class="card">
         <h2>About SDUX</h2>
         <p>
             SDUX is a future operating system project focused on deep system understanding,
-            performance, and minimalism. It is designed to explore how operating systems work
-            from the lowest level to the graphical interface.
+            minimalism and full control over the environment.
         </p>
     </div>
 
@@ -114,6 +129,7 @@
             The SDUX Desktop Environment is the graphical core of SDUX OS.
             Built using Python and Qt, it includes:
         </p>
+
         <ul style="list-style: none; padding: 0;">
             <li>• Custom Desktop Shell</li>
             <li>• Integrated Terminal</li>
@@ -121,21 +137,26 @@
             <li>• Embedded Web Browser</li>
             <li>• Linux System Integration</li>
         </ul>
+
+        <div class="buttons">
+            <a class="btn download" 
+               href="https://raw.githubusercontent.com/SSD-unix/SDUX_DE/refs/heads/main/SDUX_DE_ALPHA_1.0.py" 
+               download>
+               Download Latest Version
+            </a>
+
+            <a class="btn github" 
+               href="https://github.com/SSD-unix/SDUX_DE/" 
+               target="_blank">
+               View on GitHub
+            </a>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Vision</h2>
-        <p>
-            SDUX aims to become a fully independent operating system environment,
-            built step by step with a focus on engineering precision and system-level knowledge.
-        </p>
-    </div>
-
-    <a href="#" class="btn">Future Release Coming Soon</a>
 </section>
 
 <footer>
-    © 2026 SDUX Project — Experimental System Architecture Initiative
+    © 2026 SDUX Project — Armenian Experimental System Initiative 🇦🇲
 </footer>
 
 </body>
