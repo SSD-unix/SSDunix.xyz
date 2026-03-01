@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Сервера Minecraft</title>
+<style>
+    /* Общий черный фон для всей страницы */
+    body {
+        background-color: black;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+
+    /* Блок каждого сервера */
+    .server {
+        display: flex;
+        align-items: center;
+        background-color: #111; /* чуть светлее черного для блока */
+        padding: 15px;
+        margin: 10px auto;
+        border-radius: 10px;
+        width: 600px;
+    }
+
+    /* Логотип сервера */
+    .server img {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        margin-right: 15px;
+    }
+
+    /* Информация о сервере */
+    .server-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .server__name {
+        font-size: 18px;
+        color: #00ff00; /* ярко-зеленый */
+        font-weight: bold;
+    }
+
+    .server__players,
+    .server__address,
+    .server__description {
+        font-size: 14px;
+        color: #ccc; /* светло-серый для текста */
+    }
+
+    /* Ссылка на Discord */
+    .server__description a {
+        color: #00ffff; /* ярко-голубая ссылка */
+        text-decoration: none;
+    }
+
+    .server__description a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+
+<div class="server">
+    <img src="https://api.betacraft.uk/v2/server_icon?socket=37.59.98.229:25565" alt="Server Icon">
+    <div class="server-info">
+        <span class="server__name">[a1.1.2_01] PlanetNostalgia - Alpha 1.1.2_01 Economy Survival Server</span>
+        <span class="server__players">(0 / 36)</span>
+        <span class="server__address">37.59.98.229:25565</span>
+        <span class="server__description">
+            Minecraft Alpha 1.1.2_01 Economy Survival Server. Join our Discord - 
+            <a href="https://discord.gg/tUaEPHAtQp" target="_blank">discord.gg/tUaEPHAtQp</a>. 
+            Plugins: hModEssentials, iConomy, Towny, LWC, Spleef, LogBlock, BigBrother &amp; more!
+        </span>
+    </div>
+</div>
+
+</body>
+</html>
