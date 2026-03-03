@@ -3,108 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <title>Сервера Minecraft</title>
+
 <style>
-    /* Прозрачный фон страницы */
-    body {
-        background-color: transparent; /* фон прозрачный */
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        color: white;
-    }
+body {
+    background-color: transparent;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    color: white;
+}
 
-    /* Панорама как фон через абсолютный элемент */
-    #panorama {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1; /* позади всего */
-        background: url('res/lenta.png') no-repeat center center;
-        background-size: cover;
-        animation: scrollBackground 30s linear infinite;
-    }
+/* Панорама */
+#panorama {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: url('res/lenta.png') repeat-x center center;
+    background-size: cover;
+    animation: scrollBackground 60s linear infinite;
+}
 
-    @keyframes scrollBackground {
-        0% { background-position: 0 0; }
-        100% { background-position: -4608px 0; } /* длина вашей панорамы */
-    }
+@keyframes scrollBackground {
+    0% { background-position: 0 0; }
+    100% { background-position: -4608px 0; }
+}
 
-    /* Блок сервера */
-    .server {
-        display: flex;
-        align-items: center;
-        background-color: rgba(0,0,0,0.5); /* полупрозрачный фон для читаемости */
-        padding: 15px;
-        margin: 10px auto;
-        border-radius: 10px;
-        width: 600px;
-    }
+/* Блок сервера */
+.server {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0,0,0,0.6);
+    padding: 15px;
+    margin: 15px auto;
+    border-radius: 10px;
+    width: 600px;
+}
 
-    .server img {
-        width: 64px;
-        height: 64px;
-        border-radius: 8px;
-        margin-right: 15px;
-    }
+.server img {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    margin-right: 15px;
+}
 
-    .server-info {
-        display: flex;
-        flex-direction: column;
-    }
+.server-info {
+    display: flex;
+    flex-direction: column;
+}
 
-    .server__name {
-        font-size: 18px;
-        color: #00ff00;
-        font-weight: bold;
-    }
+.server__name {
+    font-size: 18px;
+    color: #00ff00;
+    font-weight: bold;
+}
 
-    .server__players,
-    .server__address,
-    .server__description {
-        font-size: 14px;
-        color: #ccc;
-    }
+.server__players,
+.server__address,
+.server__description {
+    font-size: 14px;
+    color: #ccc;
+}
 
-    .server__description a {
-        color: #00ffff; /* ярко-голубая ссылка */
-        text-decoration: none;
-    }
-    .server__description a:hover {
-        text-decoration: underline;
-    }
+.server__description a {
+    color: #00ffff;
+    text-decoration: none;
+}
+
+.server__description a:hover {
+    text-decoration: underline;
+}
+
+.coming-soon {
+    font-size: 20px;
+    color: #ff4444;
+    font-weight: bold;
+    margin: 5px 0;
+}
 </style>
 </head>
+
 <body>
 
 <div id="panorama"></div>
 
+<!-- Сервер 1 -->
 <div class="server">
     <img src="https://api.betacraft.uk/v2/server_icon?socket=37.59.98.229:25565" alt="Server Icon">
     <div class="server-info">
-        <span class="server__name">[a1.1.2_01] PlanetNostalgia - Alpha 1.1.2_01 Economy Survival Server</span>
+        <span class="server__name">[a1.1.2_01] PlanetNostalgia</span>
         <span class="server__players">(0 / 36)</span>
         <span class="server__address">37.59.98.229:25565</span>
         <span class="server__description">
-            Minecraft Alpha 1.1.2_01 Economy Survival Server. 
-            Join our Discord - 
-            <a href="https://discord.gg/tUaEPHAtQp" target="_blank">discord.gg/tUaEPHAtQp</a>. 
-            Plugins: hModEssentials, iConomy, Towny, LWC, Spleef, LogBlock, BigBrother &amp; more!
+            Alpha 1.1.2_01 Economy Survival Server.<br>
+            Join our Discord -
+            <a href="https://discord.gg/tUaEPHAtQp" target="_blank">discord.gg/tUaEPHAtQp</a><br>
+            Plugins: hModEssentials, iConomy, Towny, LWC, Spleef, LogBlock, BigBrother
         </span>
     </div>
 </div>
+
+<!-- Сервер 2 -->
+<div class="server">
     <img src="https://i.imgur.com/QnTLMpw.png" alt="Server Icon">
-<div class="server2">
+    <div class="server-info">
         <span class="server__name">[a1.1.2_01] NARODNI server</span>
-        <span class="server__players">(0/0)</span>
+        <span class="server__players">(0 / 0)</span>
         <span class="server__address">mc.ssdunix.xyz</span>
+        <div class="coming-soon">COMING SOON</div>
         <span class="server__description">
-            <h1>COMING SOON</h1>
-            <a href="https://discord.gg/atTawcEc" target="_blank">discord.gg/atTawcEc</a>. 
-            NO ONE PLUGIN TODAY
+            <a href="https://discord.gg/atTawcEc" target="_blank">discord.gg/atTawcEc</a><br>
+            No plugins today
         </span>
     </div>
 </div>
+
 </body>
 </html>
