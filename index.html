@@ -1,65 +1,183 @@
 <!doctype html>
-
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SSDunix</title>
-  <style>
-    body{font-family:Inter,system-ui,Arial;margin:0;background:#0f172a;color:#e6eef8}
-    .container{max-width:980px;margin:36px auto;padding:24px}
-    header{display:flex;align-items:center;justify-content:space-between}
-    h1{margin:0;font-size:28px}
-    a{color:#7dd3fc}
-    .card{background:#071029;padding:18px;border-radius:12px;margin-top:18px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-    footer{margin-top:30px;font-size:13px;color:#9fb0c8;text-align:center}
-    .meta{font-size:13px;color:#9fb0c8}
-    .repo{padding:10px;border-radius:8px;border:1px dashed rgba(255,255,255,0.03);margin:8px 0}
-    .muted{color:#9fb0c8;font-size:13px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SSDunix</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+  margin:0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #e6eef8;
+  min-height: 100vh;
+}
+
+.container { max-width: 1000px; margin:0 auto; padding:40px 20px; }
+
+header { display:flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 40px; }
+header h1 { font-size:48px; font-weight:700; margin:0 0 10px 0; color:#7dd3fc; text-shadow:1px 1px 6px rgba(0,0,0,0.6); }
+header nav { font-size:14px; margin:4px 0; }
+header nav a { color:#38bdf8; text-decoration:none; transition:0.3s; }
+header nav a:hover { color:#0ea5e9; }
+
+.lang-selector { margin-top:15px; display:flex; gap:10px; flex-wrap: wrap; justify-content:center; }
+.lang-selector button { background:#1e293b; border:none; padding:6px 14px; border-radius:8px; color:#7dd3fc; cursor:pointer; font-weight:600; transition:0.3s; }
+.lang-selector button:hover { background:#334155; }
+
+.card { background:#1e293b; padding:25px; border-radius:16px; margin-top:20px; box-shadow:0 10px 25px rgba(0,0,0,0.5); transition: transform 0.3s, box-shadow 0.3s; }
+.card:hover { transform: translateY(-5px); box-shadow:0 20px 30px rgba(0,0,0,0.6); }
+
+h2 { font-size:26px; margin-top:0; color:#7dd3fc; }
+
+a { color:#38bdf8; transition:0.3s; }
+a:hover { color:#0ea5e9; }
+
+.repo { padding:14px; border-radius:12px; border-left:4px solid #38bdf8; margin:10px 0; background:#0f172a; transition:0.3s; }
+.repo:hover { background:#1e293b; }
+
+.muted { color:#9fb0c8; font-size:13px; }
+
+footer { margin-top:50px; font-size:14px; color:#9fb0c8; text-align:center; }
+
+@media (max-width:600px){
+  header h1 { font-size:36px; }
+  h2 { font-size:22px; }
+  .card { padding:18px; }
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>SSDunix</h1>
-      <nav class="meta">GitHub: <a href="https://github.com/SSD-unix" target="_blank">@SSD-unix</a></nav>
-      <nav class="meta">the <a href="https://github.com/SSD-unix" target="_blank">russian version of site</a></nav>
-    </header><section class="card" id="about">
-  <h2>О проекте</h2>
-  <p>SSDunix — это сайт, посвящённый моим проектам и разработкам.</p>
-  <p>Также читайте новости на <a href="https://news.ssdunix.xyz" target="_blank">news.ssdunix.xyz</a></p>
-</section>
+<div class="container">
+  <header>
+    <h1 id="site-title">SSDunix</h1>
+    <nav id="github-link">GitHub: <a href="https://github.com/SSD-unix" target="_blank">@SSD-unix</a></nav>
+    <div class="lang-selector">
+      <button onclick="setLanguage('ru')">Русский</button>
+      <button onclick="setLanguage('en')">English</button>
+      <button onclick="setLanguage('hy')">Հայերեն</button>
+      <button onclick="setLanguage('uk')">Українська</button>
+      <button onclick="setLanguage('pl')">Polski</button>
+    </div>
+  </header>
 
-<section class="card" id="github">
-  <h2>GitHub репозитории</h2>
-  <div id="repos">Загрузка...</div>
+  <section class="card" id="about">
+    <h2 id="about-title">О проекте</h2>
+    <p id="about-text">SSDunix — это сайт, посвящённый моим проектам и разработкам. Здесь вы найдете мои эксперименты с Python, PyQt, созданием инструментов и сервисов, а также полезные заметки для программистов и энтузиастов IT. Моя цель — создать платформу, где каждый проект может быть представлен красиво и удобно.</p>
+    <p id="news-text">Также читайте новости на <a href="https://news.ssdunix.xyz" target="_blank">news.ssdunix.xyz</a></p>
+  </section>
 
-  <script>
-    (async function(){
-      const container = document.getElementById('repos');
-      try{
-        const res = await fetch('https://api.github.com/users/SSD-unix/repos');
-        const repos = await res.json();
-        container.innerHTML = '';
-        repos.sort((a,b)=> new Date(b.updated_at)-new Date(a.updated_at));
-        repos.forEach(r=>{
-          const el = document.createElement('div'); el.className='repo';
-          el.innerHTML = `<strong><a href="${r.html_url}" target="_blank">${r.name}</a></strong>
-                          <div class="muted">${r.language || ''} — обновлён: ${new Date(r.updated_at).toLocaleString()}</div>
-                          <div>${r.description || ''}</div>`;
-          container.appendChild(el);
-        });
-        if(repos.length===0) container.textContent='Репозиториев не найдено.';
-      }catch(e){
-        container.textContent = 'Не удалось загрузить репозитории.';
-      }
-    })();
-  </script>
-</section>
+  <section class="card" id="about-me">
+    <h2 id="about-me-title">Обо мне</h2>
+    <p id="about-me-text">Меня зовут Давид. Мне нравится изучать Linux, создавать собственные инструменты и экспериментировать с программированием. Я увлекаюсь PyQt, веб-разработкой и поиском нестандартных решений. SSDunix — это место, где я выкладываю свои проекты и делюсь опытом с другими. Моя философия — учиться через создание и эксперимент.</p>
+  </section>
 
+  <section class="card" id="github">
+    <h2 id="repos-title">GitHub репозитории</h2>
+    <div id="repos">Загрузка...</div>
+  </section>
 
-<footer>© SSDunix</footer>
+  <footer id="footer-text">© SSDunix</footer>
+</div>
 
-  </div>
+<script>
+const texts = {
+  "ru": {
+    "site-title":"SSDunix",
+    "about-title":"О проекте",
+    "about-text":"SSDunix — это сайт, посвящённый моим проектам и разработкам. Здесь вы найдете мои эксперименты с Python, PyQt, созданием инструментов и сервисов, а также полезные заметки для программистов и энтузиастов IT. Моя цель — создать платформу, где каждый проект может быть представлен красиво и удобно.",
+    "news-text":"Также читайте новости на <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
+    "about-me-title":"Обо мне",
+    "about-me-text":"Меня зовут Давид. Мне нравится изучать Linux, создавать собственные инструменты и экспериментировать с программированием. Я увлекаюсь PyQt, веб-разработкой и поиском нестандартных решений. SSDunix — это место, где я выкладываю свои проекты и делюсь опытом с другими. Моя философия — учиться через создание и эксперимент.",
+    "repos-title":"GitHub репозитории",
+    "footer-text":"© SSDunix"
+  },
+  "en": {
+    "site-title":"SSDunix",
+    "about-title":"About",
+    "about-text":"SSDunix is a website dedicated to my projects and developments. Here you can find my experiments with Python, PyQt, tool creation, and useful notes for programmers and IT enthusiasts. My goal is to create a platform where every project is presented beautifully and clearly.",
+    "news-text":"Also read news at <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
+    "about-me-title":"About Me",
+    "about-me-text":"My name is David. I enjoy exploring Linux, creating my own tools, and experimenting with programming. I love PyQt, web development, and finding unconventional solutions. SSDunix is where I share my projects and experiences with others. My philosophy is learning through creation and experimentation.",
+    "repos-title":"GitHub Repositories",
+    "footer-text":"© SSDunix"
+  },
+  "hy": {
+    "site-title":"SSDunix",
+    "about-title":"Մեր մասին",
+    "about-text":"SSDunix — սա կայք է, որը նվիրված է իմ նախագծերին և զարգացումներին: Այստեղ դուք կգտնեք իմ փորձերը Python, PyQt, գործիքների ստեղծման և օգտակար նշումներ ծրագրավորողների համար: Իմ նպատակը՝ ստեղծել հարթակ, որտեղ յուրաքանչյուր նախագիծ ներկայացված է գեղեցիկ և հարմարավետ:",
+    "news-text":"Կարդացեք նորությունները <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
+    "about-me-title":"Մասին ինձ",
+    "about-me-text":"Իմ անունը Դավիթ է: Ես սիրում եմ ուսումնասիրել Linux, ստեղծել սեփական գործիքներ և փորձեր անել ծրագրավորման ոլորտում: SSDunix — այն վայրն է, որտեղ ես կիսվում եմ իմ նախագծերով և փորձառությամբ:",
+    "repos-title":"GitHub պահոցներ",
+    "footer-text":"© SSDunix"
+  },
+  "uk": {
+    "site-title":"SSDunix",
+    "about-title":"Про проект",
+    "about-text":"SSDunix — це сайт, присвячений моїм проектам та розробкам. Тут ви знайдете мої експерименти з Python, PyQt, створенням інструментів та корисні нотатки для програмістів та IT-ентузіастів. Моя мета — створити платформу, де кожен проект буде представлений красиво та зручно.",
+    "news-text":"Читайте новини на <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
+    "about-me-title":"Про мене",
+    "about-me-text":"Мене звати Давид. Мені подобається вивчати Linux, створювати власні інструменти та експериментувати з програмуванням. SSDunix — місце, де я ділюся своїми проектами та досвідом з іншими. Моя філософія — вчитися через створення та експерименти.",
+    "repos-title":"GitHub Репозиторії",
+    "footer-text":"© SSDunix"
+  },
+  "pl": {
+    "site-title":"SSDunix",
+    "about-title":"O projekcie",
+    "about-text":"SSDunix to strona poświęcona moim projektom i rozwojowi. Tutaj znajdziesz moje eksperymenty z Python, PyQt, tworzeniem narzędzi oraz przydatne notatki dla programistów i entuzjastów IT. Moim celem jest stworzenie platformy, gdzie każdy projekt jest pięknie i przejrzyście zaprezentowany.",
+    "news-text":"Przeczytaj także wiadomości na <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
+    "about-me-title":"O mnie",
+    "about-me-text":"Nazywam się Dawid. Lubię eksplorować Linux, tworzyć własne narzędzia i eksperymentować z programowaniem. SSDunix to miejsce, gdzie dzielę się swoimi projektami i doświadczeniem. Moja filozofia — uczyć się przez tworzenie i eksperymentowanie.",
+    "repos-title":"Repozytoria GitHub",
+    "footer-text":"© SSDunix"
+  }
+};
+
+let userLang = navigator.language || navigator.userLanguage;
+let lang = "ru";
+if(userLang.startsWith("en")) lang="en";
+else if(userLang.startsWith("hy")) lang="hy";
+else if(userLang.startsWith("uk")) lang="uk";
+else if(userLang.startsWith("pl")) lang="pl";
+
+function setLanguage(l){
+  lang = l;
+  document.getElementById("site-title").innerHTML = texts[lang]["site-title"];
+  document.getElementById("about-title").innerHTML = texts[lang]["about-title"];
+  document.getElementById("about-text").innerHTML = texts[lang]["about-text"];
+  document.getElementById("news-text").innerHTML = texts[lang]["news-text"];
+  document.getElementById("about-me-title").innerHTML = texts[lang]["about-me-title"];
+  document.getElementById("about-me-text").innerHTML = texts[lang]["about-me-text"];
+  document.getElementById("repos-title").innerHTML = texts[lang]["repos-title"];
+  document.getElementById("footer-text").innerHTML = texts[lang]["footer-text"];
+}
+
+setLanguage(lang);
+
+// Загрузка репозиториев GitHub
+(async function(){
+  const container = document.getElementById('repos');
+  try{
+    const res = await fetch('https://api.github.com/users/SSD-unix/repos');
+    const repos = await res.json();
+    container.innerHTML = '';
+    repos.sort((a,b)=> new Date(b.updated_at)-new Date(a.updated_at));
+    repos.forEach(r=>{
+      const el = document.createElement('div'); 
+      el.className='repo';
+      el.innerHTML = `<strong><a href="${r.html_url}" target="_blank">${r.name}</a></strong>
+                      <div class="muted">${r.language || ''} — ${new Date(r.updated_at).toLocaleString()}</div>
+                      <div>${r.description || ''}</div>`;
+      container.appendChild(el);
+    });
+    if(repos.length===0) container.textContent='Репозиториев не найдено.';
+  }catch(e){
+    container.textContent = 'Не удалось загрузить репозитории.';
+  }
+})();
+</script>
 </body>
 </html>
