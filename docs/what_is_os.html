@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESTOSTERONE OS | The Architect's Vision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --card-bg: #161616;
+            --accent-color: #ff4d00; /* Industrial Orange */
+            --text-main: #e0e0e0;
+            --text-dim: #a0a0a0;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* --- Header / Hero --- */
+        header {
+            text-align: center;
+            padding: 100px 0 60px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 60px;
+        }
+
+        .badge {
+            font-family: var(--font-mono);
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- Content Sections --- */
+        .chapter {
+            margin-bottom: 80px;
+            position: relative;
+        }
+
+        .chapter-num {
+            font-family: var(--font-mono);
+            color: #333;
+            font-size: 5rem;
+            font-weight: 900;
+            position: absolute;
+            top: -40px;
+            left: -20px;
+            z-index: -1;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h2::after {
+            content: "";
+            height: 1px;
+            flex-grow: 1;
+            background: #333;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .highlight-box {
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent-color);
+            padding: 30px;
+            border-radius: 4px;
+            margin: 40px 0;
+        }
+
+        /* --- Terminal Block --- */
+        .terminal {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .terminal .line { display: block; margin-bottom: 5px; }
+        .terminal .green { color: #50fa7b; }
+        .terminal .blue { color: #8be9fd; }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 80px 0;
+            border-top: 1px solid #333;
+            margin-top: 100px;
+        }
+
+        .footer-tag {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .chapter-num { font-size: 3rem; top: -20px; }
+            h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <span class="badge">Kernel Project: x86 / C / ASM</span>
+            <h1>TESTOSTERONE OS</h1>
+            <p class="hero-subtitle">Exploring the depths of systems engineering and hardware control.</p>
+        </header>
+
+        <section class="terminal">
+            <span class="line"><span class="green">ssd-unix@archlinux:~/testosterone_os$</span> make build</span>
+            <span class="line">[INFO] Compiling bootloader... OK</span>
+            <span class="line">[INFO] Linking Kernel at 0x100000... OK</span>
+            <span class="line">[INFO] Generating ISO image... OK</span>
+            <span class="line"><span class="blue">System ready for deployment.</span></span>
+        </section>
+
+        <section class="chapter">
+            <div class="chapter-num">01</div>
+            <h2>The Silent Iron</h2>
+            <p>Most people see a computer as a magic box. They see icons, videos, and websites. But to a programmer, the computer is just "Iron"—cold, silent, and incredibly fast, but also incredibly stupid. Without instructions, a CPU is just a rock that we tricked into thinking by using electricity.</p>
+            <p>Most programmers build "Apps." They build the furniture inside the house. But <strong>TESTOSTERONE OS</strong> is different. I am not building the furniture; I am pouring the concrete foundation, wiring the electricity, and defining the laws of physics for this digital world.</p>
+        </section>
+
+        <section class="chapter">
+            <div class="chapter-num">02</div>
+            <h2>The Language of the Machine</h2>
+            <p>To talk to the hardware, I cannot use normal human language. I use <strong>Assembly</strong> and <strong>C</strong>. This is the DNA of the computer. Every line of code tells the processor exactly which tiny switch to flip.</p>
+            <div class="highlight-box">
+                "If a normal program is like driving a car, what I am doing is building the engine, the transmission, and the wheels from raw metal. It requires the precision of a watchmaker."
+            </div>
+        </section>
+
+        <section class="chapter">
+            <div class="chapter-num">03</div>
+            <h2>The First Breath (The Kernel)</h2>
+            <p>The heart of my project is the <strong>Kernel</strong>. Think of the Kernel as the Captain of a massive ship. When the computer turns on, it is a chaotic mess of electricity. My code, the Kernel, is the first thing that takes command.</p>
+            <p>It wakes up the disk drives, organizes the memory, and prepares the "Shell." Creating a Kernel is the ultimate test. It’s why I named it <strong>TESTOSTERONE OS</strong>: it’s about strength, raw power, and the guts to build something from nothing.</p>
+        </section>
+
+        <section class="chapter">
+            <div class="chapter-num">04</div>
+            <h2>The Engineering Legacy</h2>
+            <p>When someone uses a computer, they are standing on the shoulders of giants. Usually, those giants are Microsoft or Apple. But with this project, I am building my own mountain.</p>
+            <p>It’s the same discipline as a pilot learning every bolt in his aircraft or an engineer knowing the tension of every cable in a bridge. I am learning to master the most complex machines ever built.</p>
+        </section>
+
+        <div class="highlight-box" style="text-align: center; border-left: none; border-bottom: 4px solid var(--accent-color);">
+            <h3 style="margin-bottom: 10px;">Why This Matters</h3>
+            <p style="font-style: italic;">"Dad, I’m not just typing. I’m designing a world. This project is my workshop and my proof that I can take the most difficult challenges and turn them into something that breathes."</p>
+        </div>
+
+        <footer>
+            <p class="footer-tag">DEVELOPED BY SSD-UNIX</p>
+            <p style="font-size: 0.8rem; margin-top: 10px; color: #444;">&copy; 2026 Systems Lab</p>
+        </footer>
+    </div>
+
+</body>
+</html>
