@@ -3,145 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моё HTTP ТВ — Прямой эфир</title>
-    <!-- Подключаем стили плеера Video.js -->
-    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <title>Моё ТВ</title>
     <style>
-        body { 
-            background: #0b0b0f; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            flex-direction: column;
-            height: 100vh; 
-            margin: 0; 
-            font-family: sans-serif; 
-            color: white;
+        /* Убираем все отступы, чтобы плеер был на весь экран */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0b0b0f; /* Темный фон */
+            overflow: hidden; /* Убираем ползунки прокрутки */
         }
-        .player-container { 
-            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2); 
-            border-radius: 8px; 
-            overflow: hidden; 
-            width: 90%; 
-            max-width: 512px; 
-            text-align: center; 
-            background: #14141b;
-            padding: 15px;
-        }
-        h1 { margin-bottom: 5px; font-size: 20px; color: #eab308; }
-        .info { font-size: 12px; color: #666; margin-bottom: 15px; }
-        .url-box { margin-top: 15px; border-top: 1px solid #222; padding-top: 15px; }
-        .url-box input { 
-            width: 80%; 
-            padding: 8px; 
-            background: #1e1e24; 
-            border: 1px solid #444; 
-            color: #fff; 
-            border-radius: 4px; 
-            text-align: center; 
-            margin-bottom: 8px;
-        }
-        .btn { 
-            padding: 8px 12px; 
-            background: #eab308; 
-            color: black; 
-            border: none; 
-            border-radius: 4px; 
-            font-weight: bold; 
-            cursor: pointer; 
+        
+        /* Делаем iframe на 100% экрана */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="player-container">
-        <h1>🥔 ULTRA-POTATO TV</h1>
-        <div class="info">Поток: 144p / 15 FPS</div>
-        
-        <!-- Плеер -->
-        <video id="live-player" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay muted playsinline width="100%" height="auto" style="image-rendering: pixelated;">
-            <source src="" type="application/x-mpegURL">
-        </video>
+    <!-- ============================================================== -->
+    <!-- МЕНЯЙ ССЫЛКУ ТУТ (Обязательно добавь /player в конце!) -->
+    <!-- ============================================================== -->
+    <iframe src="https://insight-calvin-judgment-skills.trycloudflare.com/player" allow="autoplay; fullscreen"></iframe>
 
-        <!-- Панель ручной смены ссылки (резервная) -->
-        <div class="url-box">
-            <p style="font-size: 11px; color: #888; margin: 5px 0;">Текущий домен зашит в коде. Изменить вручную:</p>
-            <input type="text" id="tunnelUrl" placeholder="https://xxxx.trycloudflare.com">
-            <button class="btn" onclick="connectManualStream()">Сменить</button>
-        </div>
-    </div>
-
-    <!-- Скрипты плеера -->
-    <script src="https://vjs.zencdn.net/7.20.3/video.js"></script>
-    <script>
-        // =========================================================================
-        // 🛠️ МЕНЯЙ ССЫЛКУ ТУТ (Прямой путь к твоему stream.m3u8)
-        // =========================================================================
-        const STREAM_URL = "https://insight-calvin-judgment-skills.trycloudflare.com/static/stream/stream.m3u8";
-        // =========================================================================
-
-        // Инициализация плеера с оптимизацией под слабый ПК и низкую задержку
-        var player = videojs('live-player', {
-            html5: { vhs: { GOAL_BUFFER_LENGTH: 2, MAX_GOAL_BUFFER_LENGTH: 4, fastFragParse: true } },
-            liveui: true
-        });
-
-        // Функция запуска основного потока из переменной
-        function startDefaultStream() {
-            player.src({ src: STREAM_URL, type: 'application/x-mpegURL' });
-            player.load();
-            player.play().catch(e => console.log("Ожидаем кадры от сервера..."));
-            
-            // Вырезаем чистый домен для отображения в текстовом поле
-            try {
-                let urlObj = new URL(STREAM_URL);
-                document.getElementById('tunnelUrl').value = urlObj.origin;
-            } catch(e) {}
-        }
-
-        // Автозапуск при открытии страницы
-        window.onload = function() {
-            // Проверяем, нет ли сохраненной пользователем кастомной ссылки
-            let savedCustomUrl = localStorage.getItem('custom_tunnel_url');
-            if (savedCustomUrl) {
-                document.getElementById('tunnelUrl').value = savedCustomUrl;
-                player.src({ src: savedCustomUrl + "/static/stream/stream.m3u8", type: 'application/x-mpegURL' });
-                player.load();
-                player.play().catch(e => {});
-            } else {
-                // Если кастомной нет, запускаем ту, что зашита в STREAM_URL
-                startDefaultStream();
-            }
-        }
-
-        // Функция для ручного ввода другого домена в браузере (без правки кода)
-        function connectManualStream() {
-            let inputUrl = document.getElementById('tunnelUrl').value.trim();
-            if (!inputUrl) {
-                alert("Введите адрес туннеля!");
-                return;
-            }
-            if (inputUrl.endsWith('/')) {
-                inputUrl = inputUrl.slice(0, -1);
-            }
-
-            localStorage.setItem('custom_tunnel_url', inputUrl);
-            player.src({ src: inputUrl + "/static/stream/stream.m3u8", type: 'application/x-mpegURL' });
-            player.load();
-            player.play().catch(e => {});
-        }
-
-        // Если стрим упал или комп лаганул, скрипт каждые 3 секунды стучится по актуальной ссылке
-        player.on('error', function() {
-            setTimeout(function() {
-                let savedCustomUrl = localStorage.getItem('custom_tunnel_url');
-                let currentSrc = savedCustomUrl ? (savedCustomUrl + "/static/stream/stream.m3u8") : STREAM_URL;
-                
-                player.src({ src: currentSrc, type: 'application/x-mpegURL' });
-                player.load();
-                player.play().catch(e => {});
-            }, 3000);
-        });
-    </script>
 </body>
 </html>
