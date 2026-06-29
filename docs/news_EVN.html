@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Benjamin — Studio Announcement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            font-family: 'Roboto', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* фон с городским силуэтом и неоном */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(255, 120, 0, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(255, 200, 0, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+            z-index: -2;
+        }
+
+        /* городской силуэт (псевдоэлемент) */
+        body::after {
+            content: "";
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40vh;
+            background:
+                /* здания */
+                repeating-linear-gradient(90deg,
+                    #1a1a2e 0px, #1a1a2e 8px, transparent 8px, transparent 12px,
+                    #1f1f3a 12px, #1f1f3a 20px, transparent 20px, transparent 25px,
+                    #1a1a2e 25px, #1a1a2e 35px, transparent 35px, transparent 40px
+                ),
+                linear-gradient(0deg, #0d0d1a 0%, transparent 100%);
+            background-size: 100% 100%;
+            opacity: 0.3;
+            z-index: -1;
+            pointer-events: none;
+            mask-image: linear-gradient(to top, black 40%, transparent 90%);
+            -webkit-mask-image: linear-gradient(to top, black 40%, transparent 90%);
+        }
+
+        /* главный контейнер */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(10, 10, 20, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 150, 0, 0.3);
+            border-radius: 24px;
+            padding: 40px 35px;
+            box-shadow: 0 20px 60px rgba(255, 100, 0, 0.15), 0 0 40px rgba(255, 150, 0, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* неоновые углы */
+        .container::before,
+        .container::after {
+            content: "";
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-color: #ff8800;
+            border-style: solid;
+            border-width: 0;
+            opacity: 0.4;
+            transition: 0.4s;
+        }
+        .container::before {
+            top: -1px;
+            left: -1px;
+            border-top-width: 3px;
+            border-left-width: 3px;
+            border-radius: 6px 0 0 0;
+        }
+        .container::after {
+            bottom: -1px;
+            right: -1px;
+            border-bottom-width: 3px;
+            border-right-width: 3px;
+            border-radius: 0 0 6px 0;
+        }
+
+        /* шапка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 150, 0, 0.2);
+            padding-bottom: 20px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ff8800, #ffcc00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 136, 0, 0.4);
+        }
+        .logo span {
+            font-weight: 300;
+            font-size: 1rem;
+            background: none;
+            -webkit-text-fill-color: #aaa;
+            margin-left: 10px;
+        }
+
+        .lang-tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 150, 0, 0.15);
+        }
+        .lang-tab {
+            padding: 8px 24px;
+            border: none;
+            background: transparent;
+            color: #aaa;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .lang-tab.active {
+            background: #ff8800;
+            color: #0a0a0a;
+            box-shadow: 0 0 20px rgba(255, 136, 0, 0.5);
+        }
+        .lang-tab:hover:not(.active) {
+            color: #fff;
+            background: rgba(255, 136, 0, 0.15);
+        }
+
+        /* контент */
+        .content {
+            position: relative;
+            min-height: 400px;
+        }
+
+        .text-block {
+            display: none;
+            animation: fadeSlide 0.5s ease forwards;
+        }
+        .text-block.active {
+            display: block;
+        }
+
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .text-block h2 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.4rem;
+            letter-spacing: 2px;
+            color: #ff8800;
+            text-shadow: 0 0 30px rgba(255, 136, 0, 0.3);
+            margin-bottom: 20px;
+            border-left: 6px solid #ff8800;
+            padding-left: 20px;
+        }
+
+        .text-block p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 18px;
+            color: #ddd;
+            font-weight: 300;
+        }
+
+        .text-block p strong {
+            color: #ffaa33;
+            font-weight: 700;
+        }
+
+        .text-block .signature {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 1.1rem;
+            color: #ffaa33;
+            border-top: 1px solid rgba(255, 150, 0, 0.2);
+            padding-top: 20px;
+            font-weight: 400;
+        }
+        .text-block .signature small {
+            display: block;
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 300;
+        }
+
+        /* декоративная линия */
+        .glow-line {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff8800, #ffcc00, #ff8800, transparent);
+            margin: 30px 0 10px;
+            opacity: 0.5;
+            filter: blur(1px);
+        }
+
+        /* адаптив */
+        @media (max-width: 700px) {
+            .container {
+                padding: 25px 18px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            .logo {
+                font-size: 1.8rem;
+                text-align: center;
+            }
+            .lang-tabs {
+                justify-content: center;
+            }
+            .lang-tab {
+                padding: 6px 16px;
+                font-size: 0.85rem;
+            }
+            .text-block h2 {
+                font-size: 1.8rem;
+                padding-left: 14px;
+            }
+            .text-block p {
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .logo {
+                font-size: 1.4rem;
+            }
+            .lang-tab {
+                padding: 5px 12px;
+                font-size: 0.75rem;
+            }
+            .text-block h2 {
+                font-size: 1.4rem;
+            }
+            .text-block p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">BENJAMIN <span>STUDIO</span></div>
+            <div class="lang-tabs">
+                <button class="lang-tab active" data-lang="ru">Русский</button>
+                <button class="lang-tab" data-lang="en">English</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- РУССКИЙ ТЕКСТ -->
+            <div id="text-ru" class="text-block active">
+                <h2>Обращение основателя</h2>
+                <p><strong>Здравствуйте, дорогие разработчики и все, кто верит в наш проект!</strong></p>
+                <p>Я, <strong>Бенджамин</strong>, основатель и идейный вдохновитель нашей студии, вынужден сообщить вам очень печальные новости. Наш амбициозный проект — игра в стиле <strong>GTA</strong>, действие которой разворачивается в любимом <strong>Ереване</strong> — сталкивается с непреодолимыми на данный момент трудностями. Мы мечтали создать открытый мир, наполненный жизнью, колоритом армянской столицы, с динамичными погонями, захватывающим сюжетом и уникальными персонажами. Однако, чем глубже мы погружались в разработку, тем яснее становилось, что наши текущие ресурсы и навыки не позволяют реализовать даже малую часть задуманного.</p>
+                <p>Я, признаться, <strong>выгорел</strong> эмоционально и физически. Постоянные ночные обсуждения, поиски компромиссов, попытки оптимизировать процессы — всё это истощило меня. Я пересмотрел наши возможности и пришёл к выводу, что создание детализированной игры такого уровня, чтобы она привлекла хотя бы <strong>трёх преданных поклонников</strong>, — это задача, которая сейчас нам не по плечу. Наша команда, хоть и талантливая, но состоит из новичков в индустрии гейм-дева. У нас мало опыта в программировании сложной физики, создании искусственного интеллекта, проработке графики и оптимизации под разные платформы. Мы допустили много ошибок на начальных этапах, которые теперь требуют огромных затрат времени и сил на исправление.</p>
+                <p>Поэтому я принял непростое, но, как мне кажется, единственно верное решение — <strong>приостановить разработку игры на неопределённый срок</strong>. Это не значит, что мы отказываемся от мечты. Нет! Мы собираемся перегруппироваться, набраться опыта, возможно, выпустить несколько меньших проектов, чтобы отточить мастерство, и вернуться к Еревану с новыми силами и знаниями. Я верю в нашу команду и в то, что когда-нибудь мы всё-таки прокатимся по улицам цифрового Еревана. Но сейчас нам нужна пауза.</p>
+                <p>Спасибо всем за поддержку и понимание. Мы обязательно вернёмся, но уже более подготовленными.</p>
+                <div class="signature">
+                    С уважением,<br />
+                    <strong>Бенджамин</strong><br />
+                    <small>Основатель студии</small>
+                </div>
+                <div class="glow-line"></div>
+            </div>
+
+            <!-- АНГЛИЙСКИЙ ТЕКСТ -->
+            <div id="text-en" class="text-block">
+                <h2>Founder's Address</h2>
+                <p><strong>Hello, dear developers and everyone who believes in our project!</strong></p>
+                <p>I, <strong>Benjamin</strong>, founder and creative director of our studio, must share some very sad news with you. Our ambitious project — a <strong>GTA</strong>-style game set in our beloved <strong>Yerevan</strong> — is currently facing insurmountable obstacles. We dreamed of creating an open world full of life, the unique flavor of the Armenian capital, with thrilling chases, a gripping storyline, and memorable characters. However, the deeper we delved into development, the clearer it became that our current resources and skills are not enough to realize even a fraction of our vision.</p>
+                <p>To be honest, I have <strong>burned out</strong> both emotionally and physically. Endless late-night discussions, compromise-seeking, and attempts to streamline processes have drained me completely. After reassessing our capabilities, I have come to the conclusion that creating such a detailed game that would attract at least <strong>three dedicated fans</strong> is a challenge beyond our current reach. Our team, though talented, consists mostly of beginners in the game development industry. We lack experience in complex physics programming, artificial intelligence, advanced graphics rendering, and cross-platform optimization. We made numerous mistakes early on that now require massive amounts of time and effort to fix.</p>
+                <p>Therefore, I have made a difficult but, I believe, the only right decision — to <strong>pause the development of the game indefinitely</strong>. This does not mean we are giving up on our dream. No! We plan to regroup, gain more experience, perhaps release a few smaller projects to hone our skills, and then return to Yerevan with renewed energy and knowledge. I have faith in our team and believe that one day we will indeed drive through the streets of digital Yerevan. But for now, we need a break.</p>
+                <p>Thank you all for your support and understanding. We will be back, stronger and better prepared.</p>
+                <div class="signature">
+                    Sincerely,<br />
+                    <strong>Benjamin</strong><br />
+                    <small>Studio Founder</small>
+                </div>
+                <div class="glow-line"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const tabs = document.querySelectorAll('.lang-tab');
+            const ruBlock = document.getElementById('text-ru');
+            const enBlock = document.getElementById('text-en');
+
+            function setLanguage(lang) {
+                ruBlock.classList.remove('active');
+                enBlock.classList.remove('active');
+                if (lang === 'ru') {
+                    ruBlock.classList.add('active');
+                } else {
+                    enBlock.classList.add('active');
+                }
+                tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.dataset.lang === lang) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    setLanguage(this.dataset.lang);
+                });
+            });
+
+            setLanguage('ru');
+        })();
+    </script>
+
+</body>
+</html>
