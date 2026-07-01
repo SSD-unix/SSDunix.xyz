@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARABKIR — Pre-Alpha Registration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050508;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image:
+                radial-gradient(circle at 30% 20%, rgba(255, 50, 50, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(0, 200, 255, 0.08) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 820px;
+            width: 100%;
+            background: rgba(10, 10, 16, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 48px;
+            padding: 50px 40px;
+            box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff3333, #00e5ff, #ff3333);
+            background-size: 200% 100%;
+            animation: shimmer 4s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: rgba(255, 50, 50, 0.1);
+            border: 1px solid rgba(255, 50, 50, 0.15);
+            padding: 4px 20px;
+            border-radius: 100px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: #ff6666;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: clamp(2.8rem, 8vw, 4.5rem);
+            line-height: 1;
+        }
+        .header h1 .red {
+            color: #ff2222;
+            text-shadow: 0 0 60px rgba(255, 34, 34, 0.2);
+        }
+        .header .sub {
+            font-size: 0.9rem;
+            color: #889;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .header .intro {
+            margin-top: 20px;
+            color: #99a;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .header .intro strong {
+            color: #fff;
+        }
+
+        /* COUNTDOWN MINI */
+        .countdown-mini {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 25px 0 10px;
+            flex-wrap: wrap;
+        }
+        .countdown-mini .item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            padding: 10px 18px;
+            min-width: 65px;
+            text-align: center;
+        }
+        .countdown-mini .item .num {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            display: block;
+            line-height: 1;
+        }
+        .countdown-mini .item .lbl {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #667;
+            margin-top: 4px;
+        }
+
+        /* FORM */
+        .form-section {
+            margin-top: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+        .form-group label .required {
+            color: #ff4444;
+            margin-left: 4px;
+        }
+        .form-group .hint {
+            font-size: 0.75rem;
+            color: #667;
+            font-weight: 400;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 14px 18px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #ff3333;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #556;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-group select {
+            appearance: none;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .form-group select option {
+            background: #111;
+            color: #fff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .container {
+                padding: 30px 20px;
+            }
+        }
+
+        /* RADIO / CHECKBOX STYLES */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 6px;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: #bbb;
+            cursor: pointer;
+        }
+        .radio-group input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #ff3333;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* SUBMIT */
+        .submit-row {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .submit-row .info {
+            font-size: 0.75rem;
+            color: #556;
+        }
+        .submit-row .info a {
+            color: #00e5ff;
+            text-decoration: none;
+        }
+
+        .btn-submit {
+            background: #ff3333;
+            border: none;
+            border-radius: 60px;
+            padding: 16px 45px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 30px rgba(255, 50, 50, 0.15);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 1px;
+        }
+        .btn-submit:hover {
+            background: #ff5555;
+            transform: scale(1.02);
+            box-shadow: 0 0 50px rgba(255, 50, 50, 0.3);
+        }
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* THANK YOU MESSAGE */
+        .thank-you {
+            display: none;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .thank-you .icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        .thank-you h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            color: #00e5ff;
+        }
+        .thank-you p {
+            color: #99a;
+            margin-top: 10px;
+            line-height: 1.7;
+        }
+        .thank-you .telegram-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #00e5ff;
+            text-decoration: none;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            padding: 10px 28px;
+            border-radius: 30px;
+            transition: 0.3s;
+        }
+        .thank-you .telegram-link:hover {
+            background: rgba(0, 229, 255, 0.05);
+            border-color: rgba(0, 229, 255, 0.3);
+        }
+
+        /* FOOTER */
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.6rem;
+            color: #334;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .footer .free-badge {
+            display: inline-block;
+            margin-top: 8px;
+            background: rgba(0, 229, 255, 0.05);
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            padding: 3px 16px;
+            border-radius: 30px;
+            color: #00e5ff;
+            font-weight: 600;
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+        }
+
+        /* HIDDEN */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div class="badge">⚡ Pre-Alpha · September 23</div>
+            <h1><span class="red">ARABKIR</span></h1>
+            <div class="sub">Tester Registration</div>
+            <div class="intro">
+                <strong>Something is rising from the concrete.</strong><br />
+                A physics-driven sandbox. Brutalist streets. Hidden truths.<br />
+                <span style="color:#667;font-size:0.85rem;">Fill out the form below to secure your spot in the Pre-Alpha.</span>
+            </div>
+
+            <!-- Mini Countdown -->
+            <div class="countdown-mini">
+                <div class="item"><span class="num" id="cd-days">00</span><span class="lbl">Days</span></div>
+                <div class="item"><span class="num" id="cd-hours">00</span><span class="lbl">Hours</span></div>
+                <div class="item"><span class="num" id="cd-minutes">00</span><span class="lbl">Mins</span></div>
+                <div class="item"><span class="num" id="cd-seconds">00</span><span class="lbl">Secs</span></div>
+            </div>
+        </div>
+
+        <!-- ====== FORM ====== -->
+        <div id="form-container">
+            <!-- 🔥 YOUR PERSONAL FORMSPREE ENDPOINT IS ALREADY PLUGGED IN HERE 🔥 -->
+            <form id="tester-form" class="form-section" action="https://formspree.io/f/xaqgpqky" method="POST">
+
+                <!-- ===== SECTION 1: CONTACT ===== -->
+                <div style="margin-bottom:10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● Contact Information</span></div>
+
+                <div class="form-group">
+                    <label>What is your Tester Name / Nickname? <span class="required">*</span></label>
+                    <input type="text" name="tester_name" placeholder="e.g. Vahe_Pro" required />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email Address <span class="required">*</span></label>
+                        <input type="email" name="email" placeholder="you@example.com" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Telegram Username</label>
+                        <input type="text" name="telegram" placeholder="@your_username" />
+                        <span class="hint">Our primary way to reach you.</span>
+                    </div>
+                </div>
+
+                <!-- ===== SECTION 2: PC SPECS ===== -->
+                <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● Your Machine</span></div>
+
+                <div class="form-group">
+                    <label>What is your Operating System? <span class="required">*</span></label>
+                    <select name="os" required>
+                        <option value="">— Select —</option>
+                        <option value="Windows 10">Windows 10</option>
+                        <option value="Windows 11">Windows 11</option>
+                        <option value="Linux (Ubuntu/Pop/etc.)">Linux (Ubuntu/Pop/etc.)</option>
+                        <option value="MacOS">MacOS</option>
+                        <option value="Other">Other (please specify in the next question)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>What are your PC Specs? (CPU, GPU, RAM) <span class="required">*</span></label>
+                    <textarea name="specs" placeholder="e.g. Intel i5-10400, GTX 1660 Super, 16GB RAM" required></textarea>
+                    <span class="hint">Be as detailed as you can — this helps us optimize the game.</span>
+                </div>
+
+                <!-- ===== SECTION 3: EXPERIENCE ===== -->
+                <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● Your Experience</span></div>
+
+                <div class="form-group">
+                    <label>Have you played open-world sandbox or physics-heavy games before? <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="experience" value="Often" required /> Yes, I play them often.</label>
+                        <label><input type="radio" name="experience" value="Some" /> Yes, but only a few.</label>
+                        <label><input type="radio" name="experience" value="First" /> No, this is my first time.</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Are you willing to write detailed bug reports? (Screenshots + step-by-step instructions?) <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="bug_report" value="Yes_love" required /> Yes! I love breaking things and reporting them.</label>
+                        <label><input type="radio" name="bug_report" value="Yes_try" /> I can try my best.</label>
+                        <label><input type="radio" name="bug_report" value="No" /> No, I just want to play the game.</label>
+                    </div>
+                </div>
+
+                <!-- ===== SECTION 4: REALITY CHECK ===== -->
+                <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● The Fine Print</span></div>
+
+                <div class="form-group">
+                    <label>Do you understand that this is a PRE-ALPHA build with crashes, glitches, and missing content? <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="understand" value="Yes" required /> Yes, I understand. I am here to help, not to play a finished game.</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Are you over 13 years old? (Required for us to contact you) <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="age" value="Yes" required /> Yes</label>
+                    </div>
+                </div>
+
+                <!-- ===== SECTION 5: HYPE ===== -->
+                <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● One Last Thing</span></div>
+
+                <div class="form-group">
+                    <label>What are you most excited to do in ARABKIR?</label>
+                    <textarea name="excited" placeholder="Driving? Using the gravity gun? Exploring the district? Let us know!"></textarea>
+                </div>
+
+                <!-- ===== HIDDEN SPAM PROTECTION ===== -->
+                <input type="text" name="_gotcha" style="display:none;" />
+
+                <!-- ===== SUBMIT ===== -->
+                <div class="submit-row">
+                    <span class="info">We'll email you the download link on <strong>September 23</strong>. No spam, ever.</span>
+                    <button type="submit" class="btn-submit" id="submit-btn">▶ Register Now</button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- ===== THANK YOU (hidden initially) ===== -->
+        <div id="thank-you" class="thank-you">
+            <div class="icon">✅</div>
+            <h2>YOU'RE IN.</h2>
+            <p>
+                Your registration has been received.<br />
+                We'll send you the download link on <strong>September 23</strong>.<br />
+                <span style="color:#667;font-size:0.9rem;">Check your email (and spam folder) for confirmation.</span>
+            </p>
+            <a href="https://t.me/aR4bk1r" target="_blank" class="telegram-link">✈ Join our Telegram</a>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            © 2026 · ARABKIR
+            <div class="free-badge">✦ 100% FREE · PRE-ALPHA ✦</div>
+        </div>
+
+    </div>
+
+    <script>
+        // ===== COUNTDOWN TIMER =====
+        const target = new Date();
+        target.setFullYear(2026, 8, 23);
+        target.setHours(0, 0, 0, 0);
+
+        function updateCountdown() {
+            const now = new Date();
+            const diff = target - now;
+            if (diff <= 0) {
+                document.getElementById('cd-days').textContent = '00';
+                document.getElementById('cd-hours').textContent = '00';
+                document.getElementById('cd-minutes').textContent = '00';
+                document.getElementById('cd-seconds').textContent = '00';
+                return;
+            }
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('cd-days').textContent = String(d).padStart(2, '0');
+            document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+            document.getElementById('cd-minutes').textContent = String(m).padStart(2, '0');
+            document.getElementById('cd-seconds').textContent = String(s).padStart(2, '0');
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // ===== FORM SUBMISSION =====
+        const form = document.getElementById('tester-form');
+        const formContainer = document.getElementById('form-container');
+        const thankYou = document.getElementById('thank-you');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Disable button to prevent double-submit
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Submitting...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    // Hide form, show thank you
+                    formContainer.style.display = 'none';
+                    thankYou.style.display = 'block';
+                } else {
+                    alert('Something went wrong. Please try again or contact us on Telegram.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '▶ Register Now';
+                }
+            } catch (error) {
+                alert('Network error. Please check your connection and try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '▶ Register Now';
+            }
+        });
+    </script>
+
+</body>
+</html>
