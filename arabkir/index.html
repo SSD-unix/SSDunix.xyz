@@ -56,7 +56,6 @@
             100% { background-position: 200% 0; }
         }
 
-        /* HEADER */
         .header {
             text-align: center;
             margin-bottom: 35px;
@@ -107,7 +106,6 @@
             color: #fff;
         }
 
-        /* COUNTDOWN MINI */
         .countdown-mini {
             display: flex;
             justify-content: center;
@@ -139,7 +137,6 @@
             margin-top: 4px;
         }
 
-        /* FORM */
         .form-section {
             margin-top: 25px;
         }
@@ -222,7 +219,6 @@
             }
         }
 
-        /* RADIO / CHECKBOX STYLES */
         .radio-group {
             display: flex;
             flex-direction: column;
@@ -246,7 +242,6 @@
             flex-shrink: 0;
         }
 
-        /* SUBMIT */
         .submit-row {
             margin-top: 30px;
             display: flex;
@@ -292,7 +287,6 @@
             transform: none;
         }
 
-        /* THANK YOU MESSAGE */
         .thank-you {
             display: none;
             text-align: center;
@@ -327,7 +321,6 @@
             border-color: rgba(0, 229, 255, 0.3);
         }
 
-        /* FOOTER */
         .footer {
             margin-top: 30px;
             text-align: center;
@@ -349,7 +342,6 @@
             letter-spacing: 2px;
         }
 
-        /* HIDDEN */
         .hidden {
             display: none !important;
         }
@@ -381,7 +373,6 @@
 
         <!-- ====== FORM ====== -->
         <div id="form-container">
-            <!-- 🔥 YOUR PERSONAL FORMSPREE ENDPOINT IS ALREADY PLUGGED IN HERE 🔥 -->
             <form id="tester-form" class="form-section" action="https://formspree.io/f/xaqgpqky" method="POST">
 
                 <!-- ===== SECTION 1: CONTACT ===== -->
@@ -446,7 +437,21 @@
                     </div>
                 </div>
 
-                <!-- ===== SECTION 4: REALITY CHECK ===== -->
+                <!-- ===== SECTION 4: LANGUAGE ===== -->
+                <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● Communication</span></div>
+
+                <div class="form-group">
+                    <label>Do you speak English? <span class="required">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="language" value="Fluent" required /> Yes, fluently.</label>
+                        <label><input type="radio" name="language" value="Intermediate" /> Yes, but I prefer Armenian/Russian.</label>
+                        <label><input type="radio" name="language" value="Basic" /> A little bit.</label>
+                        <label><input type="radio" name="language" value="No" /> No, I only speak Armenian/Russian.</label>
+                    </div>
+                    <span class="hint">This helps us know how to communicate bug reports and updates with you.</span>
+                </div>
+
+                <!-- ===== SECTION 5: REALITY CHECK ===== -->
                 <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● The Fine Print</span></div>
 
                 <div class="form-group">
@@ -463,7 +468,7 @@
                     </div>
                 </div>
 
-                <!-- ===== SECTION 5: HYPE ===== -->
+                <!-- ===== SECTION 6: HYPE ===== -->
                 <div style="margin:25px 0 10px;"><span style="color:#ff4444;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">● One Last Thing</span></div>
 
                 <div class="form-group">
@@ -483,7 +488,7 @@
             </form>
         </div>
 
-        <!-- ===== THANK YOU (hidden initially) ===== -->
+        <!-- ===== THANK YOU ===== -->
         <div id="thank-you" class="thank-you">
             <div class="icon">✅</div>
             <h2>YOU'RE IN.</h2>
@@ -504,7 +509,7 @@
     </div>
 
     <script>
-        // ===== COUNTDOWN TIMER =====
+        // ===== COUNTDOWN =====
         const target = new Date();
         target.setFullYear(2026, 8, 23);
         target.setHours(0, 0, 0, 0);
@@ -540,7 +545,6 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // Disable button to prevent double-submit
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Submitting...';
 
@@ -555,7 +559,6 @@
                 });
 
                 if (response.ok) {
-                    // Hide form, show thank you
                     formContainer.style.display = 'none';
                     thankYou.style.display = 'block';
                 } else {
