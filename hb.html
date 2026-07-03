@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HAYBOOK</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0b1020;
+            color: #e5e7eb;
+            padding: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        .card {
+            background: rgba(17,24,39,.9);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,.08);
+        }
+        input, textarea, button {
+            width: 100%;
+            margin: 4px 0;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.1);
+            background: rgba(255,255,255,.05);
+            color: #e5e7eb;
+            font-size: 16px;
+        }
+        button {
+            background: linear-gradient(135deg, #5b8cff, #7c3aed);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active { opacity: 0.7; }
+        .post {
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            padding: 10px 0;
+        }
+        .post:last-child { border-bottom: none; }
+        .author { font-weight: bold; color: #a5b4fc; }
+        .time { font-size: 12px; color: #9ca3af; }
+        .actions { display: flex; gap: 8px; margin: 6px 0; }
+        .actions button { width: auto; padding: 6px 14px; font-size: 14px; }
+        .comments { margin-top: 8px; padding-left: 8px; border-left: 2px solid rgba(255,255,255,.1); }
+        .comment { margin: 3px 0; font-size: 14px; }
+        .hidden { display: none !important; }
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(11,16,32,.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid rgba(255,255,255,.08);
+            z-index: 100;
+        }
+        .tab-bar button {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 12px;
+            width: auto;
+            font-size: 14px;
+        }
+        .tab-bar button.active {
+            background: rgba(91,140,255,.2);
+            color: white;
+        }
+        .page { display: block; }
+        .page.hidden { display: none; }
+        img { max-width: 100%; border-radius: 12px; margin: 8px 0; }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .top-bar h1 { font-size: 22px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Экран входа -->
+    <div id="loginPage" class="page">
+        <div class="card">
+            <h1>HAYBOOK</h1>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Пароль">
+            <button id="loginBtn">Войти</button>
+            <p style="margin-top:10px; text-align:center;">
+                Нет аккаунта? <a href="#" id="showRegister" style="color:#5b8cff;">Зарегистрироваться</a>
+            </p>
+            <div id="loginError" style="color:red; margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <!-- Экран регистрации -->
+    <div id="registerPage" class="page hidden">
+        <div class="card">
+            <h1>Регистрация</h1>
+            <input type="text" id="regUsername" placeholder="Имя пользователя">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Пароль">
+            <button id="registerBtn">Создать аккаунт</button>
+            <p style="margin-top:10px; text-align:center;">
+                Уже есть аккаунт? <a href="#" id="showLogin" style="color:#5b8cff;">Войти</a>
+            </p>
+            <div id="registerError" style="color:red; margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <!-- Главное приложение -->
+    <div id="mainApp" class="page hidden">
+        <div class="top-bar">
+            <h1>HAYBOOK</h1>
+            <button id="logoutBtn" style="width:auto; padding:6px 14px; background:rgba(255,0,0,.3);">Выйти</button>
+        </div>
+
+        <!-- Страницы -->
+        <div id="feedPage" class="page">
+            <div class="card">
+                <textarea id="postContent" placeholder="Что нового?" rows="3"></textarea>
+                <input type="text" id="postImage" placeholder="Ссылка на фото (опционально)">
+                <button id="createPostBtn">Опубликовать</button>
+            </div>
+            <div id="feedContainer"></div>
+        </div>
+
+        <div id="friendsPage" class="page hidden">
+            <div id="friendsContainer"></div>
+        </div>
+
+        <div id="chatPage" class="page hidden">
+            <div id="chatFriendsList"></div>
+            <div id="chatMessages" style="margin-top:10px;"></div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1;">
+                <button id="sendMsgBtn" style="width:auto;">Отправить</button>
+            </div>
+        </div>
+
+        <div id="profilePage" class="page hidden">
+            <div id="profileInfo"></div>
+            <div class="card">
+                <h3>Редактировать профиль</h3>
+                <input type="text" id="profileAvatar" placeholder="Ссылка на аватар">
+                <textarea id="profileBio" placeholder="Биография" rows="3"></textarea>
+                <button id="updateProfileBtn">Сохранить</button>
+            </div>
+        </div>
+
+        <!-- Нижние табы -->
+        <div class="tab-bar">
+            <button class="tab active" data-tab="feed">Лента</button>
+            <button class="tab" data-tab="friends">Друзья</button>
+            <button class="tab" data-tab="chat">Чат</button>
+            <button class="tab" data-tab="profile">Профиль</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- Получаем адрес сервера из Tauri (если есть) ----------
+    let SERVER_BASE = "http://127.0.0.1:5000"; // fallback
+    // Tauri внедряет глобальную переменную __SERVER_URL из Rust
+    if (typeof __SERVER_URL !== 'undefined') {
+        SERVER_BASE = __SERVER_URL;
+    }
+
+    // ---------- Вспомогательные функции ----------
+    function api(method, endpoint, data=null) {
+        const url = SERVER_BASE + endpoint;
+        const options = {
+            method: method,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+        return fetch(url, options).then(r => {
+            if (!r.ok) return r.text().then(t => { throw new Error(t) });
+            return r.json();
+        });
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('#mainApp .page').forEach(p => p.classList.add('hidden'));
+        document.getElementById(id + 'Page').classList.remove('hidden');
+    }
+
+    // ---------- Авторизация ----------
+    document.getElementById('loginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        try {
+            const resp = await fetch(SERVER_BASE + '/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ email, password })
+            });
+            if (resp.ok) {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadFeed();
+                loadFriends();
+                loadProfile();
+            } else {
+                document.getElementById('loginError').textContent = 'Неверный email или пароль';
+            }
+        } catch(e) {
+            document.getElementById('loginError').textContent = 'Ошибка соединения';
+        }
+    };
+
+    document.getElementById('registerBtn').onclick = async () => {
+        const username = document.getElementById('regUsername').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        try {
+            const resp = await fetch(SERVER_BASE + '/register', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ username, email, password })
+            });
+            if (resp.ok) {
+                document.getElementById('registerPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadFeed();
+                loadFriends();
+                loadProfile();
+            } else {
+                document.getElementById('registerError').textContent = 'Ошибка регистрации';
+            }
+        } catch(e) {
+            document.getElementById('registerError').textContent = 'Ошибка соединения';
+        }
+    };
+
+    document.getElementById('showRegister').onclick = (e) => { e.preventDefault(); showPage('register'); };
+    document.getElementById('showLogin').onclick = (e) => { e.preventDefault(); showPage('login'); };
+
+    document.getElementById('logoutBtn').onclick = async () => {
+        await api('POST', '/api/logout');
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+    };
+
+    // ---------- Табы ----------
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            showPage(tab.dataset.tab);
+            if (tab.dataset.tab === 'feed') loadFeed();
+            else if (tab.dataset.tab === 'friends') loadFriends();
+            else if (tab.dataset.tab === 'chat') loadChatFriends();
+            else if (tab.dataset.tab === 'profile') loadProfile();
+        };
+    });
+
+    // ---------- Лента ----------
+    async function loadFeed() {
+        try {
+            const posts = await api('GET', '/api/feed');
+            const container = document.getElementById('feedContainer');
+            container.innerHTML = posts.map(p => `
+                <div class="card post">
+                    <div><span class="author">${p.author.username}</span> <span class="time">${p.created_at || ''}</span></div>
+                    <div>${p.content}</div>
+                    ${p.image ? `<img src="${p.image}">` : ''}
+                    <div class="actions">
+                        <button onclick="toggleLike(${p.id})">${p.liked_by_me ? '❤️' : '🤍'} ${p.likes}</button>
+                    </div>
+                    <div class="comments">
+                        ${p.comments.map(c => `<div class="comment"><strong>${c.author.username}</strong> ${c.content}</div>`).join('')}
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <input type="text" id="comment_${p.id}" placeholder="Комментарий..." style="flex:1;">
+                        <button onclick="addComment(${p.id})" style="width:auto;">Отправить</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('feedContainer').innerHTML = `<div class="card">Ошибка загрузки</div>`;
+        }
+    }
+
+    window.toggleLike = async (id) => {
+        await api('POST', '/api/like', { post_id: id });
+        loadFeed();
+    };
+
+    window.addComment = async (id) => {
+        const input = document.getElementById('comment_'+id);
+        const content = input.value.trim();
+        if (!content) return;
+        await api('POST', '/api/comment', { post_id: id, content });
+        input.value = '';
+        loadFeed();
+    };
+
+    document.getElementById('createPostBtn').onclick = async () => {
+        const content = document.getElementById('postContent').value.trim();
+        const image = document.getElementById('postImage').value.trim();
+        if (!content && !image) return alert('Введите текст или фото');
+        await api('POST', '/api/create_post', { content, image });
+        document.getElementById('postContent').value = '';
+        document.getElementById('postImage').value = '';
+        loadFeed();
+    };
+
+    // ---------- Друзья ----------
+    async function loadFriends() {
+        try {
+            const data = await api('GET', '/api/recommendations');
+            document.getElementById('friendsContainer').innerHTML = data.map(u => `
+                <div class="card">
+                    <strong>${u.username}</strong> ${u.bio ? '- ' + u.bio : ''}
+                    <div>
+                        ${u.status === 'accepted' ? '✅ Друзья' :
+                         u.status === 'pending_out' ? '⏳ Заявка' :
+                         u.status === 'pending_in' ? `<button onclick="acceptFriend(${u.request_id})">Принять</button>` :
+                         `<button onclick="sendFriendRequest(${u.id})">Добавить</button>`}
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    window.sendFriendRequest = async (id) => {
+        await api('POST', '/api/friends/request', { user_id: id });
+        loadFriends();
+    };
+    window.acceptFriend = async (id) => {
+        await api('POST', '/api/friends/accept', { request_id: id });
+        loadFriends();
+    };
+
+    // ---------- Чат ----------
+    let chatUserId = null;
+    async function loadChatFriends() {
+        try {
+            const friends = await api('GET', '/api/friends/accepted');
+            document.getElementById('chatFriendsList').innerHTML = friends.map(f => `
+                <div class="card" style="cursor:pointer;" onclick="openChat(${f.id})">
+                    <strong>${f.username}</strong>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    window.openChat = async (id) => {
+        chatUserId = id;
+        loadMessages(id);
+    };
+
+    async function loadMessages(id) {
+        try {
+            const msgs = await api('GET', `/api/messages?with_user_id=${id}`);
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = msgs.map(m => `
+                <div style="margin:4px 0; padding:8px; background:${m.sender_id === 1 ? 'rgba(91,140,255,.2)' : 'rgba(255,255,255,.05)'}; border-radius:8px;">
+                    <strong>${m.sender_id === 1 ? 'Вы' : 'Собеседник'}</strong>: ${m.content}
+                    <span style="font-size:10px; color:#9ca3af;">${m.created_at}</span>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    document.getElementById('sendMsgBtn').onclick = async () => {
+        if (!chatUserId) return alert('Выберите чат');
+        const content = document.getElementById('chatInput').value.trim();
+        if (!content) return;
+        await api('POST', '/api/messages', { to_user_id: chatUserId, content });
+        document.getElementById('chatInput').value = '';
+        loadMessages(chatUserId);
+    };
+
+    // ---------- Профиль ----------
+    async function loadProfile() {
+        try {
+            const me = await api('GET', '/api/me');
+            if (!me.user) return;
+            const u = me.user;
+            document.getElementById('profileInfo').innerHTML = `
+                <div class="card">
+                    <h3>${u.username}</h3>
+                    ${u.avatar ? `<img src="${u.avatar}" style="width:80px; border-radius:50%;">` : ''}
+                    <p>${u.bio || 'Без био'}</p>
+                </div>
+            `;
+            document.getElementById('profileAvatar').value = u.avatar || '';
+            document.getElementById('profileBio').value = u.bio || '';
+        } catch(e) {}
+    }
+
+    document.getElementById('updateProfileBtn').onclick = async () => {
+        const avatar = document.getElementById('profileAvatar').value.trim();
+        const bio = document.getElementById('profileBio').value.trim();
+        await api('POST', '/api/update_profile', { avatar, bio });
+        loadProfile();
+    };
+
+    // ---------- Инициализация ----------
+    (async () => {
+        try {
+            const me = await api('GET', '/api/me');
+            if (me.user) {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadFeed();
+                loadFriends();
+                loadProfile();
+            }
+        } catch(e) {
+            // остаёмся на странице входа
+        }
+    })();
+</script>
+</body>
+</html>
