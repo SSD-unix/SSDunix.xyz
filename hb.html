@@ -13,25 +13,23 @@
     </div>
 
     <script>
-        // Собираем URL из частей, чтобы обойти жесткие регулярки сканеров GitHub
-        const domain = 'ssdunix.xyz';
-        const configUrl = `https://${domain}/download/hb.server`;
+        // Берем файл напрямую из сырого репозитория GitHub
+        const configUrl = 'https://raw.githubusercontent.com/SSD-unix/SSDunix.xyz/refs/heads/main/download/hb.server';
 
-        // Делаем запрос к файлу конфигурации
         fetch(configUrl)
             .then(response => {
-                if (!response.ok) throw new Error('Network error');
+                if (!response.ok) throw new Error('Ошибка загрузки файла конфигурации');
                 return response.text();
             })
             .then(text => {
                 const redirectUrl = text.trim();
                 
-                // Проверяем, что внутри файла корректный URL
+                // Проверяем, что внутри файла действительно ссылка
                 if (redirectUrl.startsWith('http://') || redirectUrl.startsWith('https://')) {
                     document.getElementById('status').innerText = 'Перенаправление...';
                     window.location.replace(redirectUrl);
                 } else {
-                    document.getElementById('status').innerText = 'Ошибка: неверный формат ссылки в hb.server';
+                    document.getElementById('status').innerText = 'Ошибка: в hb.server указан неверный URL';
                 }
             })
             .catch(error => {
