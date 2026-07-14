@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Vietnam Locker Keygen</h2>
+    <input id="hwid" placeholder="Enter Hardware ID">
+    <input id="salt" placeholder="Enter Secret Salt">
+    <button onclick="generate()">Generate Key</button>
+    <h3 id="result"></h3>
+
+    <script>
+    async function generate() {
+        const str = document.getElementById('hwid').value + document.getElementById('salt').value;
+        const msgUint8 = new TextEncoder().encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        document.getElementById('result').innerText = "Key: " + hashHex.substring(0, 8);
+    }
+    </script>
+</body>
+</html>
