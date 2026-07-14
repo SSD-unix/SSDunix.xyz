@@ -1,21 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keygen</title>
+    <style>
+        body { background: #121212; color: #0f0; font-family: monospace; display: flex; height: 100vh; align-items: center; justify-content: center; margin: 0; }
+        .box { border: 2px solid #0f0; padding: 30px; text-align: center; background: #111; }
+        input, button { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; font-size: 20px; margin: 10px; text-align: center; }
+        button { cursor: pointer; font-weight: bold; }
+        button:hover { background: #0a0; color: #000; }
+        #res { font-size: 30px; color: #ff0; margin-top: 15px; }
+    </style>
+</head>
 <body>
-    <h2>Vietnam Locker Keygen</h2>
-    <input id="hwid" placeholder="Enter Hardware ID">
-    <input id="salt" placeholder="Enter Secret Salt">
-    <button onclick="generate()">Generate Key</button>
-    <h3 id="result"></h3>
-
+    <div class="box">
+        <h2>VIETNAM KEYGEN</h2>
+        <input type="text" id="hwid" placeholder="ID (5 chars)" maxlength="5"><br>
+        <button onclick="gen()">Generate Key</button>
+        <div id="res"></div>
+    </div>
     <script>
-    async function generate() {
-        const str = document.getElementById('hwid').value + document.getElementById('salt').value;
-        const msgUint8 = new TextEncoder().encode(str);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        document.getElementById('result').innerText = "Key: " + hashHex.substring(0, 8);
-    }
+        async function gen() {
+            const hwid = document.getElementById("hwid").value.trim();
+            if (!hwid) return;
+            
+            // Просто хэшируем сам ID
+            const data = new TextEncoder().encode(hwid);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // Выдаем первые 5 символов
+            document.getElementById("res").innerText = hashHex.substring(0, 5);
+        }
     </script>
 </body>
 </html>
