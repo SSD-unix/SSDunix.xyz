@@ -1,2 +1,3 @@
 turboget : https://github.com/SSD-unix/turboget/releases/download/TURBOGET/turboget : the light-weight analog of gitclone and wget
 turbopack : https://github.com/SSD-unix/TURBOPACK/releases/download/relese/turbopack : the package manager for use pacman repos on another distros and install SDUX projects for one click
+test : https://github.com/SSD-unix/turboget/releases/download/TURBOGET/turboget : the light-weight analog of gitclone and wget
