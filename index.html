@@ -80,12 +80,12 @@ header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.
 .lang-selector button { 
   background: rgba(30, 41, 59, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 12px; /* Уменьшили отступы для компактности */
+  padding: 6px 12px; 
   border-radius: 10px; 
   color: #e2e8f0; 
   cursor: pointer; 
   font-family: inherit;
-  font-size: 13px; /* Уменьшили шрифт */
+  font-size: 13px; 
   font-weight: 500; 
   transition: all 0.3s ease; 
   backdrop-filter: blur(5px);
@@ -208,7 +208,6 @@ footer {
     <h1 id="site-title">SSDunix</h1>
     <nav id="github-link">GitHub: <a href="https://github.com/SSD-unix" target="_blank">@SSD-unix</a></nav>
     <div class="lang-selector" id="lang-buttons">
-      <!-- Кнопки сгенерируются автоматически через JS, чтобы не захламлять HTML -->
     </div>
   </header>
 
@@ -235,7 +234,7 @@ footer {
 const langNames = {
   "ru": "Русский", "en": "English", "hy": "Հայերեն", "uk": "Українська", "pl": "Polski",
   "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano", "pt": "Português",
-  "zh": "中文", "ja": "日本語", "ko": "한국어", "ar": "العربية", "tr": "Türkçe",
+  "zh": "中文", "ja": "日本語", "ko": "한국어", "ar": "العربية",
   "hi": "हिन्दी", "nl": "Nederlands", "sv": "Svenska", "el": "Ελληνικά", "he": "עברית",
   "cs": "Čeština", "ro": "Română", "hu": "Magyar", "fi": "Suomi", "da": "Dansk", "ka": "ქართული"
 };
@@ -343,7 +342,7 @@ const texts = {
     "news-text":"뉴스 읽기 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
     "about-me-title":"내 소개",
     "about-me-text":"저는 Linux를 탐색하고, 자체 도구를 만들고, 프로그래밍을 실험하는 것을 즐깁니다.",
-    "repos-title":"GitHub 저장소", "footer-text":"© SSDunix"
+    "repos-title":"GitHub 저장소", "footer 실":"© SSDunix"
   },
   "ar": {
     "site-title":"SSDunix", "about-title":"عن المشروع",
@@ -352,14 +351,6 @@ const texts = {
     "about-me-title":"عني",
     "about-me-text":"أستمتع باستكشاف نظام Linux وإنشاء أدواتي الخاصة والتجربة في البرمجة.",
     "repos-title":"مستودعات GitHub", "footer-text":"© SSDunix"
-  },
-  "tr": {
-    "site-title":"SSDunix", "about-title":"Proje Hakkında",
-    "about-text":"SSDunix, projelerime ve geliştirmelerime adanmış bir web sitesidir. Python, PyQt, araç oluşturma denemelerimi ve programcılar için notları bulabilirsiniz.",
-    "news-text":"Haberleri okuyun: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Hakkımda",
-    "about-me-text":"Linux'u keşfetmeyi, kendi araçlarımı oluşturmayı ve programlamayı seviyorum.",
-    "repos-title":"GitHub Depoları", "footer-text":"© SSDunix"
   },
   "hi": {
     "site-title":"SSDunix", "about-title":"परियोजना के बारे में",
@@ -451,7 +442,6 @@ const texts = {
   }
 };
 
-// Генерация кнопок
 const btnContainer = document.getElementById('lang-buttons');
 Object.keys(langNames).forEach(k => {
   const btn = document.createElement('button');
@@ -460,13 +450,11 @@ Object.keys(langNames).forEach(k => {
   btnContainer.appendChild(btn);
 });
 
-// Умное автоопределение языка браузера (берем только первые 2 буквы, например "en-US" -> "en")
 let rawUserLang = (navigator.language || navigator.userLanguage).split('-')[0];
 let lang = texts[rawUserLang] ? rawUserLang : "ru";
 
 function setLanguage(l){
   lang = l;
-  // Добавляем поддержку RTL языков (Арабский, Иврит)
   if(l === 'ar' || l === 'he') {
     document.body.style.direction = 'rtl';
   } else {
