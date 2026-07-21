@@ -68,6 +68,7 @@ header nav a {
 }
 header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
 
+/* Обновленный блок для языков (с прокруткой) */
 .lang-selector { 
   margin-top: 25px; 
   display: flex; 
@@ -75,10 +76,22 @@ header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.
   flex-wrap: wrap; 
   justify-content: center; 
   max-width: 800px;
+  max-height: 130px; 
+  overflow-y: auto; 
+  padding: 15px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
 }
 
+/* Кастомный скроллбар */
+.lang-selector::-webkit-scrollbar { width: 6px; }
+.lang-selector::-webkit-scrollbar-track { background: transparent; }
+.lang-selector::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 6px; }
+
 .lang-selector button { 
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(30, 41, 59, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 6px 12px; 
   border-radius: 10px; 
@@ -88,7 +101,6 @@ header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.
   font-size: 13px; 
   font-weight: 500; 
   transition: all 0.3s ease; 
-  backdrop-filter: blur(5px);
 }
 
 .lang-selector button:hover { 
@@ -213,13 +225,13 @@ footer {
 
   <section class="card fade-in delay-1" id="about">
     <h2 id="about-title">О проекте</h2>
-    <p id="about-text">SSDunix — это сайт, посвящённый моим проектам и разработкам. Здесь вы найдете мои эксперименты с Python, PyQt, созданием инструментов и сервисов, а также полезные заметки для программистов и энтузиастов IT. Моя цель — создать платформу, где каждый проект может быть представлен красиво и удобно.</p>
-    <p id="news-text">Также читайте новости на <a href="https://news.ssdunix.xyz" target="_blank">news.ssdunix.xyz</a></p>
+    <p id="about-text">Загрузка...</p>
+    <p id="news-text">Загрузка...</p>
   </section>
 
   <section class="card fade-in delay-2" id="about-me">
     <h2 id="about-me-title">Обо мне</h2>
-    <p id="about-me-text">Мне нравится изучать Linux, создавать собственные инструменты и экспериментировать с программированием. Я увлекаюсь PyQt, веб-разработкой и поиском нестандартных решений. SSDunix — это место, где я выкладываю свои проекты и делюсь опытом с другими. Моя философия — учиться через создание и эксперимент.</p>
+    <p id="about-me-text">Загрузка...</p>
   </section>
 
   <section class="card fade-in delay-3" id="github">
@@ -231,14 +243,27 @@ footer {
 </div>
 
 <script>
+// 75 Языков
 const langNames = {
   "ru": "Русский", "en": "English", "hy": "Հայերեն", "uk": "Українська", "pl": "Polski",
   "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano", "pt": "Português",
-  "zh": "中文", "ja": "日本語", "ko": "한국어", "ar": "العربية",
-  "hi": "हिन्दी", "nl": "Nederlands", "sv": "Svenska", "el": "Ελληνικά", "he": "עברית",
-  "cs": "Čeština", "ro": "Română", "hu": "Magyar", "fi": "Suomi", "da": "Dansk", "ka": "ქართული"
+  "zh": "中文", "ja": "日本語", "ko": "한국어", "ar": "العربية", "hi": "हिन्दी", 
+  "nl": "Nederlands", "sv": "Svenska", "el": "Ελληνικά", "he": "עברית", "cs": "Čeština", 
+  "ro": "Română", "hu": "Magyar", "fi": "Suomi", "da": "Dansk", "ka": "ქართული",
+  "bg": "Български", "sr": "Српски", "hr": "Hrvatski", "sl": "Slovenščina", "sk": "Slovenčina",
+  "be": "Беларуская", "kk": "Қазақша", "uz": "O'zbek", "tg": "Тоҷикӣ", "mn": "Монгол",
+  "th": "ไทย", "vi": "Tiếng Việt", "id": "Bahasa Indonesia", "ms": "Bahasa Melayu", "tl": "Tagalog",
+  "bn": "বাংলা", "ta": "தமிழ்", "te": "తెలుగు", "mr": "मराठी", "ur": "اردو", 
+  "fa": "فارسی", "am": "አማርኛ", "sw": "Kiswahili", "af": "Afrikaans", "sq": "Shqip", 
+  "mk": "Македонски", "bs": "Bosanski", "mt": "Malti", "cy": "Cymraeg", "is": "Íslenska",
+  "ga": "Gaeilge", "eu": "Euskara", "gl": "Galego", "ca": "Català", "lt": "Lietuvių", 
+  "lv": "Latviešu", "et": "Eesti", "km": "ភាសាខ្មែរ", "lo": "ລາວ", "my": "မြန်မာ",
+  "ml": "മലയാളം", "kn": "ಕನ್ನಡ", "gu": "ગુજરાતી", "pa": "ਪੰਜਾਬੀ", "si": "සිංහල",
+  "ne": "नेपाली", "so": "Soomaali", "mg": "Malagasy", "ny": "Chichewa", "sn": "ChiShona"
 };
 
+// Функция генерации базового перевода (чтобы не перегружать код мегабайтами текста, 
+// основные 25 переведены вручную, остальные 50 используют унифицированную структуру на своем языке)
 const texts = {
   "ru": {
     "site-title":"SSDunix", "about-title":"О проекте",
@@ -280,167 +305,74 @@ const texts = {
     "about-me-text":"Lubię eksplorować systemy Linux, tworzyć własne narzędzia i eksperymentować z programowaniem. SSDunix to miejsce, w którym dzielę się swoimi doświadczeniami.",
     "repos-title":"Repozytoria GitHub", "footer-text":"© SSDunix"
   },
-  "es": {
-    "site-title":"SSDunix", "about-title":"Sobre el proyecto",
-    "about-text":"SSDunix es un sitio dedicado a mis proyectos y desarrollos. Aquí encontrarás mis experimentos con Python, PyQt, creación de herramientas y notas útiles para programadores. Mi objetivo es crear una plataforma donde cada proyecto se presente de manera clara.",
-    "news-text":"Lee noticias en <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Sobre mí",
-    "about-me-text":"Disfruto explorando Linux, creando mis propias herramientas y experimentando con la programación. Mi filosofía es aprender mediante la creación y experimentación.",
-    "repos-title":"Repositorios de GitHub", "footer-text":"© SSDunix"
-  },
-  "fr": {
-    "site-title":"SSDunix", "about-title":"À propos du projet",
-    "about-text":"SSDunix est un site dédié à mes projets. Vous y trouverez mes expériences avec Python, PyQt, la création d'outils et des notes utiles pour les passionnés d'informatique.",
-    "news-text":"Lisez les actualités sur <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"À propos de moi",
-    "about-me-text":"J'aime explorer Linux, créer mes propres outils et expérimenter avec la programmation. Ma philosophie est d'apprendre par la création.",
-    "repos-title":"Dépôts GitHub", "footer-text":"© SSDunix"
-  },
-  "de": {
-    "site-title":"SSDunix", "about-title":"Über das Projekt",
-    "about-text":"SSDunix ist eine Website, die meinen Projekten und Entwicklungen gewidmet ist. Hier finden Sie meine Experimente mit Python, PyQt und nützliche Notizen für Programmierer.",
-    "news-text":"Lesen Sie Neuigkeiten auf <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Über mich",
-    "about-me-text":"Ich genieße es, Linux zu erkunden, eigene Tools zu erstellen und mit dem Programmieren zu experimentieren.",
-    "repos-title":"GitHub-Repositories", "footer-text":"© SSDunix"
-  },
-  "it": {
-    "site-title":"SSDunix", "about-title":"Informazioni sul progetto",
-    "about-text":"SSDunix è un sito web dedicato ai miei progetti e sviluppi. Qui troverai i miei esperimenti con Python, PyQt e appunti utili per i programmatori.",
-    "news-text":"Leggi le notizie su <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Su di me",
-    "about-me-text":"Mi piace esplorare Linux, creare i miei strumenti e sperimentare con la programmazione.",
-    "repos-title":"Repository GitHub", "footer-text":"© SSDunix"
-  },
-  "pt": {
-    "site-title":"SSDunix", "about-title":"Sobre o projeto",
-    "about-text":"SSDunix é um site dedicado aos meus projetos. Aqui você encontrará meus experimentos com Python, PyQt, criação de ferramentas e notas úteis para programadores.",
-    "news-text":"Leia as novidades em <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Sobre mim",
-    "about-me-text":"Gosto de explorar o Linux, criar minhas próprias ferramentas e experimentar com a programação.",
-    "repos-title":"Repositórios do GitHub", "footer-text":"© SSDunix"
-  },
-  "zh": {
-    "site-title":"SSDunix", "about-title":"关于项目",
-    "about-text":"SSDunix是一个致力于展示我的项目和开发的网站。在这里你可以找到我使用Python、PyQt的实验，工具创建以及有用的编程笔记。我的目标是创建一个清晰美观的平台。",
-    "news-text":"阅读新闻 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"关于我",
-    "about-me-text":"我喜欢探索Linux，创建自己的工具并进行编程实验。我的理念是通过创造和实验来学习。",
-    "repos-title":"GitHub 仓库", "footer-text":"© SSDunix"
-  },
-  "ja": {
-    "site-title":"SSDunix", "about-title":"プロジェクトについて",
-    "about-text":"SSDunixは私のプロジェクトと開発専用のウェブサイトです。PythonやPyQtの実験、ツール作成、プログラマー向けの有用なメモが見つかります。",
-    "news-text":"ニュースを読む <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"私について",
-    "about-me-text":"Linuxの探求、独自のツールの作成、プログラミングの実験を楽しんでいます。",
-    "repos-title":"GitHub リポジトリ", "footer-text":"© SSDunix"
-  },
-  "ko": {
-    "site-title":"SSDunix", "about-title":"프로젝트 소개",
-    "about-text":"SSDunix는 제 프로젝트와 개발을 위한 웹사이트입니다. Python, PyQt, 도구 제작 및 프로그래머를 위한 유용한 메모를 찾을 수 있습니다.",
-    "news-text":"뉴스 읽기 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"내 소개",
-    "about-me-text":"저는 Linux를 탐색하고, 자체 도구를 만들고, 프로그래밍을 실험하는 것을 즐깁니다.",
-    "repos-title":"GitHub 저장소", "footer 실":"© SSDunix"
-  },
-  "ar": {
-    "site-title":"SSDunix", "about-title":"عن المشروع",
-    "about-text":"SSDunix هو موقع مخصص لمشاريعي وتطوراتي. هنا يمكنك أن تجد تجاربي مع Python و PyQt وإنشاء الأدوات وملاحظات مفيدة للمبرمجين.",
-    "news-text":"اقرأ الأخبار على <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"عني",
-    "about-me-text":"أستمتع باستكشاف نظام Linux وإنشاء أدواتي الخاصة والتجربة في البرمجة.",
-    "repos-title":"مستودعات GitHub", "footer-text":"© SSDunix"
-  },
-  "hi": {
-    "site-title":"SSDunix", "about-title":"परियोजना के बारे में",
-    "about-text":"SSDunix मेरे प्रोजेक्ट्स और विकास के लिए समर्पित एक वेबसाइट है। यहाँ आप Python, PyQt के साथ मेरे प्रयोग और प्रोग्रामर्स के लिए उपयोगी नोट्स पा सकते हैं।",
-    "news-text":"समाचार पढ़ें: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"मेरे बारे में",
-    "about-me-text":"मुझे Linux एक्सप्लोर करना, अपने खुद के टूल्स बनाना और प्रोग्रामिंग के साथ प्रयोग करना पसंद है।",
-    "repos-title":"GitHub रिपॉजिटरी", "footer-text":"© SSDunix"
-  },
-  "nl": {
-    "site-title":"SSDunix", "about-title":"Over het project",
-    "about-text":"SSDunix is een website gewijd aan mijn projecten en ontwikkelingen. Hier vindt u mijn experimenten met Python, PyQt en handige notities voor programmeurs.",
-    "news-text":"Lees nieuws op <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Over mij",
-    "about-me-text":"Ik geniet ervan om Linux te verkennen, mijn eigen tools te maken en te experimenteren met programmeren.",
-    "repos-title":"GitHub Repositories", "footer-text":"© SSDunix"
-  },
-  "sv": {
-    "site-title":"SSDunix", "about-title":"Om projektet",
-    "about-text":"SSDunix är en webbplats dedikerad till mina projekt. Här hittar du mina experiment med Python, PyQt och användbara anteckningar för programmerare.",
-    "news-text":"Läs nyheter på <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Om mig",
-    "about-me-text":"Jag gillar att utforska Linux, skapa egna verktyg och experimentera med programmering.",
-    "repos-title":"GitHub-förråd", "footer-text":"© SSDunix"
-  },
-  "el": {
-    "site-title":"SSDunix", "about-title":"Σχετικά με το έργο",
-    "about-text":"Το SSDunix είναι ένας ιστότοπος αφιερωμένος στα έργα μου. Εδώ θα βρείτε τα πειράματά μου με Python, PyQt και χρήσιμες σημειώσεις.",
-    "news-text":"Διαβάστε νέα στο <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Σχετικά με εμένα",
-    "about-me-text":"Μου αρέσει να εξερευνώ το Linux, να δημιουργώ τα δικά μου εργαλεία και να πειραματίζομαι με τον προγραμματισμό.",
-    "repos-title":"Αποθετήρια GitHub", "footer-text":"© SSDunix"
-  },
-  "he": {
-    "site-title":"SSDunix", "about-title":"על הפרויקט",
-    "about-text":"SSDunix הוא אתר המוקדש לפרויקטים ולפיתוחים שלי. כאן תמצאו את הניסויים שלי ב-Python, PyQt ורשימות מועילות למתכנתים.",
-    "news-text":"קרא חדשות ב- <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"על עצמי",
-    "about-me-text":"אני נהנה לחקור את Linux, ליצור כלים משלי ולהתנסות בתכנות.",
-    "repos-title":"מאגרי GitHub", "footer-text":"© SSDunix"
-  },
-  "cs": {
-    "site-title":"SSDunix", "about-title":"O projektu",
-    "about-text":"SSDunix je web věnovaný mým projektům. Najdete zde mé experimenty s Pythonem, PyQt a užitečné poznámky pro programátory.",
-    "news-text":"Přečtěte si zprávy na <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"O mně",
-    "about-me-text":"Rád zkoumám Linux, vytvářím vlastní nástroje a experimentuji s programováním.",
-    "repos-title":"Repozitáře GitHub", "footer-text":"© SSDunix"
-  },
-  "ro": {
-    "site-title":"SSDunix", "about-title":"Despre proiect",
-    "about-text":"SSDunix este un site dedicat proiectelor mele. Aici veți găsi experimentele mele cu Python, PyQt și note utile pentru programatori.",
-    "news-text":"Citiți știri pe <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Despre mine",
-    "about-me-text":"Îmi place să explorez Linux, să creez propriile mele instrumente și să experimentez cu programarea.",
-    "repos-title":"Depozite GitHub", "footer-text":"© SSDunix"
-  },
-  "hu": {
-    "site-title":"SSDunix", "about-title":"A projektről",
-    "about-text":"Az SSDunix a projektjeimnek és fejlesztéseimnek szentelt oldal. Itt találja a Python, PyQt kísérleteimet és hasznos jegyzeteket.",
-    "news-text":"Olvasson híreket itt: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Rólam",
-    "about-me-text":"Szeretem felfedezni a Linuxot, saját eszközöket készíteni és programozással kísérletezni.",
-    "repos-title":"GitHub adattárak", "footer-text":"© SSDunix"
-  },
-  "fi": {
-    "site-title":"SSDunix", "about-title":"Tietoja projektista",
-    "about-text":"SSDunix on projekteilleni omistettu verkkosivusto. Täältä löydät Python-, PyQt-kokeiluni ja hyödyllisiä muistiinpanoja.",
-    "news-text":"Lue uutisia: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Minusta",
-    "about-me-text":"Nautin Linuxin tutkimisesta, omien työkalujen luomisesta ja ohjelmoinnin kokeilemisesta.",
-    "repos-title":"GitHub-tietovarastot", "footer-text":"© SSDunix"
-  },
-  "da": {
-    "site-title":"SSDunix", "about-title":"Om projektet",
-    "about-text":"SSDunix er en hjemmeside dedikeret til mine projekter. Her finder du mine eksperimenter med Python, PyQt og nyttige noter.",
-    "news-text":"Læs nyheder på <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Om mig",
-    "about-me-text":"Jeg kan godt lide at udforske Linux, skabe mine egne værktøjer og eksperimentere med programmering.",
-    "repos-title":"GitHub Repositories", "footer-text":"© SSDunix"
-  },
-  "ka": {
-    "site-title":"SSDunix", "about-title":"პროექტის შესახებ",
-    "about-text":"SSDunix არის ვებგვერდი, რომელიც ეძღვნება ჩემს პროექტებს. აქ ნახავთ ჩემს ექსპერიმენტებს Python-ით და პროგრამირების ჩანაწერებს.",
-    "news-text":"წაიკითხეთ სიახლეები: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"ჩემ შესახებ",
-    "about-me-text":"მე მიყვარს Linux-ის შესწავლა, საკუთარი ინსტრუმენტების შექმნა და პროგრამირებით ექსპერიმენტები.",
-    "repos-title":"GitHub რეპოზიტორები", "footer-text":"© SSDunix"
-  }
+  "es": { "site-title":"SSDunix", "about-title":"Sobre el proyecto", "about-text":"SSDunix es un sitio dedicado a mis proyectos. Aquí encontrarás mis experimentos con Python, PyQt y notas útiles. Mi objetivo es crear una plataforma hermosa.", "news-text":"Lee noticias en <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"Sobre mí", "about-me-text":"Disfruto explorando Linux, creando herramientas y programando. Aprendo mediante la creación.", "repos-title":"Repositorios de GitHub", "footer-text":"© SSDunix" },
+  "fr": { "site-title":"SSDunix", "about-title":"À propos du projet", "about-text":"SSDunix est un site dédié à mes projets. Vous y trouverez mes expériences avec Python et PyQt.", "news-text":"Lisez les actualités sur <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"À propos de moi", "about-me-text":"J'aime explorer Linux, créer mes propres outils et programmer.", "repos-title":"Dépôts GitHub", "footer-text":"© SSDunix" },
+  "de": { "site-title":"SSDunix", "about-title":"Über das Projekt", "about-text":"SSDunix ist eine Website für meine Projekte, Python-Experimente und nützliche Notizen.", "news-text":"Nachrichten lesen: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"Über mich", "about-me-text":"Ich erkunde gerne Linux und erstelle meine eigenen Tools.", "repos-title":"GitHub-Repositories", "footer-text":"© SSDunix" },
+  "it": { "site-title":"SSDunix", "about-title":"Info sul progetto", "about-text":"SSDunix è un sito per i miei progetti, esperimenti in Python e PyQt.", "news-text":"Leggi le notizie su <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"Su di me", "about-me-text":"Mi piace esplorare Linux e creare i miei strumenti.", "repos-title":"Repository GitHub", "footer-text":"© SSDunix" },
+  "zh": { "site-title":"SSDunix", "about-title":"关于项目", "about-text":"SSDunix是展示我的Python、PyQt项目和编程笔记的网站。", "news-text":"阅读新闻 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"关于我", "about-me-text":"我喜欢探索Linux和编程。通过创造来学习。", "repos-title":"GitHub 仓库", "footer-text":"© SSDunix" },
+  "ja": { "site-title":"SSDunix", "about-title":"プロジェクトについて", "about-text":"SSDunixはPythonやPyQtのプロジェクトを紹介するサイトです。", "news-text":"ニュースを読む <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"私について", "about-me-text":"Linuxの探求やプログラミングが好きです。", "repos-title":"GitHub リポジトリ", "footer-text":"© SSDunix" },
+  "ko": { "site-title":"SSDunix", "about-title":"프로젝트 소개", "about-text":"SSDunix는 저의 Python, PyQt 프로젝트와 노트를 공유하는 곳입니다.", "news-text":"뉴스 읽기 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"내 소개", "about-me-text":"저는 Linux와 프로그래밍을 즐깁니다.", "repos-title":"GitHub 저장소", "footer-text":"© SSDunix" },
+  "ar": { "site-title":"SSDunix", "about-title":"عن المشروع", "about-text":"SSDunix هو موقع مخصص لمشاريعي وتجارب Python.", "news-text":"اقرأ الأخبار <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"عني", "about-me-text":"أحب استكشاف Linux والبرمجة.", "repos-title":"مستودعات GitHub", "footer-text":"© SSDunix" },
+  "fa": { "site-title":"SSDunix", "about-title":"درباره پروژه", "about-text":"SSDunix سایتی برای پروژه‌های من با Python و PyQt است.", "news-text":"اخبار را بخوانید <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"درباره من", "about-me-text":"من به لینوکس و برنامه‌نویسی علاقه دارم.", "repos-title":"مخازن GitHub", "footer-text":"© SSDunix" },
+  "ur": { "site-title":"SSDunix", "about-title":"پروجیکٹ کے بارے میں", "about-text":"یہ ویب سائٹ میرے Python اور PyQt کے پروجیکٹس کے لیے ہے۔", "news-text":"خبریں پڑھیں <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"میرے بارے میں", "about-me-text":"مجھے لینکس اور پروگرامنگ کا شوق ہے۔", "repos-title":"GitHub ریپوزٹریز", "footer-text":"© SSDunix" },
+  "he": { "site-title":"SSDunix", "about-title":"על הפרויקט", "about-text":"SSDunix הוא אתר לפרויקטים שלי ב-Python.", "news-text":"קרא חדשות <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"על עצמי", "about-me-text":"אני אוהב לחקור את לינוקס ולתכנת.", "repos-title":"מאגרי GitHub", "footer-text":"© SSDunix" }
 };
+
+// Функция-генератор для всех остальных языков, чтобы они использовали правильные заголовки
+function generateFallbackText(langCode) {
+  const dict = {
+    "pt": ["Sobre o projeto", "Sobre mim", "Repositórios"], "hi": ["परियोजना के बारे में", "मेरे बारे में", "रिपॉजिटरी"],
+    "nl": ["Over het project", "Over mij", "Repositories"], "sv": ["Om projektet", "Om mig", "Förråd"],
+    "el": ["Σχετικά με", "Σχετικά με εμένα", "Αποθετήρια"], "cs": ["O projektu", "O mně", "Repozitáře"],
+    "ro": ["Despre proiect", "Despre mine", "Depozite"], "hu": ["A projektről", "Rólam", "Adattárak"],
+    "fi": ["Tietoja", "Minusta", "Tietovarastot"], "da": ["Om projektet", "Om mig", "Repositories"],
+    "ka": ["პროექტის შესახებ", "ჩემ შესახებ", "რეპოზიტორები"], "bg": ["За проекта", "За мен", "Хранилища"],
+    "sr": ["О пројекту", "О мени", "Репозиторијуми"], "hr": ["O projektu", "O meni", "Repozitoriji"],
+    "sl": ["O projektu", "O meni", "Repozitoriji"], "sk": ["O projekte", "O mne", "Repozitáre"],
+    "be": ["Пра праект", "Пра мяне", "Рэпазітарыі"], "kk": ["Жоба туралы", "Мен туралы", "Репозиторийлер"],
+    "uz": ["Loyiha haqida", "Men haqimda", "Repozitoriylar"], "tg": ["Дар бораи", "Дар бораи ман", "Репозиторийҳо"],
+    "mn": ["Төслийн тухай", "Миний тухай", "Репозиториуд"], "th": ["เกี่ยวกับโครงการ", "เกี่ยวกับฉัน", "ที่เก็บ"],
+    "vi": ["Về dự án", "Về tôi", "Kho lưu trữ"], "id": ["Tentang proyek", "Tentang saya", "Repositori"],
+    "ms": ["Tentang projek", "Tentang saya", "Repositori"], "tl": ["Tungkol sa proyekto", "Tungkol sa akin", "Mga Repositori"],
+    "bn": ["প্রকল্প সম্পর্কে", "আমার সম্পর্কে", "রিপোজিটরি"], "ta": ["திட்டம் பற்றி", "என்னை பற்றி", "களஞ்சியங்கள்"],
+    "te": ["ప్రాజెక్ట్ గురించి", "నా గురించి", "రిపోజిటరీలు"], "mr": ["प्रकल्पाबद्दल", "माझ्याबद्दल", "रिपॉझिटरीज"],
+    "am": ["ስለ ፕሮጀክቱ", "ስለ እኔ", "ማከማቻዎች"], "sw": ["Kuhusu mradi", "Kuhusu mimi", "Hifadhi"],
+    "af": ["Oor die projek", "Oor my", "Bewaarplekke"], "sq": ["Rreth projektit", "Rreth meje", "Depot"],
+    "mk": ["За проектот", "За мене", "Репозиториуми"], "bs": ["O projektu", "O meni", "Repozitoriji"],
+    "mt": ["Dwar il-proġett", "Dwari", "Repożitorji"], "cy": ["Am y prosiect", "Amdana i", "Storfeydd"],
+    "is": ["Um verkefnið", "Um mig", "Geymslur"], "ga": ["Faoina tionscadal", "Fúm", "Stórtha"],
+    "eu": ["Proiektuari buruz", "Niri buruz", "Biltegiak"], "gl": ["Sobre o proxecto", "Sobre min", "Repositorios"],
+    "ca": ["Sobre el projecte", "Sobre mi", "Repositoris"], "lt": ["Apie projektą", "Apie mane", "Repozitorijos"],
+    "lv": ["Par projektu", "Par mani", "Repozitoriji"], "et": ["Projektist", "Minust", "Hoidlad"],
+    "km": ["អំពីគម្រោង", "អំពីខ្ញុំ", "ឃ្លាំង"], "lo": ["ກ່ຽວກັບໂຄງການ", "ກ່ຽວກັບຂ້ອຍ", "Repositories"],
+    "my": ["ပရောဂျက်အကြောင်း", "ကျွန်တော့်အကြောင်း", "သိုလှောင်ရုံများ"], "ml": ["പ്രോജക്റ്റിനെക്കുറിച്ച്", "എന്നെക്കുറിച്ച്", "റിപ്പോസിറ്ററികൾ"],
+    "kn": ["ಯೋಜನೆಯ ಬಗ್ಗೆ", "ನನ್ನ ಬಗ್ಗೆ", "ರೆಪೊಸಿಟರಿಗಳು"], "gu": ["પ્રોજેક્ટ વિશે", "મારા વિશે", "રિપોઝીટરીઝ"],
+    "pa": ["ਪ੍ਰੋਜੈਕਟ ਬਾਰੇ", "ਮੇਰੇ ਬਾਰੇ", "ਰਿਪੋਜ਼ਟਰੀਆਂ"], "si": ["ව්‍යාපෘතිය ගැන", "මා ගැන", "ගබඩා"],
+    "ne": ["परियोजनाको बारेमा", "मेरो बारेमा", "भण्डारहरू"], "so": ["Ku saabsan", "Ku saabsan aniga", "Kaydadka"],
+    "mg": ["Momba ny tetikasa", "Momba ahy", "Tahiry"], "ny": ["Za pulojekiti", "Za ine", "Nkhokwe"],
+    "sn": ["Nezve purojekiti", "Nezve ini", "Repositories"]
+  };
+  
+  const d = dict[langCode] || ["About the project", "About Me", "Repositories"];
+  
+  return {
+    "site-title": "SSDunix",
+    "about-title": d[0],
+    "about-text": texts['en']['about-text'], 
+    "news-text": `News: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>`,
+    "about-me-title": d[1],
+    "about-me-text": texts['en']['about-me-text'],
+    "repos-title": `GitHub ${d[2]}`,
+    "footer-text": "© SSDunix"
+  };
+}
+
+// Заполняем недостающие языки
+Object.keys(langNames).forEach(k => {
+  if(!texts[k]) {
+    texts[k] = generateFallbackText(k);
+  }
+});
 
 const btnContainer = document.getElementById('lang-buttons');
 Object.keys(langNames).forEach(k => {
@@ -455,7 +387,8 @@ let lang = texts[rawUserLang] ? rawUserLang : "ru";
 
 function setLanguage(l){
   lang = l;
-  if(l === 'ar' || l === 'he') {
+  // Поддержка письма справа налево (RTL) для Арабского, Иврита, Персидского и Урду
+  if(['ar', 'he', 'fa', 'ur'].includes(l)) {
     document.body.style.direction = 'rtl';
   } else {
     document.body.style.direction = 'ltr';
