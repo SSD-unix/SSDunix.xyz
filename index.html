@@ -5,53 +5,209 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SSDunix</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 body {
-  margin:0;
+  margin: 0;
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
+  /* Анимированный градиентный фон */
+  background: linear-gradient(-45deg, #020617, #0f172a, #1e1b4b, #172554);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
   color: #e6eef8;
   min-height: 100vh;
 }
 
-.container { max-width: 1000px; margin:0 auto; padding:40px 20px; }
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-header { display:flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 40px; }
-header h1 { font-size:48px; font-weight:700; margin:0 0 10px 0; color:#7dd3fc; text-shadow:1px 1px 6px rgba(0,0,0,0.6); }
-header nav { font-size:14px; margin:4px 0; }
-header nav a { color:#38bdf8; text-decoration:none; transition:0.3s; }
-header nav a:hover { color:#0ea5e9; }
+.container { 
+  max-width: 900px; 
+  margin: 0 auto; 
+  padding: 50px 20px; 
+}
 
-.lang-selector { margin-top:15px; display:flex; gap:10px; flex-wrap: wrap; justify-content:center; }
-.lang-selector button { background:#1e293b; border:none; padding:6px 14px; border-radius:8px; color:#7dd3fc; cursor:pointer; font-weight:600; transition:0.3s; }
-.lang-selector button:hover { background:#334155; }
+/* Анимация появления */
+.fade-in {
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.3s; }
+.delay-3 { animation-delay: 0.5s; }
 
-.card { background:#1e293b; padding:25px; border-radius:16px; margin-top:20px; box-shadow:0 10px 25px rgba(0,0,0,0.5); transition: transform 0.3s, box-shadow 0.3s; }
-.card:hover { transform: translateY(-5px); box-shadow:0 20px 30px rgba(0,0,0,0.6); }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-h2 { font-size:26px; margin-top:0; color:#7dd3fc; }
+header { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  text-align: center; 
+  margin-bottom: 50px; 
+}
 
-a { color:#38bdf8; transition:0.3s; }
-a:hover { color:#0ea5e9; }
+header h1 { 
+  font-size: 56px; 
+  font-weight: 700; 
+  margin: 0 0 10px 0; 
+  color: #fff; 
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.5); 
+  letter-spacing: -1px;
+}
 
-.repo { padding:14px; border-radius:12px; border-left:4px solid #38bdf8; margin:10px 0; background:#0f172a; transition:0.3s; }
-.repo:hover { background:#1e293b; }
+header nav { font-size: 16px; margin: 8px 0; color: #94a3b8; }
+header nav a { 
+  color: #38bdf8; 
+  text-decoration: none; 
+  font-weight: 500;
+  transition: 0.3s; 
+}
+header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
 
-.muted { color:#9fb0c8; font-size:13px; }
+.lang-selector { 
+  margin-top: 25px; 
+  display: flex; 
+  gap: 12px; 
+  flex-wrap: wrap; 
+  justify-content: center; 
+}
 
-footer { margin-top:50px; font-size:14px; color:#9fb0c8; text-align:center; }
+.lang-selector button { 
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 18px; 
+  border-radius: 12px; 
+  color: #e2e8f0; 
+  cursor: pointer; 
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500; 
+  transition: all 0.3s ease; 
+  backdrop-filter: blur(5px);
+}
 
-@media (max-width:600px){
-  header h1 { font-size:36px; }
-  h2 { font-size:22px; }
-  .card { padding:18px; }
+.lang-selector button:hover { 
+  background: #38bdf8; 
+  color: #0f172a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+}
+
+/* Glassmorphism Карточки */
+.card { 
+  background: rgba(15, 23, 42, 0.5); 
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 35px; 
+  border-radius: 20px; 
+  margin-top: 25px; 
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+  transition: all 0.4s ease; 
+}
+
+.card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(56, 189, 248, 0.1); 
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+h2 { 
+  font-size: 28px; 
+  margin-top: 0; 
+  color: #f1f5f9; 
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h2::before {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: #38bdf8;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #38bdf8;
+}
+
+p {
+  line-height: 1.7;
+  color: #cbd5e1;
+  font-size: 16px;
+}
+
+a { color: #38bdf8; transition: 0.3s; text-decoration: none;}
+a:hover { color: #bae6fd; text-decoration: underline; }
+
+/* Стили репозиториев */
+.repo { 
+  padding: 20px; 
+  border-radius: 16px; 
+  border-left: 4px solid #0ea5e9; 
+  margin: 15px 0; 
+  background: rgba(30, 41, 59, 0.4); 
+  transition: all 0.3s ease;
+  border-right: 1px solid transparent;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  opacity: 0; /* Для JS анимации */
+}
+
+.repo:hover { 
+  background: rgba(30, 41, 59, 0.8); 
+  transform: translateX(5px);
+  border-color: #38bdf8;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.repo strong a {
+  font-size: 18px;
+  color: #fff;
+}
+
+.repo div {
+  margin-top: 8px;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.muted { 
+  color: #64748b !important; 
+  font-size: 13px; 
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+footer { 
+  margin-top: 60px; 
+  font-size: 14px; 
+  color: #64748b; 
+  text-align: center; 
+  padding-bottom: 20px;
+}
+
+@media (max-width: 600px){
+  .container { padding: 30px 15px; }
+  header h1 { font-size: 42px; }
+  h2 { font-size: 24px; }
+  .card { padding: 25px; }
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <header>
+  <header class="fade-in">
     <h1 id="site-title">SSDunix</h1>
     <nav id="github-link">GitHub: <a href="https://github.com/SSD-unix" target="_blank">@SSD-unix</a></nav>
     <div class="lang-selector">
@@ -63,23 +219,23 @@ footer { margin-top:50px; font-size:14px; color:#9fb0c8; text-align:center; }
     </div>
   </header>
 
-  <section class="card" id="about">
+  <section class="card fade-in delay-1" id="about">
     <h2 id="about-title">О проекте</h2>
     <p id="about-text">SSDunix — это сайт, посвящённый моим проектам и разработкам. Здесь вы найдете мои эксперименты с Python, PyQt, созданием инструментов и сервисов, а также полезные заметки для программистов и энтузиастов IT. Моя цель — создать платформу, где каждый проект может быть представлен красиво и удобно.</p>
     <p id="news-text">Также читайте новости на <a href="https://news.ssdunix.xyz" target="_blank">news.ssdunix.xyz</a></p>
   </section>
 
-  <section class="card" id="about-me">
+  <section class="card fade-in delay-2" id="about-me">
     <h2 id="about-me-title">Обо мне</h2>
     <p id="about-me-text">Мне нравится изучать Linux, создавать собственные инструменты и экспериментировать с программированием. Я увлекаюсь PyQt, веб-разработкой и поиском нестандартных решений. SSDunix — это место, где я выкладываю свои проекты и делюсь опытом с другими. Моя философия — учиться через создание и эксперимент.</p>
   </section>
 
-  <section class="card" id="github">
+  <section class="card fade-in delay-3" id="github">
     <h2 id="repos-title">GitHub репозитории</h2>
-    <div id="repos">Загрузка...</div>
+    <div id="repos" style="color: #94a3b8; font-style: italic;">Загрузка...</div>
   </section>
 
-  <footer id="footer-text">© SSDunix</footer>
+  <footer id="footer-text" class="fade-in delay-3">© SSDunix</footer>
 </div>
 
 <script>
@@ -164,15 +320,23 @@ setLanguage(lang);
     const repos = await res.json();
     container.innerHTML = '';
     repos.sort((a,b)=> new Date(b.updated_at)-new Date(a.updated_at));
-    repos.forEach(r=>{
+    
+    repos.forEach((r, index) => {
       const el = document.createElement('div'); 
-      el.className='repo';
+      el.className = 'repo';
+      // Добавляем каскадную анимацию появления элементов
+      el.style.animation = `fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) ${index * 0.15}s forwards`;
+      
+      const langText = r.language ? r.language : 'Без языка';
+      const dateText = new Date(r.updated_at).toLocaleDateString();
+      
       el.innerHTML = `<strong><a href="${r.html_url}" target="_blank">${r.name}</a></strong>
-                      <div class="muted">${r.language || ''} — ${new Date(r.updated_at).toLocaleString()}</div>
-                      <div>${r.description || ''}</div>`;
+                      <div class="muted">${langText} • ${dateText}</div>
+                      <div>${r.description || 'Описание отсутствует'}</div>`;
       container.appendChild(el);
     });
-    if(repos.length===0) container.textContent='Репозиториев не найдено.';
+    
+    if(repos.length === 0) container.textContent = 'Репозиториев не найдено.';
   }catch(e){
     container.textContent = 'Не удалось загрузить репозитории.';
   }
