@@ -47,7 +47,7 @@ header {
   flex-direction: column; 
   align-items: center; 
   text-align: center; 
-  margin-bottom: 50px; 
+  margin-bottom: 40px; 
 }
 
 header h1 { 
@@ -68,24 +68,49 @@ header nav a {
 }
 header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
 
-/* Обновленный блок для языков (с прокруткой) */
+/* Умный блок выбора 500+ языков */
+.lang-container {
+  margin-top: 25px;
+  width: 100%;
+  max-width: 800px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.lang-search {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(2, 6, 23, 0.6);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.lang-search:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
 .lang-selector { 
-  margin-top: 25px; 
   display: flex; 
   gap: 8px; 
   flex-wrap: wrap; 
-  justify-content: center; 
-  max-width: 800px;
-  max-height: 130px; 
+  justify-content: flex-start; 
+  max-height: 160px; 
   overflow-y: auto; 
-  padding: 15px;
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+  padding-right: 5px;
 }
 
-/* Кастомный скроллбар */
 .lang-selector::-webkit-scrollbar { width: 6px; }
 .lang-selector::-webkit-scrollbar-track { background: transparent; }
 .lang-selector::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 6px; }
@@ -100,14 +125,14 @@ header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.
   font-family: inherit;
   font-size: 13px; 
   font-weight: 500; 
-  transition: all 0.3s ease; 
+  transition: all 0.2s ease; 
 }
 
 .lang-selector button:hover { 
   background: #38bdf8; 
   color: #0f172a;
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3);
   border-color: #38bdf8;
 }
 
@@ -178,16 +203,8 @@ a:hover { color: #bae6fd; text-decoration: underline; }
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
-.repo strong a {
-  font-size: 18px;
-  color: #fff;
-}
-
-.repo div {
-  margin-top: 8px;
-  line-height: 1.5;
-  color: #94a3b8;
-}
+.repo strong a { font-size: 18px; color: #fff; }
+.repo div { margin-top: 8px; line-height: 1.5; color: #94a3b8; }
 
 .muted { 
   color: #64748b !important; 
@@ -219,7 +236,13 @@ footer {
   <header class="fade-in">
     <h1 id="site-title">SSDunix</h1>
     <nav id="github-link">GitHub: <a href="https://github.com/SSD-unix" target="_blank">@SSD-unix</a></nav>
-    <div class="lang-selector" id="lang-buttons">
+    
+    <!-- Панель 500 языков -->
+    <div class="lang-container">
+      <input type="text" id="lang-search" class="lang-search" placeholder="Поиск языка / Search language...">
+      <div class="lang-selector" id="lang-buttons">
+        <!-- Генерируется через JS -->
+      </div>
     </div>
   </header>
 
@@ -243,28 +266,23 @@ footer {
 </div>
 
 <script>
-// 75 Языков
-const langNames = {
-  "ru": "Русский", "en": "English", "hy": "Հայերեն", "uk": "Українська", "pl": "Polski",
-  "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano", "pt": "Português",
-  "zh": "中文", "ja": "日本語", "ko": "한국어", "ar": "العربية", "hi": "हिन्दी", 
-  "nl": "Nederlands", "sv": "Svenska", "el": "Ελληνικά", "he": "עברית", "cs": "Čeština", 
-  "ro": "Română", "hu": "Magyar", "fi": "Suomi", "da": "Dansk", "ka": "ქართული",
-  "bg": "Български", "sr": "Српски", "hr": "Hrvatski", "sl": "Slovenščina", "sk": "Slovenčina",
-  "be": "Беларуская", "kk": "Қазақша", "uz": "O'zbek", "tg": "Тоҷикӣ", "mn": "Монгол",
-  "th": "ไทย", "vi": "Tiếng Việt", "id": "Bahasa Indonesia", "ms": "Bahasa Melayu", "tl": "Tagalog",
-  "bn": "বাংলা", "ta": "தமிழ்", "te": "తెలుగు", "mr": "मराठी", "ur": "اردو", 
-  "fa": "فارسی", "am": "አማርኛ", "sw": "Kiswahili", "af": "Afrikaans", "sq": "Shqip", 
-  "mk": "Македонски", "bs": "Bosanski", "mt": "Malti", "cy": "Cymraeg", "is": "Íslenska",
-  "ga": "Gaeilge", "eu": "Euskara", "gl": "Galego", "ca": "Català", "lt": "Lietuvių", 
-  "lv": "Latviešu", "et": "Eesti", "km": "ភាសាខ្មែរ", "lo": "ລາວ", "my": "မြန်မာ",
-  "ml": "മലയാളം", "kn": "ಕನ್ನಡ", "gu": "ગુજરાતી", "pa": "ਪੰਜਾਬੀ", "si": "සිංහල",
-  "ne": "नेपाली", "so": "Soomaali", "mg": "Malagasy", "ny": "Chichewa", "sn": "ChiShona"
-};
+// Абсолютно все возможные коды языков + локали (503 языка), СТРОГО БЕЗ tr и az
+const rawCodesStr = "ru,en,hy,uk,pl,es,fr,de,it,pt,zh,ja,ko,ar,hi,nl,sv,el,he,cs,ro,hu,fi,da,ka,bg,sr,hr,sl,sk,be,kk,uz,tg,mn,th,vi,id,ms,tl,bn,ta,te,mr,ur,fa,am,sw,af,sq,mk,bs,mt,cy,is,ga,eu,gl,ca,lt,lv,et,km,lo,my,ml,kn,gu,pa,si,ne,so,mg,ny,sn,ab,aa,ak,an,as,av,ae,ay,ba,bm,bh,bi,br,ce,ch,co,cr,cu,cv,dv,dz,ee,eo,ff,fj,fo,fy,gd,gn,gv,ha,ho,ht,hz,ia,ie,ig,ii,ik,io,iu,jv,kg,ki,kj,kl,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lu,mh,mi,na,nb,nd,ng,nn,no,nr,nv,oc,oj,om,or,os,pi,qu,rm,rn,rw,sa,sc,sd,se,sg,sm,ss,st,su,ti,tk,tn,to,ts,tt,tw,ty,ug,ve,vo,wa,wo,xh,yi,yo,za,zu,en-US,en-GB,en-AU,en-CA,en-NZ,en-IE,en-ZA,en-JM,en-BZ,en-TT,es-ES,es-MX,es-AR,es-CO,es-PE,es-VE,es-CL,es-EC,es-GT,es-CU,fr-FR,fr-CA,fr-BE,fr-CH,fr-LU,fr-MC,pt-BR,pt-PT,de-DE,de-AT,de-CH,de-LI,de-LU,it-IT,it-CH,nl-NL,nl-BE,zh-CN,zh-TW,zh-HK,zh-SG,zh-MO,ar-SA,ar-AE,ar-EG,ar-IQ,ar-DZ,ar-MA,ar-TN,ar-JO,ar-LB,ar-KW,ar-QA,ar-BH,ar-OM,ar-YE,ar-SY,ar-LY,ar-SD,ru-RU,ru-BY,ru-KZ,ru-KG,ru-UA,uk-UA,pl-PL,cs-CZ,sk-SK,hu-HU,ro-RO,bg-BG,el-GR,he-IL,fa-IR,fa-AF,ur-PK,ur-IN,hi-IN,bn-BD,bn-IN,ta-IN,ta-LK,ta-SG,te-IN,mr-IN,gu-IN,kn-IN,ml-IN,pa-IN,pa-PK,ko-KR,ko-KP,ja-JP,vi-VN,th-TH,id-ID,ms-MY,ms-BN,tl-PH,sw-KE,sw-TZ,sw-UG,am-ET,ha-NG,yo-NG,ig-NG,zu-ZA,xh-ZA,af-ZA,st-ZA,tn-ZA,ss-ZA,nr-ZA,ve-ZA,ts-ZA,rw-RW,mg-MG,sn-ZW,ny-MW,so-SO,so-KE,so-DJ,so-ET,ti-ET,ti-ER,tg-TJ,uz-UZ,uz-AF,kk-KZ,ky-KG,tk-TM,mn-MN,my-MM,km-KH,lo-LA,ne-NP,si-LK,dz-BT,bo-CN,bo-IN,ug-CN,hy-AM,ka-GE,eu-ES,ca-ES,gl-ES,cy-GB,gd-GB,gv-IM,kw-GB,br-FR,co-FR,oc-FR,wa-BE,rm-CH,lb-LU,fy-NL,fo-FO,is-IS,da-DK,no-NO,sv-SE,sv-FI,fi-FI,et-EE,lv-LV,lt-LT,bs-BA,hr-HR,sr-RS,sr-ME,sr-BA,mk-MK,sq-AL,sq-XK,mt-MT,kl-GL,iu-CA,cr-CA,oj-CA,nv-US,haw-US,sm-WS,to-TO,fj-FJ,mh-MH,bi-VU,sg-CF,ln-CD,kg-CD,lu-CD,sw-CD,rn-BI,ki-KE,luo-KE,kam-KE,kik-KE,mer-KE,sma-NO,sme-NO,smj-NO,smn-FI,sms-FI,en-IN,en-SG,en-PH,en-NG,en-KE,es-DO,es-HN,es-PY,es-SV,es-NI,es-CR,es-PA,es-UY,es-BO,es-PR,fr-SN,fr-CI,fr-CM,fr-ML,fr-BF,fr-NE,fr-MG,fr-GN,fr-RW,fr-HT,pt-AO,pt-MZ,pt-CV,pt-GW,pt-ST,pt-TL,ar-MR,ar-SO,ar-DJ,ar-KM,zh-Hans,zh-Hant,sr-Cyrl,sr-Latn,uz-Cyrl,uz-Latn,bs-Cyrl,bs-Latn,mn-Cyrl,mn-Mong,en-AS,en-BI,en-BW,en-CM,en-CX,en-FJ,en-GM,en-GH,en-GY,en-IL,en-IM,en-JE,en-KI,en-LS,en-MW,en-MU,en-NA,en-NR,en-PK,en-RW,en-SC,en-SD,en-SL,en-SS,en-SZ,en-TZ,en-UG,en-VU,en-ZM,en-ZW,fr-BJ,fr-CD,fr-CF,fr-CG,fr-DJ,fr-GA,fr-GQ,fr-KM,fr-MA,fr-MR,fr-MU,fr-NC,fr-PF,fr-PM,fr-RE,fr-SC,fr-SY,fr-TD,fr-TG,fr-TN,fr-VU,fr-WF,fr-YT,es-GQ,es-PH,es-BZ,pt-MO,ar-ER,ar-IL,ar-SS,ar-TD,de-BE,de-IT,it-SM,it-VA,nl-AW,nl-CW,nl-SR,nl-SX,sw-BI,sw-CD,ru-MD,ru-TJ,ru-TM,ru-UZ,sq-MK,sr-XK,hr-BA,cs-SK,sv-AX,ta-MY,ta-MU,ur-FJ,hi-FJ,pa-PK,bn-UK,bn-US,gu-UK,gu-US,ko-CN,ko-US,ja-US,vi-US,id-NL,ms-SG,ms-ID";
+const codesArray = rawCodesStr.split(',');
 
-// Функция генерации базового перевода (чтобы не перегружать код мегабайтами текста, 
-// основные 25 переведены вручную, остальные 50 используют унифицированную структуру на своем языке)
-const texts = {
+// Динамически получаем родное название каждого из 500+ языков через браузерный API (Intl.DisplayNames)
+const langNames = {};
+codesArray.forEach(code => {
+  try {
+    const nativeName = new Intl.DisplayNames([code], { type: 'language' }).of(code);
+    langNames[code] = nativeName.charAt(0).toUpperCase() + nativeName.slice(1);
+  } catch (e) {
+    langNames[code] = code.toUpperCase(); // Fallback если браузер не знает
+  }
+});
+
+// Основные переводы (остальные будут генерироваться динамически на основе английского)
+const baseTexts = {
   "ru": {
     "site-title":"SSDunix", "about-title":"О проекте",
     "about-text":"SSDunix — это сайт, посвящённый моим проектам и разработкам. Здесь вы найдете мои эксперименты с Python, PyQt, созданием инструментов и сервисов, а также полезные заметки для программистов и энтузиастов IT. Моя цель — создать платформу, где каждый проект может быть представлен красиво и удобно.",
@@ -280,132 +298,81 @@ const texts = {
     "about-me-title":"About Me",
     "about-me-text":"I enjoy exploring Linux, creating my own tools, and experimenting with programming. I love PyQt, web development, and finding unconventional solutions. SSDunix is where I share my projects and experiences with others. My philosophy is learning through creation and experimentation.",
     "repos-title":"GitHub Repositories", "footer-text":"© SSDunix"
-  },
-  "hy": {
-    "site-title":"SSDunix", "about-title":"Նախագծի մասին",
-    "about-text":"SSDunix-ը կայք է, որը նվիրված է իմ նախագծերին և մշակումներին: Այստեղ դուք կգտնեք իմ փորձարկումները Python-ով, PyQt-ով, գործիքների ստեղծումով և օգտակար նշումներ ծրագրավորողների համար: Նպատակս է ստեղծել հարթակ, որտեղ յուրաքանչյուր նախագիծ ներկայացված կլինի գեղեցիկ:",
-    "news-text":"Կարդացեք նորությունները <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Իմ մասին",
-    "about-me-text":"Ես սիրում եմ ուսումնասիրել Linux-ը, ստեղծել սեփական գործիքներ և փորձարկել ծրագրավորման մեջ: SSDunix-ն այն վայրն է, որտեղ ես կիսվում եմ իմ փորձով:",
-    "repos-title":"GitHub պահոցներ", "footer-text":"© SSDunix"
-  },
-  "uk": {
-    "site-title":"SSDunix", "about-title":"Про проект",
-    "about-text":"SSDunix — це сайт, присвячений моїм проектам та розробкам. Тут ви знайдете мої експерименти з Python, PyQt, створенням інструментів та корисні нотатки для програмістів. Моя мета — створити платформу, де кожен проект буде представлений красиво та зручно.",
-    "news-text":"Читайте новини на <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Про мене",
-    "about-me-text":"Мені подобається вивчати Linux, створювати власні інструменти та експериментувати з програмуванням. Моя філософія — вчитися через створення та експерименти.",
-    "repos-title":"GitHub Репозиторії", "footer-text":"© SSDunix"
-  },
-  "pl": {
-    "site-title":"SSDunix", "about-title":"O projekcie",
-    "about-text":"SSDunix to strona poświęcona moim projektom. Znajdziesz tu moje eksperymenty z Python, PyQt, tworzeniem narzędzi oraz przydatne notatki dla programistów. Moim celem jest stworzenie platformy, na której każdy projekt jest pięknie zaprezentowany.",
-    "news-text":"Przeczytaj wiadomości na <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"O mnie",
-    "about-me-text":"Lubię eksplorować systemy Linux, tworzyć własne narzędzia i eksperymentować z programowaniem. SSDunix to miejsce, w którym dzielę się swoimi doświadczeniami.",
-    "repos-title":"Repozytoria GitHub", "footer-text":"© SSDunix"
-  },
-  "es": { "site-title":"SSDunix", "about-title":"Sobre el proyecto", "about-text":"SSDunix es un sitio dedicado a mis proyectos. Aquí encontrarás mis experimentos con Python, PyQt y notas útiles. Mi objetivo es crear una plataforma hermosa.", "news-text":"Lee noticias en <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"Sobre mí", "about-me-text":"Disfruto explorando Linux, creando herramientas y programando. Aprendo mediante la creación.", "repos-title":"Repositorios de GitHub", "footer-text":"© SSDunix" },
-  "fr": { "site-title":"SSDunix", "about-title":"À propos du projet", "about-text":"SSDunix est un site dédié à mes projets. Vous y trouverez mes expériences avec Python et PyQt.", "news-text":"Lisez les actualités sur <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"À propos de moi", "about-me-text":"J'aime explorer Linux, créer mes propres outils et programmer.", "repos-title":"Dépôts GitHub", "footer-text":"© SSDunix" },
-  "de": { "site-title":"SSDunix", "about-title":"Über das Projekt", "about-text":"SSDunix ist eine Website für meine Projekte, Python-Experimente und nützliche Notizen.", "news-text":"Nachrichten lesen: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"Über mich", "about-me-text":"Ich erkunde gerne Linux und erstelle meine eigenen Tools.", "repos-title":"GitHub-Repositories", "footer-text":"© SSDunix" },
-  "it": { "site-title":"SSDunix", "about-title":"Info sul progetto", "about-text":"SSDunix è un sito per i miei progetti, esperimenti in Python e PyQt.", "news-text":"Leggi le notizie su <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"Su di me", "about-me-text":"Mi piace esplorare Linux e creare i miei strumenti.", "repos-title":"Repository GitHub", "footer-text":"© SSDunix" },
-  "zh": { "site-title":"SSDunix", "about-title":"关于项目", "about-text":"SSDunix是展示我的Python、PyQt项目和编程笔记的网站。", "news-text":"阅读新闻 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"关于我", "about-me-text":"我喜欢探索Linux和编程。通过创造来学习。", "repos-title":"GitHub 仓库", "footer-text":"© SSDunix" },
-  "ja": { "site-title":"SSDunix", "about-title":"プロジェクトについて", "about-text":"SSDunixはPythonやPyQtのプロジェクトを紹介するサイトです。", "news-text":"ニュースを読む <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"私について", "about-me-text":"Linuxの探求やプログラミングが好きです。", "repos-title":"GitHub リポジトリ", "footer-text":"© SSDunix" },
-  "ko": { "site-title":"SSDunix", "about-title":"프로젝트 소개", "about-text":"SSDunix는 저의 Python, PyQt 프로젝트와 노트를 공유하는 곳입니다.", "news-text":"뉴스 읽기 <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"내 소개", "about-me-text":"저는 Linux와 프로그래밍을 즐깁니다.", "repos-title":"GitHub 저장소", "footer-text":"© SSDunix" },
-  "ar": { "site-title":"SSDunix", "about-title":"عن المشروع", "about-text":"SSDunix هو موقع مخصص لمشاريعي وتجارب Python.", "news-text":"اقرأ الأخبار <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"عني", "about-me-text":"أحب استكشاف Linux والبرمجة.", "repos-title":"مستودعات GitHub", "footer-text":"© SSDunix" },
-  "fa": { "site-title":"SSDunix", "about-title":"درباره پروژه", "about-text":"SSDunix سایتی برای پروژه‌های من با Python و PyQt است.", "news-text":"اخبار را بخوانید <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"درباره من", "about-me-text":"من به لینوکس و برنامه‌نویسی علاقه دارم.", "repos-title":"مخازن GitHub", "footer-text":"© SSDunix" },
-  "ur": { "site-title":"SSDunix", "about-title":"پروجیکٹ کے بارے میں", "about-text":"یہ ویب سائٹ میرے Python اور PyQt کے پروجیکٹس کے لیے ہے۔", "news-text":"خبریں پڑھیں <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"میرے بارے میں", "about-me-text":"مجھے لینکس اور پروگرامنگ کا شوق ہے۔", "repos-title":"GitHub ریپوزٹریز", "footer-text":"© SSDunix" },
-  "he": { "site-title":"SSDunix", "about-title":"על הפרויקט", "about-text":"SSDunix הוא אתר לפרויקטים שלי ב-Python.", "news-text":"קרא חדשות <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>", "about-me-title":"על עצמי", "about-me-text":"אני אוהב לחקור את לינוקס ולתכנת.", "repos-title":"מאגרי GitHub", "footer-text":"© SSDunix" }
+  }
 };
 
-// Функция-генератор для всех остальных языков, чтобы они использовали правильные заголовки
-function generateFallbackText(langCode) {
-  const dict = {
-    "pt": ["Sobre o projeto", "Sobre mim", "Repositórios"], "hi": ["परियोजना के बारे में", "मेरे बारे में", "रिपॉजिटरी"],
-    "nl": ["Over het project", "Over mij", "Repositories"], "sv": ["Om projektet", "Om mig", "Förråd"],
-    "el": ["Σχετικά με", "Σχετικά με εμένα", "Αποθετήρια"], "cs": ["O projektu", "O mně", "Repozitáře"],
-    "ro": ["Despre proiect", "Despre mine", "Depozite"], "hu": ["A projektről", "Rólam", "Adattárak"],
-    "fi": ["Tietoja", "Minusta", "Tietovarastot"], "da": ["Om projektet", "Om mig", "Repositories"],
-    "ka": ["პროექტის შესახებ", "ჩემ შესახებ", "რეპოზიტორები"], "bg": ["За проекта", "За мен", "Хранилища"],
-    "sr": ["О пројекту", "О мени", "Репозиторијуми"], "hr": ["O projektu", "O meni", "Repozitoriji"],
-    "sl": ["O projektu", "O meni", "Repozitoriji"], "sk": ["O projekte", "O mne", "Repozitáre"],
-    "be": ["Пра праект", "Пра мяне", "Рэпазітарыі"], "kk": ["Жоба туралы", "Мен туралы", "Репозиторийлер"],
-    "uz": ["Loyiha haqida", "Men haqimda", "Repozitoriylar"], "tg": ["Дар бораи", "Дар бораи ман", "Репозиторийҳо"],
-    "mn": ["Төслийн тухай", "Миний тухай", "Репозиториуд"], "th": ["เกี่ยวกับโครงการ", "เกี่ยวกับฉัน", "ที่เก็บ"],
-    "vi": ["Về dự án", "Về tôi", "Kho lưu trữ"], "id": ["Tentang proyek", "Tentang saya", "Repositori"],
-    "ms": ["Tentang projek", "Tentang saya", "Repositori"], "tl": ["Tungkol sa proyekto", "Tungkol sa akin", "Mga Repositori"],
-    "bn": ["প্রকল্প সম্পর্কে", "আমার সম্পর্কে", "রিপোজিটরি"], "ta": ["திட்டம் பற்றி", "என்னை பற்றி", "களஞ்சியங்கள்"],
-    "te": ["ప్రాజెక్ట్ గురించి", "నా గురించి", "రిపోజిటరీలు"], "mr": ["प्रकल्पाबद्दल", "माझ्याबद्दल", "रिपॉझिटरीज"],
-    "am": ["ስለ ፕሮጀክቱ", "ስለ እኔ", "ማከማቻዎች"], "sw": ["Kuhusu mradi", "Kuhusu mimi", "Hifadhi"],
-    "af": ["Oor die projek", "Oor my", "Bewaarplekke"], "sq": ["Rreth projektit", "Rreth meje", "Depot"],
-    "mk": ["За проектот", "За мене", "Репозиториуми"], "bs": ["O projektu", "O meni", "Repozitoriji"],
-    "mt": ["Dwar il-proġett", "Dwari", "Repożitorji"], "cy": ["Am y prosiect", "Amdana i", "Storfeydd"],
-    "is": ["Um verkefnið", "Um mig", "Geymslur"], "ga": ["Faoina tionscadal", "Fúm", "Stórtha"],
-    "eu": ["Proiektuari buruz", "Niri buruz", "Biltegiak"], "gl": ["Sobre o proxecto", "Sobre min", "Repositorios"],
-    "ca": ["Sobre el projecte", "Sobre mi", "Repositoris"], "lt": ["Apie projektą", "Apie mane", "Repozitorijos"],
-    "lv": ["Par projektu", "Par mani", "Repozitoriji"], "et": ["Projektist", "Minust", "Hoidlad"],
-    "km": ["អំពីគម្រោង", "អំពីខ្ញុំ", "ឃ្លាំង"], "lo": ["ກ່ຽວກັບໂຄງການ", "ກ່ຽວກັບຂ້ອຍ", "Repositories"],
-    "my": ["ပရောဂျက်အကြောင်း", "ကျွန်တော့်အကြောင်း", "သိုလှောင်ရုံများ"], "ml": ["പ്രോജക്റ്റിനെക്കുറിച്ച്", "എന്നെക്കുറിച്ച്", "റിപ്പോസിറ്ററികൾ"],
-    "kn": ["ಯೋಜನೆಯ ಬಗ್ಗೆ", "ನನ್ನ ಬಗ್ಗೆ", "ರೆಪೊಸಿಟರಿಗಳು"], "gu": ["પ્રોજેક્ટ વિશે", "મારા વિશે", "રિપોઝીટરીઝ"],
-    "pa": ["ਪ੍ਰੋਜੈਕਟ ਬਾਰੇ", "ਮੇਰੇ ਬਾਰੇ", "ਰਿਪੋਜ਼ਟਰੀਆਂ"], "si": ["ව්‍යාපෘතිය ගැන", "මා ගැන", "ගබඩා"],
-    "ne": ["परियोजनाको बारेमा", "मेरो बारेमा", "भण्डारहरू"], "so": ["Ku saabsan", "Ku saabsan aniga", "Kaydadka"],
-    "mg": ["Momba ny tetikasa", "Momba ahy", "Tahiry"], "ny": ["Za pulojekiti", "Za ine", "Nkhokwe"],
-    "sn": ["Nezve purojekiti", "Nezve ini", "Repositories"]
-  };
+// Функция-генератор для всех 500 языков
+function getTranslations(code) {
+  const shortCode = code.split('-')[0]; // Берем базу языка (например en-US -> en)
+  if (baseTexts[shortCode]) return baseTexts[shortCode];
+  if (baseTexts[code]) return baseTexts[code];
   
-  const d = dict[langCode] || ["About the project", "About Me", "Repositories"];
-  
+  // Если ручного перевода нет, генерируем интерфейс
   return {
     "site-title": "SSDunix",
-    "about-title": d[0],
-    "about-text": texts['en']['about-text'], 
+    "about-title": langNames[code] + " - Project",
+    "about-text": baseTexts['en']['about-text'], 
     "news-text": `News: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>`,
-    "about-me-title": d[1],
-    "about-me-text": texts['en']['about-me-text'],
-    "repos-title": `GitHub ${d[2]}`,
+    "about-me-title": langNames[code] + " - About",
+    "about-me-text": baseTexts['en']['about-me-text'],
+    "repos-title": `GitHub Repositories`,
     "footer-text": "© SSDunix"
   };
 }
 
-// Заполняем недостающие языки
-Object.keys(langNames).forEach(k => {
-  if(!texts[k]) {
-    texts[k] = generateFallbackText(k);
-  }
-});
-
+// Рендер кнопок
 const btnContainer = document.getElementById('lang-buttons');
-Object.keys(langNames).forEach(k => {
-  const btn = document.createElement('button');
-  btn.innerText = langNames[k];
-  btn.onclick = () => setLanguage(k);
-  btnContainer.appendChild(btn);
+const searchInput = document.getElementById('lang-search');
+
+function renderButtons(filter = '') {
+  btnContainer.innerHTML = '';
+  Object.keys(langNames).forEach(k => {
+    const name = langNames[k];
+    if (name.toLowerCase().includes(filter.toLowerCase()) || k.toLowerCase().includes(filter.toLowerCase())) {
+      const btn = document.createElement('button');
+      btn.innerText = name;
+      btn.onclick = () => setLanguage(k);
+      btnContainer.appendChild(btn);
+    }
+  });
+}
+
+renderButtons();
+
+// Логика поиска
+searchInput.addEventListener('input', (e) => {
+  renderButtons(e.target.value);
 });
 
-let rawUserLang = (navigator.language || navigator.userLanguage).split('-')[0];
-let lang = texts[rawUserLang] ? rawUserLang : "ru";
+// Установка языка
+let userLang = navigator.language || navigator.userLanguage;
+let currentLang = codesArray.includes(userLang) ? userLang : "ru";
 
 function setLanguage(l){
-  lang = l;
-  // Поддержка письма справа налево (RTL) для Арабского, Иврита, Персидского и Урду
-  if(['ar', 'he', 'fa', 'ur'].includes(l)) {
+  currentLang = l;
+  const shortL = l.split('-')[0];
+  
+  // RTL для арабского, иврита, фарси, урду и т.д.
+  if(['ar', 'he', 'fa', 'ur', 'ug', 'yi', 'dz'].includes(shortL)) {
     document.body.style.direction = 'rtl';
   } else {
     document.body.style.direction = 'ltr';
   }
   
-  document.getElementById("site-title").innerHTML = texts[lang]["site-title"];
-  document.getElementById("about-title").innerHTML = texts[lang]["about-title"];
-  document.getElementById("about-text").innerHTML = texts[lang]["about-text"];
-  document.getElementById("news-text").innerHTML = texts[lang]["news-text"];
-  document.getElementById("about-me-title").innerHTML = texts[lang]["about-me-title"];
-  document.getElementById("about-me-text").innerHTML = texts[lang]["about-me-text"];
-  document.getElementById("repos-title").innerHTML = texts[lang]["repos-title"];
-  document.getElementById("footer-text").innerHTML = texts[lang]["footer-text"];
+  const t = getTranslations(l);
+  document.getElementById("site-title").innerHTML = t["site-title"];
+  document.getElementById("about-title").innerHTML = t["about-title"];
+  document.getElementById("about-text").innerHTML = t["about-text"];
+  document.getElementById("news-text").innerHTML = t["news-text"];
+  document.getElementById("about-me-title").innerHTML = t["about-me-title"];
+  document.getElementById("about-me-text").innerHTML = t["about-me-text"];
+  document.getElementById("repos-title").innerHTML = t["repos-title"];
+  document.getElementById("footer-text").innerHTML = t["footer-text"];
 }
 
-setLanguage(lang);
+setLanguage(currentLang);
 
+// GitHub API
 (async function(){
   const container = document.getElementById('repos');
   try{
