@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GPS Speedometer & Tracker</title>
+    
+    <!-- Leaflet CSS for the map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #111;
+            color: white;
+        }
+
+        #speedometer {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #2c3e50, #000000);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        #speed {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #00ff88;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #unit {
+            font-size: 1.5rem;
+            color: #aaa;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: #222;
+            z-index: 10;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #startBtn { background: #00ff88; color: #000; }
+        #startBtn:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
+        #stopBtn { background: #ff3366; color: #fff; }
+        #stopBtn:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+        #map {
+            flex-grow: 1; /* Makes the map fill the rest of the screen */
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="speedometer">
+        <span id="speed">0.0</span> <span id="unit">km/h</span>
+    </div>
+
+    <div id="controls">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn" disabled>Stop</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS for the map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        let map, marker, routeLine;
+        let watchId = null;
+        let routeCoords = [];
+
+        // 1. Initialize the Map
+        // We start with a default view, it will update when GPS locks on
+        map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Create an empty polyline to draw the route
+        routeLine = L.polyline([], { color: '#ff3366', weight: 5 }).addTo(map);
+
+        const speedEl = document.getElementById('speed');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        // 2. Start Tracking
+        startBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+
+            // watchPosition updates continuously as the device moves
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // The API returns speed in meters per second (m/s)
+                    // We multiply by 3.6 to convert to kilometers per hour (km/h)
+                    let speedMs = position.coords.speed;
+                    
+                    // If device isn't moving, speed might be null
+                    let speedKmh = speedMs ? (speedMs * 3.6).toFixed(1) : "0.0";
+                    speedEl.textContent = speedKmh;
+
+                    // Add new coordinate to our route array
+                    const latLng = [lat, lng];
+                    routeCoords.push(latLng);
+                    
+                    // Update the line on the map
+                    routeLine.setLatLngs(routeCoords);
+
+                    // If it's the first GPS ping, create the marker and zoom in
+                    if (!marker) {
+                        marker = L.marker(latLng).addTo(map);
+                        map.setView(latLng, 16);
+                    } else {
+                        // Otherwise, just move the marker and pan the map
+                        marker.setLatLng(latLng);
+                        map.panTo(latLng);
+                    }
+                },
+                (error) => {
+                    console.warn('GPS Error:', error.message);
+                },
+                {
+                    enableHighAccuracy: true, // Forces device to use GPS chip instead of Wi-Fi/Cell towers
+                    maximumAge: 0,            // Do not use cached positions
+                    timeout: 5000
+                }
+            );
+        });
+
+        // 3. Stop Tracking
+        stopBtn.addEventListener('click', () => {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            speedEl.textContent = "0.0";
+        });
+    </script>
+</body>
+</html>
