@@ -1,4 +1,210 @@
 <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GPS Navigator</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; font-family: -apple-system, sans-serif; background: #111; color: white; }
+        
+        #search-box {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        input {
+            flex-grow: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #0f3460;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background: #00ff88;
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        #info-panel {
+            padding: 12px;
+            background: #16213e;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #aaa;
+            z-index: 10;
+        }
+        #info-panel strong { color: #00ff88; }
+
+        #map { flex-grow: 1; width: 100%; }
+
+        /* Стиль для стрелки компаса */
+        .user-arrow {
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300ff88"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.2s ease-out; /* Плавное вращение стрелки */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="search-box">
+        <input type="text" id="destination" placeholder="Куда едем? (напр. Каскад Ереван)">
+        <button id="searchBtn">Маршрут</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="info-panel">
+        <span id="status">Ожидание GPS...</span>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        let map = L.map('map', { zoomControl: false }).setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        let userMarker, destMarker, routeLine;
+        let userCoords = null;
+        let heading = 0;
+
+        const statusEl = document.getElementById('status');
+        const searchInput = document.getElementById('destination');
+        const searchBtn = document.getElementById('searchBtn');
+
+        // Иконка для стрелки-компаса
+        const arrowIcon = L.divIcon({
+            className: 'user-arrow-container',
+            html: '<div id="arrow" class="user-arrow"></div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        // 1. Отслеживание GPS
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    userCoords = [pos.coords.latitude, pos.coords.longitude];
+                    
+                    if (!userMarker) {
+                        userMarker = L.marker(userCoords, { icon: arrowIcon }).addTo(map);
+                        map.setView(userCoords, 16);
+                        statusEl.textContent = "GPS найден. Введите место назначения.";
+                    } else {
+                        userMarker.setLatLng(userCoords);
+                    }
+                },
+                (err) => { statusEl.textContent = "Ошибка GPS: " + err.message; },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        // 2. Отслеживание Компаса (Направление взгляда)
+        function handleOrientation(event) {
+            // webkitCompassHeading для iOS, alpha для Android
+            let compass = event.webkitCompassHeading || (360 - event.alpha);
+            if (compass !== undefined && compass !== null) {
+                heading = compass;
+                const arrowEl = document.getElementById('arrow');
+                if (arrowEl) {
+                    arrowEl.style.transform = `rotate(${heading}deg)`;
+                }
+            }
+        }
+
+        // Запрос разрешения на использование компаса (критично для iOS Safari)
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            document.body.addEventListener('click', () => {
+                DeviceOrientationEvent.requestPermission().then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                    }
+                });
+            }, { once: true });
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+        }
+
+        // 3. Поиск места и построение маршрута
+        searchBtn.addEventListener('click', async () => {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            if (!userCoords) return alert("Подождите, пока GPS определит ваши координаты!");
+
+            statusEl.textContent = "Ищем место и строим маршрут...";
+
+            try {
+                // А) Поиск координат места через Nominatim
+                const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+                const geoRes = await fetch(geoUrl);
+                const geoData = await geoRes.json();
+
+                if (!geoData || geoData.length === 0) {
+                    statusEl.textContent = "Место не найдено. Уточните запрос.";
+                    return;
+                }
+
+                const destCoords = [parseFloat(geoData[0].lat), parseFloat(geoData[0].lon)];
+
+                // Ставим маркер финиша
+                if (destMarker) map.removeLayer(destMarker);
+                destMarker = L.marker(destCoords).addTo(map).bindPopup(geoData[0].display_name).openPopup();
+
+                // Б) Построение маршрута по дорогам через OSRM
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${userCoords[1]},${userCoords[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`;
+                const routeRes = await fetch(osrmUrl);
+                const routeData = await routeRes.json();
+
+                if (routeData.routes && routeData.routes.length > 0) {
+                    const routeGeometry = routeData.routes[0].geometry.coordinates;
+                    // OSRM дает координаты в формате [lng, lat], а Leaflet требует [lat, lng]
+                    const latLngs = routeGeometry.map(coord => [coord[1], coord[0]]);
+
+                    if (routeLine) map.removeLayer(routeLine);
+                    routeLine = L.polyline(latLngs, { color: '#00ff88', weight: 6, opacity: 0.8 }).addTo(map);
+
+                    // Масштабируем карту, чтобы был виден весь маршрут
+                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+
+                    const distanceKm = (routeData.routes[0].distance / 1000).toFixed(1);
+                    const durationMin = Math.round(routeData.routes[0].duration / 60);
+                    statusEl.innerHTML = `Расстояние: <strong>${distanceKm} км</strong> | Время: <strong>${durationMin} мин</strong>`;
+                }
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Ошибка при построении маршрута.";
+            }
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
