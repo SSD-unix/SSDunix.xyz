@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Flight Radar</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; font-family: -apple-system, sans-serif; background: #000; color: white; }
+        
+        #header { padding: 15px; background: #111; text-align: center; border-bottom: 2px solid #333; z-index: 10; }
+        #header h1 { margin: 0; font-size: 1.2rem; color: #00ff88; text-transform: uppercase; letter-spacing: 2px; }
+        #status { font-size: 0.8rem; color: #aaa; margin-top: 5px; }
+
+        #map { flex-grow: 1; width: 100%; }
+
+        /* Иконка самолета (SVG), которая будет крутиться по курсу */
+        .plane-icon {
+            width: 24px;
+            height: 24px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300ff88"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 1s linear; /* Плавный поворот */
+        }
+        
+        /* Стили для окошка с информацией о рейсе */
+        .leaflet-popup-content-wrapper { background: #1a1a1a; color: #00ff88; border-radius: 4px; border: 1px solid #333; }
+        .leaflet-popup-tip { background: #1a1a1a; }
+        .popup-data { font-size: 14px; }
+        .popup-data strong { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <h1>Airspace Radar</h1>
+        <div id="status">Загрузка данных...</div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Инициализация карты (темная тема выглядит как радар)
+        const map = L.map('map').setView([40.1811, 44.5136], 7);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap, © CartoDB',
+            maxZoom: 19
+        }).addTo(map);
+
+        const statusEl = document.getElementById('status');
+        let markers = {}; // Храним самолеты по их уникальному ICAO коду
+
+        // Задаем "квадрат" радара (Кавказ: Грузия, Армения, часть Турции и Ирана)
+        // Чтобы не перегружать бесплатный API, мы просим только конкретную зону
+        const BBOX = { lamin: 38.0, lomin: 42.0, lamax: 43.5, lomax: 47.0 };
+        const API_URL = `https://opensky-network.org/api/states/all?lamin=${BBOX.lamin}&lomin=${BBOX.lomin}&lamax=${BBOX.lamax}&lomax=${BBOX.lomax}`;
+
+        async function fetchFlights() {
+            try {
+                statusEl.textContent = "Обновление...";
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("API Limit");
+                const data = await response.json();
+                
+                updateRadar(data.states || []);
+                statusEl.textContent = `В зоне радара: ${data.states ? data.states.length : 0} бортов. Обновлено: ${new Date().toLocaleTimeString()}`;
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Слишком много запросов. Ждем 10 секунд...";
+            }
+        }
+
+        function updateRadar(states) {
+            // Список ICAO бортов, которые мы только что получили
+            const currentIcao = new Set();
+
+            states.forEach(state => {
+                const icao = state[0];           // Уникальный ID борта
+                const callsign = (state[1] || "N/A").trim(); // Номер рейса
+                const lng = state[5];            // Долгота
+                const lat = state[6];            // Широта
+                const altitude = state[7];       // Высота (метры)
+                const velocity = state[9];       // Скорость (м/с)
+                const heading = state[10] || 0;  // Курс (градусы)
+
+                // Если нет точных координат, пропускаем
+                if (lat === null || lng === null) return;
+
+                currentIcao.add(icao);
+
+                const speedKmh = velocity ? Math.round(velocity * 3.6) : 0;
+                
+                // HTML для окошка при клике на самолет
+                const popupHTML = `
+                    <div class="popup-data">
+                        Рейс: <strong>${callsign}</strong><br>
+                        Высота: <strong>${altitude ? altitude + ' м' : 'На земле'}</strong><br>
+                        Скорость: <strong>${speedKmh} км/ч</strong><br>
+                        Курс: <strong>${Math.round(heading)}°</strong>
+                    </div>
+                `;
+
+                if (markers[icao]) {
+                    // Если самолет уже на карте - двигаем его и обновляем данные
+                    markers[icao].setLatLng([lat, lng]);
+                    markers[icao].getPopup().setContent(popupHTML);
+                    
+                    // Крутим иконку по курсу движения
+                    const iconEl = markers[icao].getElement().querySelector('.plane-icon');
+                    if (iconEl) iconEl.style.transform = `rotate(${heading}deg)`;
+                } else {
+                    // Если это новый самолет - создаем его
+                    const planeIcon = L.divIcon({
+                        className: 'custom-plane-icon',
+                        html: `<div class="plane-icon" style="transform: rotate(${heading}deg);"></div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+
+                    markers[icao] = L.marker([lat, lng], { icon: planeIcon })
+                        .bindPopup(popupHTML)
+                        .addTo(map);
+                }
+            });
+
+            // Удаляем с карты самолеты, которые вылетели за пределы квадрата или сели
+            Object.keys(markers).forEach(icao => {
+                if (!currentIcao.has(icao)) {
+                    map.removeLayer(markers[icao]);
+                    delete markers[icao];
+                }
+            });
+        }
+
+        // Запускаем радар
+        fetchFlights();
+        // OpenSky API просит обновлять данные не чаще раза в 10 секунд (10000 мс)
+        setInterval(fetchFlights, 10000); 
+    </script>
+</body>
+</html>
