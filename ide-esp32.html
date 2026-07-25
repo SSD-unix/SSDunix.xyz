@@ -2,15 +2,15 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Wave IDE</title>
+  <title>Wave IDE - Serial Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
   <style>
     body { margin: 0; background: #0b0c10; display: flex; flex-direction: column; height: 100vh; font-family: monospace; color: #c5c6c7;}
     #toolbar { padding: 15px; background: #1f2833; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #45a29e;}
     .logo { font-size: 20px; font-weight: bold; color: #66fcf1; text-transform: uppercase; letter-spacing: 2px; margin-right: 20px;}
-    input { padding: 6px; background: #0b0c10; color: #66fcf1; border: 1px solid #45a29e; font-family: monospace; outline: none; border-radius: 3px;}
     button { background: #45a29e; color: #0b0c10; border: none; padding: 8px 20px; cursor: pointer; font-weight: bold; border-radius: 3px; transition: 0.2s;}
     button:hover { background: #66fcf1; }
+    button:disabled { background: #555; cursor: not-allowed; color: #888; }
     #editor { flex-grow: 1; font-size: 16px; }
     #console { height: 220px; background: #000; color: #66fcf1; padding: 15px; overflow-y: auto; white-space: pre-wrap; border-top: 1px solid #1f2833;}
   </style>
@@ -18,19 +18,19 @@
 <body>
   <div id="toolbar">
     <div class="logo">🌊 Wave IDE</div>
-    <span>Target IP:</span>
-    <input type="text" id="esp-ip" value="192.168.x.x" placeholder="192.168...">
-    <button onclick="runCode()">Deploy Over-The-Air</button>
+    <button id="connectBtn" onclick="connectSerial()">🔌 Connect USB</button>
+    <button id="deployBtn" onclick="runCode()" disabled>▶ Deploy via Cable</button>
   </div>
-  <div id="editor"># Wave IDE - Wireless deployment
+  <div id="editor"># Wave IDE - Direct USB deployment
 pinmode 2 out
 
-# Blink loop
 write 2 1
 sleep 500
 write 2 0
+sleep 500
+write 2 1
 </div>
-  <div id="console">WAVE SYS: IDE Initialized. Ready for wireless transmission.\n</div>
+  <div id="console">WAVE SYS: IDE Initialized. Awaiting USB connection...\n</div>
   
   <script>
     var editor = ace.edit("editor");
@@ -43,25 +43,63 @@ write 2 0
       cons.scrollTop = cons.scrollHeight;
     }
 
-    async function runCode() {
-      const ip = document.getElementById('esp-ip').value;
-      const code = editor.getValue();
-      
-      log("WAVE SYS: Broadcasting to " + ip + "...");
-      
+    let port;
+    let writer;
+
+    async function connectSerial() {
       try {
-        const response = await fetch(`http://${ip}/api/run`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: code
-        });
+        port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
         
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const textEncoder = new TextEncoderStream();
+        textEncoder.readable.pipeTo(port.writable);
+        writer = textEncoder.writable.getWriter();
         
-        const output = await response.text();
-        log(output || "WAVE SYS: Execution complete (no output returned).");
-      } catch (error) {
-        log("WAVE ERR: Link failed. Is the ESP32 powered on and connected to ST Museum? Details: " + error.message);
+        document.getElementById('connectBtn').innerText = 'USB Connected';
+        document.getElementById('connectBtn').disabled = true;
+        document.getElementById('deployBtn').disabled = false;
+        
+        log("WAVE SYS: Port opened at 115200 baud.");
+        readLoop(); // Запускаем слушатель ответов
+      } catch (e) {
+        log("ERR: Connection failed. " + e.message);
+      }
+    }
+
+    async function runCode() {
+      const code = editor.getValue();
+      log("WAVE SYS: Flashing script...");
+      try {
+        await writer.write(code + '\x04'); // Добавляем EOT в конец скрипта
+      } catch (e) {
+        log("ERR: Failed to write. " + e.message);
+      }
+    }
+
+    async function readLoop() {
+      const textDecoder = new TextDecoderStream();
+      port.readable.pipeTo(textDecoder.writable);
+      const reader = textDecoder.readable.getReader();
+      
+      let buffer = "";
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          
+          buffer += value;
+          // Если получили EOT от платы, выводим буфер и очищаем его
+          if (buffer.includes('\x04')) {
+            let output = buffer.replace('\x04', '');
+            if (output.trim().length > 0) log(output);
+            else log("WAVE SYS: Execution complete (no output).");
+            buffer = "";
+          }
+        }
+      } catch (e) {
+        log("ERR: Read error. " + e.message);
+      } finally {
+        reader.releaseLock();
       }
     }
   </script>
