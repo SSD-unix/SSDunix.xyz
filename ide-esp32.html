@@ -2,49 +2,52 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Wave IDE - Serial Edition</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+  <title>TESTOSTERONE SSH</title>
   <style>
-    body { margin: 0; background: #0b0c10; display: flex; flex-direction: column; height: 100vh; font-family: monospace; color: #c5c6c7;}
-    #toolbar { padding: 15px; background: #1f2833; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #45a29e;}
-    .logo { font-size: 20px; font-weight: bold; color: #66fcf1; text-transform: uppercase; letter-spacing: 2px; margin-right: 20px;}
-    button { background: #45a29e; color: #0b0c10; border: none; padding: 8px 20px; cursor: pointer; font-weight: bold; border-radius: 3px; transition: 0.2s;}
-    button:hover { background: #66fcf1; }
-    button:disabled { background: #555; cursor: not-allowed; color: #888; }
-    #editor { flex-grow: 1; font-size: 16px; }
-    #console { height: 220px; background: #000; color: #66fcf1; padding: 15px; overflow-y: auto; white-space: pre-wrap; border-top: 1px solid #1f2833;}
+    body { 
+      background: #000; 
+      color: #00ff00; 
+      font-family: monospace; 
+      margin: 0; 
+      padding: 15px; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      box-sizing: border-box; 
+      font-size: 16px; 
+    }
+    #toolbar { padding-bottom: 10px; border-bottom: 1px solid #00ff00; margin-bottom: 15px; }
+    button { background: #00ff00; color: #000; border: none; padding: 5px 15px; font-weight: bold; cursor: pointer; font-family: monospace; }
+    button:hover { background: #fff; }
+    #output { flex-grow: 1; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; }
+    #input-line { display: flex; align-items: center; margin-top: 10px; }
+    #prompt { margin-right: 8px; font-weight: bold; }
+    #cmd { background: transparent; border: none; color: #00ff00; font-family: monospace; font-size: 16px; flex-grow: 1; outline: none; }
   </style>
 </head>
 <body>
   <div id="toolbar">
-    <div class="logo">🌊 Wave IDE</div>
-    <button id="connectBtn" onclick="connectSerial()">🔌 Connect USB</button>
-    <button id="deployBtn" onclick="runCode()" disabled>▶ Deploy via Cable</button>
+    <button id="connectBtn" onclick="connectSerial()">[ Connect to /dev/ttyACM0 ]</button>
   </div>
-  <div id="editor"># Wave IDE - Direct USB deployment
-pinmode 2 out
-
-write 2 1
-sleep 500
-write 2 0
-sleep 500
-write 2 1
-</div>
-  <div id="console">WAVE SYS: IDE Initialized. Awaiting USB connection...\n</div>
   
-  <script>
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/tomorrow_night_eighties");
-    editor.session.setMode("ace/mode/sh");
-    
-    function log(msg) {
-      const cons = document.getElementById('console');
-      cons.innerText += msg + "\n";
-      cons.scrollTop = cons.scrollHeight;
-    }
+  <div id="output">TESTOSTERONE OS Pseudo-SSH Terminal.<br>Awaiting connection to Mega 2560...<br></div>
+  
+  <div id="input-line" style="display:none;">
+    <span id="prompt">root@mega2560:~#</span>
+    <input type="text" id="cmd" autocomplete="off" autofocus>
+  </div>
 
-    let port;
-    let writer;
+  <script>
+    const output = document.getElementById('output');
+    const cmdInput = document.getElementById('cmd');
+    const inputLine = document.getElementById('input-line');
+    const connectBtn = document.getElementById('connectBtn');
+    let port, writer;
+
+    function printText(text) {
+      output.innerHTML += text.replace(/\n/g, '<br>');
+      output.scrollTop = output.scrollHeight;
+    }
 
     async function connectSerial() {
       try {
@@ -55,49 +58,45 @@ write 2 1
         textEncoder.readable.pipeTo(port.writable);
         writer = textEncoder.writable.getWriter();
         
-        document.getElementById('connectBtn').innerText = 'USB Connected';
-        document.getElementById('connectBtn').disabled = true;
-        document.getElementById('deployBtn').disabled = false;
+        connectBtn.style.display = 'none';
+        document.getElementById('toolbar').style.display = 'none';
+        inputLine.style.display = 'flex';
+        cmdInput.focus();
         
-        log("WAVE SYS: Port opened at 115200 baud.");
-        readLoop(); // Запускаем слушатель ответов
+        printText("\nSYS: Connection established. Type 'help'.\n");
+        readLoop();
       } catch (e) {
-        log("ERR: Connection failed. " + e.message);
+        printText("\nERR: Connection failed. " + e.message + "\n");
       }
     }
 
-    async function runCode() {
-      const code = editor.getValue();
-      log("WAVE SYS: Flashing script...");
-      try {
-        await writer.write(code + '\x04'); // Добавляем EOT в конец скрипта
-      } catch (e) {
-        log("ERR: Failed to write. " + e.message);
+    // Отправка команды при нажатии Enter
+    cmdInput.addEventListener('keypress', async function(e) {
+      if (e.key === 'Enter') {
+        const command = cmdInput.value;
+        printText("root@mega2560:~# " + command + "\n"); // Печатаем команду в консоль браузера
+        cmdInput.value = '';
+        
+        if (writer) {
+          await writer.write(command + '\n'); // Отправляем байты в Мегу
+        }
       }
-    }
+    });
 
+    // Бесконечное чтение ответов от платы
     async function readLoop() {
       const textDecoder = new TextDecoderStream();
       port.readable.pipeTo(textDecoder.writable);
       const reader = textDecoder.readable.getReader();
       
-      let buffer = "";
       try {
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
-          
-          buffer += value;
-          // Если получили EOT от платы, выводим буфер и очищаем его
-          if (buffer.includes('\x04')) {
-            let output = buffer.replace('\x04', '');
-            if (output.trim().length > 0) log(output);
-            else log("WAVE SYS: Execution complete (no output).");
-            buffer = "";
-          }
+          printText(value);
         }
       } catch (e) {
-        log("ERR: Read error. " + e.message);
+        printText("\nERR: Serial read error. " + e.message + "\n");
       } finally {
         reader.releaseLock();
       }
