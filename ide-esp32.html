@@ -2,40 +2,40 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title> Static IDE</title>
+  <title>Wave IDE</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
   <style>
-    body { margin: 0; background: #121212; display: flex; flex-direction: column; height: 100vh; font-family: monospace; color: #fff;}
-    #toolbar { padding: 15px; background: #222; display: flex; gap: 10px; align-items: center; border-bottom: 2px solid #333;}
-    input { padding: 5px; background: #111; color: #0f0; border: 1px solid #444; font-family: monospace; }
-    button { background: #4caf50; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; }
-    button:hover { background: #45a049; }
+    body { margin: 0; background: #0b0c10; display: flex; flex-direction: column; height: 100vh; font-family: monospace; color: #c5c6c7;}
+    #toolbar { padding: 15px; background: #1f2833; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #45a29e;}
+    .logo { font-size: 20px; font-weight: bold; color: #66fcf1; text-transform: uppercase; letter-spacing: 2px; margin-right: 20px;}
+    input { padding: 6px; background: #0b0c10; color: #66fcf1; border: 1px solid #45a29e; font-family: monospace; outline: none; border-radius: 3px;}
+    button { background: #45a29e; color: #0b0c10; border: none; padding: 8px 20px; cursor: pointer; font-weight: bold; border-radius: 3px; transition: 0.2s;}
+    button:hover { background: #66fcf1; }
     #editor { flex-grow: 1; font-size: 16px; }
-    #console { height: 200px; background: #000; color: #00ff00; padding: 10px; overflow-y: auto; white-space: pre-wrap;}
+    #console { height: 220px; background: #000; color: #66fcf1; padding: 15px; overflow-y: auto; white-space: pre-wrap; border-top: 1px solid #1f2833;}
   </style>
 </head>
 <body>
   <div id="toolbar">
-    <span>ESP32 IP:</span>
+    <div class="logo">🌊 Wave IDE</div>
+    <span>Target IP:</span>
     <input type="text" id="esp-ip" value="192.168.x.x" placeholder="192.168...">
-    <button onclick="runCode()">▶ Deploy & Run</button>
+    <button onclick="runCode()">Deploy Over-The-Air</button>
   </div>
-  <div id="editor"># Скрипт мигания диодом
+  <div id="editor"># Wave IDE - Wireless deployment
 pinmode 2 out
 
-# Включаем
+# Blink loop
 write 2 1
-sleep 1000
-
-# Выключаем
+sleep 500
 write 2 0
 </div>
-  <div id="console">SYS: IDE Ready.\n</div>
+  <div id="console">WAVE SYS: IDE Initialized. Ready for wireless transmission.\n</div>
   
   <script>
     var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/monokai");
-    editor.session.setMode("ace/mode/sh"); // Подсветка как у bash скриптов
+    editor.setTheme("ace/theme/tomorrow_night_eighties");
+    editor.session.setMode("ace/mode/sh");
     
     function log(msg) {
       const cons = document.getElementById('console');
@@ -47,7 +47,7 @@ write 2 0
       const ip = document.getElementById('esp-ip').value;
       const code = editor.getValue();
       
-      log("SYS: Sending script to " + ip + "...");
+      log("WAVE SYS: Broadcasting to " + ip + "...");
       
       try {
         const response = await fetch(`http://${ip}/api/run`, {
@@ -56,12 +56,12 @@ write 2 0
           body: code
         });
         
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const output = await response.text();
-        log(output || "SYS: Script executed (no output).");
+        log(output || "WAVE SYS: Execution complete (no output returned).");
       } catch (error) {
-        log("ERR: Failed to connect. Check IP and CORS. Details: " + error.message);
+        log("WAVE ERR: Link failed. Is the ESP32 powered on and connected to ST Museum? Details: " + error.message);
       }
     }
   </script>
