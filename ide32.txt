@@ -1,0 +1,151 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// === НАСТРОЙКА I2C LCD ===
+// Обычные адреса: 0x27 или 0x3F. Попробуйте оба.
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Для большинства модулей
+
+// === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+String cmdBuffer = "";
+bool lcdReady = false;
+
+// ======== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ РАЗБОРА ========
+void parseCmd(String cmd, String &base, String &args) {
+  cmd.trim();
+  int spaceIdx = cmd.indexOf(' ');
+  if (spaceIdx == -1) {
+    base = cmd;
+    args = "";
+  } else {
+    base = cmd.substring(0, spaceIdx);
+    args = cmd.substring(spaceIdx + 1);
+    args.trim();
+  }
+}
+
+// ======== ЯДРО КОМАНДНОЙ ОБОЛОЧКИ ========
+String execShell(String cmd) {
+  cmd.trim();
+  if (cmd.length() == 0) return "";
+
+  String base, args;
+  parseCmd(cmd, base, args);
+
+  // ---- Системные команды ----
+  if (base == "uname") return "Wave-OS v1.0 (Mega 2560)\n";
+  if (base == "whoami") return "root\n";
+  if (base == "clear") {
+    Serial.print("\033[2J\033[H");
+    return "";
+  }
+  if (base == "help") {
+    String helpText = 
+      "=== Wave Shell Commands ===\n"
+      "  uname, whoami, help, clear\n"
+      "  pinmode <pin> <out/in>   - GPIO mode\n"
+      "  write <pin> <0/1>        - write digital\n"
+      "  read <pin>               - read digital\n"
+      "  lcd_init                 - init I2C LCD\n"
+      "  lcd_clear                - clear screen\n"
+      "  lcd_print <text>         - print text\n"
+      "  lcd_setcursor <col> <row> - set cursor\n"
+      "  lcd_home                 - cursor to (0,0)\n"
+      "  lcd_backlight <on/off>   - turn backlight\n";
+    return helpText;
+  }
+
+  // ---- GPIO ----
+  if (base == "pinmode") {
+    int space = args.indexOf(' ');
+    if (space == -1) return "bash: pinmode: need pin and mode\n";
+    int pin = args.substring(0, space).toInt();
+    String mode = args.substring(space + 1);
+    if (mode == "out") pinMode(pin, OUTPUT);
+    else if (mode == "in") pinMode(pin, INPUT);
+    else return "bash: invalid mode (out/in)\n";
+    return "sys: pin " + String(pin) + " set to " + mode + "\n";
+  }
+  if (base == "write") {
+    int space = args.indexOf(' ');
+    if (space == -1) return "bash: write: need pin and value\n";
+    int pin = args.substring(0, space).toInt();
+    int val = args.substring(space + 1).toInt();
+    digitalWrite(pin, val);
+    return "sys: pin " + String(pin) + " = " + String(val) + "\n";
+  }
+  if (base == "read") {
+    int pin = args.toInt();
+    return "sys: pin " + String(pin) + " = " + String(digitalRead(pin)) + "\n";
+  }
+
+  // ---- LCD (I2C) ----
+  if (base == "lcd_init") {
+    lcd.init();          // инициализация I2C
+    lcd.backlight();     // включить подсветку
+    lcdReady = true;
+    return "I2C LCD initialized (backlight ON)\n";
+  }
+  if (base == "lcd_clear") {
+    if (!lcdReady) return "LCD not initialized. Use lcd_init first.\n";
+    lcd.clear();
+    return "LCD cleared\n";
+  }
+  if (base == "lcd_print") {
+    if (!lcdReady) return "LCD not initialized. Use lcd_init first.\n";
+    if (args.length() == 0) return "bash: lcd_print: need text\n";
+    lcd.print(args);
+    return "Printed to LCD\n";
+  }
+  if (base == "lcd_setcursor") {
+    if (!lcdReady) return "LCD not initialized. Use lcd_init first.\n";
+    int space = args.indexOf(' ');
+    if (space == -1) return "bash: lcd_setcursor: need col and row\n";
+    int col = args.substring(0, space).toInt();
+    int row = args.substring(space + 1).toInt();
+    lcd.setCursor(col, row);
+    return "Cursor set to (" + String(col) + "," + String(row) + ")\n";
+  }
+  if (base == "lcd_home") {
+    if (!lcdReady) return "LCD not initialized. Use lcd_init first.\n";
+    lcd.setCursor(0, 0);
+    return "Cursor home\n";
+  }
+  if (base == "lcd_backlight") {
+    if (!lcdReady) return "LCD not initialized. Use lcd_init first.\n";
+    if (args == "on") {
+      lcd.backlight();
+      return "Backlight ON\n";
+    } else if (args == "off") {
+      lcd.noBacklight();
+      return "Backlight OFF\n";
+    } else {
+      return "bash: lcd_backlight: need on/off\n";
+    }
+  }
+
+  return "bash: " + cmd + ": command not found\n";
+}
+
+// ======== SETUP ========
+void setup() {
+  Serial.begin(115200);
+  Serial.println("=== Wave Shell ready ===");
+  Serial.println("Type 'help' for commands.");
+}
+
+// ======== LOOP ========
+void loop() {
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (cmdBuffer.length() > 0) {
+        String result = execShell(cmdBuffer);
+        Serial.print(result);
+        cmdBuffer = "";
+      }
+    } else {
+      cmdBuffer += c;
+    }
+  }
+}
