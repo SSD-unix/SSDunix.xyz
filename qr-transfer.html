@@ -5,47 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07C160" />
 <title>QR Chat</title>
-<link rel="manifest" id="manifestLink">
 <style>
   :root {
-    --green: #07C160;
-    --green-dark: #06AD56;
-    --bg: #EDEDED;
-    --bubble-me: #95EC69;
-    --bubble-them: #FFFFFF;
-    --header: #F5F5F5;
-    --card: #FFFFFF;
-    --border: rgba(0,0,0,0.08);
-    --muted: #888;
-    --text: #111;
-    --input-bg: #FFFFFF;
+    --green: #07C160; --green-dark: #06AD56;
+    --bg: #EDEDED; --bubble-me: #95EC69; --bubble-them: #FFFFFF;
+    --header: #F5F5F5; --card: #FFFFFF; --border: rgba(0,0,0,0.08);
+    --muted: #888; --text: #111; --input-bg: #FFFFFF;
     --overlay-bg: linear-gradient(160deg, #f8f9fa 0%, #eaeef1 100%);
-    --sys-bg: rgba(0,0,0,0.05);
-    --danger: #d93025;
+    --sys-bg: rgba(0,0,0,0.05); --danger: #d93025;
   }
   [data-theme="dark"] {
-    --bg: #0E1621;
-    --bubble-me: #2B5278;
-    --bubble-them: #182533;
-    --header: #17212B;
-    --card: #17212B;
-    --border: rgba(255,255,255,0.08);
-    --muted: #7D8B99;
-    --text: #ECF0F3;
-    --input-bg: #242F3D;
+    --bg: #0E1621; --bubble-me: #2B5278; --bubble-them: #182533;
+    --header: #17212B; --card: #17212B; --border: rgba(255,255,255,0.08);
+    --muted: #7D8B99; --text: #ECF0F3; --input-bg: #242F3D;
     --overlay-bg: linear-gradient(160deg, #0E1621 0%, #17212B 100%);
     --sys-bg: rgba(255,255,255,0.08);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg); color: var(--text); font-size: 16px; overscroll-behavior: none;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); font-size: 16px; overscroll-behavior: none; }
   .app { display: flex; flex-direction: column; height: 100dvh; height: 100vh;
     padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-
-  /* Topbar */
   .topbar { height: 54px; flex-shrink: 0; background: var(--header);
     border-bottom: 1px solid var(--border); display: flex; align-items: center;
     gap: 2px; padding: 0 6px; }
@@ -54,33 +35,32 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .topbar .subtitle { font-size: 11px; color: var(--muted); margin-top: 2px;
     display: flex; align-items: center; justify-content: center; gap: 5px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; flex-shrink: 0; transition: background 0.3s; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
   .dot.on { background: var(--green); box-shadow: 0 0 6px rgba(7,193,96,0.6); }
   .icon-btn { width: 42px; height: 42px; border-radius: 50%; border: none;
     background: transparent; font-size: 20px; color: var(--text);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; padding: 0; flex-shrink: 0; }
+    cursor: pointer; padding: 0; flex-shrink: 0; position: relative; }
   .icon-btn:active { background: rgba(128,128,128,0.15); }
-  .icon-btn .badge { position: absolute; margin: -22px 0 0 22px; background: var(--danger);
-    color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 8px; font-weight: 700; }
+  .icon-btn .badge { position: absolute; top: 3px; right: 3px; background: var(--danger);
+    color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 8px; font-weight: 700; min-width: 16px; text-align: center; }
 
-  /* Chat */
-  .chat { flex: 1; overflow-y: auto; padding: 12px 12px 4px; -webkit-overflow-scrolling: touch;
-    display: flex; flex-direction: column; gap: 2px; }
+  .chat { flex: 1; overflow-y: auto; padding: 12px 12px 4px;
+    -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 2px; }
   .chat:empty::before { content: 'Чат пуст. Напиши первое сообщение.';
     display: block; text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
   .day { text-align: center; font-size: 11px; color: var(--muted); margin: 12px 0 6px; }
   .day span { background: var(--sys-bg); padding: 3px 10px; border-radius: 10px; }
   .sys { text-align: center; font-size: 12px; color: var(--muted); margin: 6px 24px;
     background: var(--sys-bg); padding: 6px 12px; border-radius: 10px; }
-  .sys .em { font-weight: 600; }
+  .sys .em { font-weight: 600; color: var(--text); }
   .msg-wrap { display: flex; flex-direction: column; margin-top: 6px; }
   .msg-wrap.same-sender { margin-top: 2px; }
-  .msg-nick { font-size: 11px; color: #6b7280; margin: 0 10px 3px 10px; font-weight: 500; }
-  [data-theme="dark"] .msg-nick { color: #8ca0b3; }
-  .msg-wrap.me .msg-nick { text-align: right; color: #4b7a3a; }
-  .msg-nick .admin { display: inline-block; background: var(--green); color: #fff;
-    font-size: 9px; padding: 1px 5px; border-radius: 6px; margin-left: 4px; vertical-align: 1px; }
+  .msg-nick { font-size: 11px; margin: 0 10px 3px 10px; font-weight: 600; }
+  .msg-wrap.me .msg-nick { text-align: right; }
+  .msg-nick .admin-tag { display: inline-block; background: var(--green); color: #fff;
+    font-size: 9px; padding: 1px 5px; border-radius: 6px; margin-left: 4px;
+    vertical-align: 1px; font-weight: 700; }
   .msg-row { display: flex; width: 100%; animation: pop 0.18s ease-out; }
   @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
   .msg-wrap.me .msg-row { justify-content: flex-end; }
@@ -95,16 +75,15 @@
   .bubble.img { padding: 4px; background: var(--card); border-radius: 14px; max-width: 72%; }
   .bubble.img img { display: block; width: 100%; max-width: 260px; border-radius: 10px; cursor: pointer; }
   .bubble .quote { border-left: 3px solid var(--green); padding: 3px 8px; margin-bottom: 4px;
-    font-size: 12px; color: var(--muted); background: rgba(0,0,0,0.04); border-radius: 4px; max-width: 100%;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    font-size: 12px; color: var(--muted); background: rgba(0,0,0,0.04); border-radius: 4px;
+    max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   [data-theme="dark"] .bubble .quote { background: rgba(255,255,255,0.06); }
   .bubble.broken { background: #ffecec; color: #b00; font-size: 12px; font-style: italic; }
-  .reactions { display: flex; gap: 3px; margin: 3px 0 0 6px; flex-wrap: wrap; }
-  .react-pill { background: var(--card); border: 1px solid var(--border); padding: 1px 7px;
+  .reactions { display: flex; gap: 3px; margin: 4px 0 0 4px; flex-wrap: wrap; }
+  .react-pill { background: var(--card); border: 1px solid var(--border); padding: 2px 8px;
     border-radius: 10px; font-size: 12px; cursor: pointer; user-select: none; }
   .react-pill.mine { border-color: var(--green); background: rgba(7,193,96,0.12); }
 
-  /* Composer */
   .composer { flex-shrink: 0; background: var(--header); border-top: 1px solid var(--border);
     padding: 8px; display: flex; align-items: flex-end; gap: 6px;
     padding-bottom: max(8px, env(safe-area-inset-bottom)); position: relative; }
@@ -119,14 +98,13 @@
   .send-btn:active { transform: scale(0.92); }
   .send-btn:disabled { background: #C8C8C8; box-shadow: none; }
   .send-btn svg { width: 20px; height: 20px; }
-  .reply-bar { position: absolute; top: -46px; left: 8px; right: 8px; background: var(--card);
+  .reply-bar { position: absolute; top: -48px; left: 8px; right: 8px; background: var(--card);
     border-radius: 10px; padding: 8px 12px; display: none; align-items: center; gap: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 13px; }
   .reply-bar.show { display: flex; }
   .reply-bar .rb-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
   .reply-bar button { background: transparent; border: none; font-size: 18px; color: var(--muted); cursor: pointer; }
 
-  /* Overlays */
   .overlay { position: fixed; inset: 0; background: var(--overlay-bg);
     display: flex; align-items: stretch; z-index: 50; overflow-y: auto; }
   .overlay.hidden { display: none; }
@@ -149,49 +127,40 @@
   .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 38%; height: 1px; background: var(--border); }
   .divider::before { left: 0; } .divider::after { right: 0; }
   .row { display: flex; gap: 6px; }
-  .row input, .field { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+  .field { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
     font-size: 15px; font-family: inherit; background: var(--input-bg); color: var(--text);
     outline: none; margin-bottom: 10px; }
-  .row input:focus, .field:focus { border-color: var(--green); }
-  .row .btn { width: auto; margin: 0; padding: 12px 20px; }
-  #qrBox { margin: 16px auto 8px; display: none; justify-content: center; }
-  #qrBox.show { display: flex; }
-  #qrBox canvas, #qrBox img { background: #fff; padding: 12px; border-radius: 14px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-  #keyLine { font-size: 12px; margin-top: 8px; color: var(--muted); word-break: break-all; text-align: center; }
-  #keyLine .key { font-family: ui-monospace, monospace; background: var(--input-bg);
-    padding: 3px 8px; border-radius: 6px; color: var(--text); font-size: 12px;
-    display: inline-block; margin-top: 4px; }
+  .field:focus { border-color: var(--green); }
 
-  /* Chat list */
   .chat-item { display: flex; gap: 12px; align-items: center; padding: 14px 12px;
     border-radius: 12px; cursor: pointer; margin-bottom: 4px; }
   .chat-item:active { background: var(--sys-bg); }
   .chat-item.active { background: rgba(7,193,96,0.12); }
-  .chat-avatar { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--green-dark));
+  .chat-avatar { width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
     color: #fff; display: flex; align-items: center; justify-content: center;
     font-size: 18px; font-weight: 700; flex-shrink: 0; }
   .chat-meta { flex: 1; min-width: 0; }
   .chat-meta .name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .chat-meta .last { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
 
-  /* User list */
   .user-item { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 12px; }
-  .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #B0BEC5;
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 15px; font-weight: 700; position: relative; flex-shrink: 0; }
-  .user-avatar .presence-dot { position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px;
-    border-radius: 50%; background: #ccc; border: 2px solid var(--card); }
+  .user-avatar { width: 40px; height: 40px; border-radius: 50%; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+    font-weight: 700; position: relative; flex-shrink: 0; }
+  .user-avatar .presence-dot { position: absolute; bottom: -1px; right: -1px;
+    width: 12px; height: 12px; border-radius: 50%; background: #ccc;
+    border: 2px solid var(--card); }
   .user-avatar .presence-dot.on { background: var(--green); }
   .user-info { flex: 1; min-width: 0; }
   .user-info .nick { font-weight: 600; font-size: 14px; }
   .user-info .sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
-  .user-actions { display: flex; gap: 4px; }
+  .user-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .user-actions button { background: transparent; border: 1px solid var(--border); border-radius: 8px;
     padding: 6px 10px; font-size: 12px; color: var(--text); cursor: pointer; font-family: inherit; }
   .user-actions button.danger { border-color: var(--danger); color: var(--danger); }
+  .user-actions button.ok { border-color: var(--green); color: var(--green); }
 
-  /* Scanner */
   .scanner { position: fixed; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; }
   .scanner.show { display: flex; }
   .scanner video { flex: 1; width: 100%; height: 100%; object-fit: cover; }
@@ -204,16 +173,14 @@
   .scanner .tip { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center;
     color: #fff; font-size: 14px; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
 
-  /* Viewer */
   .viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.94); z-index: 200;
     display: none; align-items: center; justify-content: center; }
   .viewer.show { display: flex; animation: fadeIn 0.2s; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .viewer img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-  /* Context menu */
   .ctx { position: fixed; background: var(--card); border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.25); z-index: 150; display: none; min-width: 180px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25); z-index: 150; display: none; min-width: 190px;
     overflow: hidden; border: 1px solid var(--border); }
   .ctx.show { display: block; animation: fadeIn 0.15s; }
   .ctx button { display: block; width: 100%; text-align: left; padding: 12px 16px;
@@ -234,10 +201,10 @@
       <div class="title" id="chatTitle">QR Chat</div>
       <div class="subtitle">
         <span class="dot" id="statusDot"></span>
-        <span id="statusText">Не подключено</span>
+        <span id="statusText">Подключение…</span>
       </div>
     </div>
-    <button class="icon-btn" id="usersBtn" style="position:relative;">👥<span class="badge" id="usersBadge" style="display:none;">0</span></button>
+    <button class="icon-btn" id="usersBtn">👥<span class="badge" id="usersBadge" style="display:none;">0</span></button>
   </header>
 
   <main class="chat" id="chat"></main>
@@ -266,7 +233,6 @@
 </div>
 
 <div class="viewer" id="viewer"><img id="viewerImg" alt=""></div>
-
 <div class="ctx" id="ctx"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -274,485 +240,468 @@
 'use strict';
 
 // ================================================================
-//  CONSTANTS & UTILS
+//  UTILS
 // ================================================================
-const LS_KEY = 'qrchat_v4';
 const $ = id => document.getElementById(id);
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-
-function randomHex(bytes) {
-  const arr = new Uint8Array(bytes);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+const LS = 'qrchat_v5';
+function rhex(n) {
+  const a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
 }
-function b64(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)));
-}
-function unb64(s) {
-  return Uint8Array.from(atob(s), c => c.charCodeAt(0));
-}
-function nowMs() { return Date.now(); }
-function fmtTime(ts) { return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }); }
-function fmtDay(ts) { return new Date(ts).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function shortSid(sid) { return sid ? sid.slice(0, 4) : '????'; }
+function fmtTime(ts) { return new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDay(ts) { return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function esc(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function shortSid(s) { return s ? s.slice(0,4) : '????'; }
 function nickColor(sid) {
-  const colors = ['#e57373','#ba68c8','#64b5f6','#4db6ac','#81c784','#ffb74d','#f06292','#7986cb','#4fc3f7'];
-  let h = 0; for (const c of (sid || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return colors[h % colors.length];
-}
-
-// ================================================================
-//  CRYPTO — ECDSA P-256 sign/verify + sid = hash(pubKey)
-// ================================================================
-let KEYPAIR = null;
-
-async function loadOrCreateKeypair() {
-  if (KEYPAIR) return KEYPAIR;
-  if (state.me.privJwk && state.me.pubJwk) {
-    const priv = await crypto.subtle.importKey('jwk', state.me.privJwk,
-      { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign']);
-    const pub = await crypto.subtle.importKey('jwk', state.me.pubJwk,
-      { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']);
-    KEYPAIR = { priv, pub, sid: state.me.sid };
-    return KEYPAIR;
-  }
-  const kp = await crypto.subtle.generateKey(
-    { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
-  const privJwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
-  const pubJwk = await crypto.subtle.exportKey('jwk', kp.publicKey);
-  // sid = sha256(pubJwk.x) первые 16 hex
-  const x = await crypto.subtle.digest('SHA-256', enc.encode(pubJwk.x));
-  const sid = Array.from(new Uint8Array(x), b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
-  state.me.sid = sid;
-  state.me.privJwk = privJwk;
-  state.me.pubJwk = pubJwk;
-  saveState();
-  KEYPAIR = { priv: kp.privateKey, pub: kp.publicKey, sid };
-  return KEYPAIR;
-}
-
-const SIG_FIELDS = ['id','sid','nick','ts','type','text','url','action','target','replyTo','prev','pubKeyX'];
-function canonical(m) {
-  return SIG_FIELDS.map(k => m[k] === undefined || m[k] === null ? '' : JSON.stringify(m[k])).join('|');
-}
-async function signMessage(m) {
-  const { priv } = await loadOrCreateKeypair();
-  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, priv, enc.encode(canonical(m)));
-  return b64(sig);
-}
-const pubKeyCache = new Map();
-async function getPubKey(x) {
-  if (pubKeyCache.has(x)) return pubKeyCache.get(x);
-  const jwk = { kty: 'EC', crv: 'P-256', x, y: state.pubKeys[x] || '' };
-  if (!jwk.y) return null;
-  const key = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']);
-  pubKeyCache.set(x, key);
-  return key;
-}
-async function verifyMessage(m) {
-  if (!m || !m.sig || !m.pubKeyX || !m.pubKeyY) return false;
-  state.pubKeys[m.pubKeyX] = m.pubKeyY;  // запоминаем
-  const key = await getPubKey(m.pubKeyX);
-  if (!key) return false;
-  try {
-    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, unb64(m.sig), enc.encode(canonical(m)));
-  } catch { return false; }
-}
-
-// ================================================================
-//  CHAIN — FNV-1a для целостности последовательности
-// ================================================================
-function fnv(str) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-  return ('00000000' + h.toString(16)).slice(-8);
-}
-function chainHash(m) {
-  return fnv(`${m.prev||''}|${m.id}|${m.sid}|${m.ts}|${m.type}|${m.text||''}|${m.url||''}|${m.action||''}|${m.target||''}|${m.replyTo||''}`);
-}
-function verifyChain(msgs) {
-  let prev = '';
-  for (const m of msgs) {
-    if (m.prev !== prev) return { ok: false, at: m.id };
-    if (chainHash(m) !== m.hash) return { ok: false, at: m.id };
-    prev = m.hash;
-  }
-  return { ok: true };
+  const c = ['#e57373','#ba68c8','#64b5f6','#4db6ac','#81c784','#ffb74d','#f06292','#7986cb','#4fc3f7','#a1887f'];
+  let h = 0; for (const ch of String(sid||'')) h = (h*31 + ch.charCodeAt(0)) >>> 0;
+  return c[h % c.length];
 }
 
 // ================================================================
 //  STATE
 // ================================================================
 let state = {
-  me: { sid: null, nick: null, privJwk: null, pubJwk: null },
-  pubKeys: {},        // x -> y  (публичные ключи по sid-хвосту)
+  me: { sid: null, nick: null },
   currentChat: null,
-  chats: {},          // topic -> { name, createdBy, admins, bans, messages, lastTs, lastPresenceTs }
-  seenIds: {},
+  chats: {},   // topic -> { name, createdBy, admins:[], bans:[], deleted:[], messages:[], lastTs }
+  seenIds: {}, // topic -> [id]
   theme: 'auto',
-  notifications: false,
+  notifications: false
 };
-
+let savePending = null;
 function loadState() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(LS);
     if (raw) Object.assign(state, JSON.parse(raw));
-  } catch (e) { console.warn(e); }
+  } catch(e) { console.warn(e); }
   state.me = state.me || {};
-  state.pubKeys = state.pubKeys || {};
   state.chats = state.chats || {};
   state.seenIds = state.seenIds || {};
+  if (!state.me.sid) state.me.sid = rhex(6);
 }
 function saveState() {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      me: state.me,
-      pubKeys: state.pubKeys,
-      currentChat: state.currentChat,
-      chats: state.chats,
-      seenIds: state.seenIds,
-      theme: state.theme,
-      notifications: state.notifications,
-    }));
-  } catch (e) { console.warn('save error', e); }
+  if (savePending) return;
+  savePending = setTimeout(() => {
+    savePending = null;
+    try { localStorage.setItem(LS, JSON.stringify(state)); }
+    catch(e) { console.warn('save fail', e); }
+  }, 150);
 }
-function ensureChat(topic) {
-  if (!state.chats[topic]) {
-    state.chats[topic] = {
-      name: 'Чат ' + topic.slice(-4),
+function saveNow() {
+  if (savePending) { clearTimeout(savePending); savePending = null; }
+  try { localStorage.setItem(LS, JSON.stringify(state)); }
+  catch(e) { console.warn('save fail', e); }
+}
+
+function ensureChat(t) {
+  if (!state.chats[t]) {
+    state.chats[t] = {
+      name: 'Чат ' + t.slice(-4),
       createdBy: null,
       admins: [],
       bans: [],
+      deleted: [],
       messages: [],
-      lastTs: 0,
-      lastPresenceTs: 0,
+      lastTs: 0
     };
   }
-  if (!state.seenIds[topic]) state.seenIds[topic] = [];
-  return state.chats[topic];
+  if (!state.seenIds[t]) state.seenIds[t] = [];
+  const c = state.chats[t];
+  c.admins = c.admins || [];
+  c.bans = c.bans || [];
+  c.deleted = c.deleted || [];
+  c.messages = c.messages || [];
+  return c;
 }
 function cur() { return state.currentChat ? ensureChat(state.currentChat) : null; }
 function isAdmin(sid) { const c = cur(); return c && c.admins.includes(sid); }
 function isBanned(sid) { const c = cur(); return c && c.bans.includes(sid); }
-function isMe(sid) { return state.me.sid === sid; }
-function hasSeen(topic, id) { return state.seenIds[topic]?.includes(id); }
-function markSeen(topic, id) {
-  const arr = state.seenIds[topic];
-  if (!arr) return;
-  if (arr.includes(id)) return;
+function hasSeen(t, id) { return (state.seenIds[t] || []).includes(id); }
+function markSeen(t, id) {
+  const arr = state.seenIds[t];
+  if (!arr || arr.includes(id)) return;
   arr.push(id);
-  if (arr.length > 2000) arr.splice(0, arr.length - 2000);
+  if (arr.length > 3000) arr.splice(0, arr.length - 3000);
 }
 
 // ================================================================
-//  PRESENCE
+//  PRESENCE (in-memory)
 // ================================================================
-let presence = {};        // sid -> { nick, ts }
+let presence = {};   // sid -> { nick, ts }
 let presenceTimer = null;
-let presenceSource = null;
-
-function presenceTopic(topic) { return topic + '-p'; }
-
-function startPresence() {
-  stopPresence();
-  if (!state.currentChat) return;
-  const topic = state.currentChat;
-  const pTopic = presenceTopic(topic);
-  const since = Math.floor(Date.now() / 1000) - 90;
-  presenceSource = new EventSource(`https://ntfy.sh/${encodeURIComponent(pTopic)}/sse?since=${since}`);
-  presenceSource.onmessage = (ev) => {
-    try {
-      const d = JSON.parse(ev.data);
-      if (d.event !== 'message') return;
-      const p = JSON.parse(d.message);
-      if (!p.sid) return;
-      presence[p.sid] = { nick: p.nick, ts: Date.now() };
-      renderUsers();
-    } catch {}
-  };
-  heartbeat();
-  presenceTimer = setInterval(heartbeat, 20000);
-  setInterval(() => {  // чистка старых
-    const cutoff = Date.now() - 65000;
-    let changed = false;
-    for (const sid in presence) if (presence[sid].ts < cutoff) { delete presence[sid]; changed = true; }
-    if (changed) renderUsers();
-  }, 15000);
+function updatePresence(sid, nick, ts) {
+  presence[sid] = { nick: nick || ('User ' + shortSid(sid)), ts: ts || Date.now() };
 }
-function stopPresence() {
-  if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
-  if (presenceSource) { presenceSource.close(); presenceSource = null; }
-}
-async function heartbeat() {
-  if (!state.currentChat || !state.me.nick) return;
-  try {
-    await fetch(`https://ntfy.sh/${encodeURIComponent(presenceTopic(state.currentChat))}`, {
-      method: 'POST',
-      body: JSON.stringify({ sid: state.me.sid, nick: state.me.nick, ts: Date.now() }),
-    });
-    presence[state.me.sid] = { nick: state.me.nick, ts: Date.now() };
-    renderUsers();
-  } catch {}
+function isOnline(sid) { return presence[sid] && (Date.now() - presence[sid].ts) < 70000; }
+function presenceClean() {
+  const cut = Date.now() - 70000;
+  let changed = false;
+  for (const k in presence) if (presence[k].ts < cut) { delete presence[k]; changed = true; }
+  return changed;
 }
 
 // ================================================================
-//  NETWORK — chat topic SSE
+//  NETWORK  (single SSE per chat + POST to same topic)
 // ================================================================
-let eventSource = null;
-let chatOnline = false;
+let es = null;
+let esTopic = null;
+let netOnline = false;
+let reconnectTimer = null;
+
+function netStatus() {
+  $('statusDot').classList.toggle('on', netOnline);
+  if (!state.currentChat) { $('statusText').textContent = 'Нет чата'; return; }
+  const online = Object.values(presence).filter(p => Date.now() - p.ts < 70000).length;
+  if (netOnline) $('statusText').textContent = `В сети · ${online}`;
+  else $('statusText').textContent = 'Переподключение…';
+}
 
 function connect() {
-  if (eventSource) { eventSource.close(); eventSource = null; }
+  disconnect();
   if (!state.currentChat) return;
   const t = state.currentChat;
   const c = ensureChat(t);
-  const since = c.lastTs ? Math.floor(c.lastTs / 1000) : 'all';
-  eventSource = new EventSource(`https://ntfy.sh/${encodeURIComponent(t)}/sse?since=${since}`);
-  eventSource.onopen = () => { chatOnline = true; updateStatus(); };
-  eventSource.onerror = () => { chatOnline = false; updateStatus(); };
-  eventSource.onmessage = handleIncoming;
+  // since = на 60 секунд назад от lastTs (запас на рассинхрон часов)
+  const since = c.lastTs ? Math.max(0, Math.floor(c.lastTs/1000) - 60) : 'all';
+  const url = `https://ntfy.sh/${encodeURIComponent(t)}/sse?since=${since}`;
+
+  es = new EventSource(url);
+  esTopic = t;
+
+  es.onopen = () => { netOnline = true; netStatus(); };
+  es.onerror = () => {
+    netOnline = false;
+    netStatus();
+    // ES сам переподключится, но подстрахуемся
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+      if (state.currentChat === t) connect();
+    }, 4000);
+  };
+  es.onmessage = (ev) => {
+    if (state.currentChat !== t) return;
+    handleMessage(ev);
+  };
 }
 
-async function handleIncoming(ev) {
+function disconnect() {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  if (es) { try { es.close(); } catch{} es = null; }
+  esTopic = null;
+}
+
+function handleMessage(ev) {
   let d;
   try { d = JSON.parse(ev.data); } catch { return; }
   if (d.event !== 'message') return;
 
-  let meta;
-  try { meta = JSON.parse(d.message || '{}'); } catch { return; }
-  if (d.attachment?.url) meta.url = d.attachment.url;
-
-  if (!meta.id || !meta.sid) return;
-  if (hasSeen(state.currentChat, meta.id)) return;
-
-  // Проверка подписи
-  const ok = await verifyMessage(meta);
-  if (!ok) {
-    console.warn('bad signature, dropped', meta);
+  // Presence
+  if (typeof d.message === 'string' && d.message.startsWith('\u0001P|')) {
+    const [, sid, nick] = d.message.split('|');
+    if (sid) updatePresence(sid, nick);
+    netStatus();
+    updateUsersBadge();
     return;
   }
 
-  // Проверка цепочки (prev должен совпадать с последним hash)
-  const c = cur();
-  if (meta.prev !== lastHash()) {
-    // возможно мы получили не в порядке — попробуем догнать
-    // для простоты: реконнект с since=0
-    console.warn('chain mismatch, reload from 0');
-    c.lastTs = 0;
-    saveState();
-    connect();
-    return;
-  }
+  // Обычное сообщение: JSON
+  let m;
+  try { m = JSON.parse(d.message || '{}'); } catch { return; }
+  if (!m.id || !m.sid) return;
 
-  markSeen(state.currentChat, meta.id);
-  applyMessage(meta);
-  c.messages.push(meta);
-  c.lastTs = Math.max(c.lastTs, meta.ts);
+  // Attachment URL
+  if (d.attachment && d.attachment.url) m.url = d.attachment.url;
+
+  // Время: если sender не проставил — берём серверное
+  if (!m.ts) m.ts = (d.time || Math.floor(Date.now()/1000)) * 1000;
+
+  ingestMessage(m, false);
+}
+
+async function postJSON(topic, obj, headers) {
+  const r = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+    method: 'POST',
+    body: JSON.stringify(obj),
+    headers: headers || {}
+  });
+  if (!r.ok) throw new Error('ntfy ' + r.status);
+}
+
+async function postAttachment(topic, blob, metaObj, headers) {
+  const r = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+    method: 'PUT',
+    body: blob,
+    headers: Object.assign({
+      'Filename': 'photo.jpg',
+      'Message': JSON.stringify(metaObj)
+    }, headers || {})
+  });
+  if (!r.ok) throw new Error('ntfy ' + r.status);
+}
+
+// ================================================================
+//  INGEST
+// ================================================================
+function ingestMessage(m, mine) {
+  const t = state.currentChat;
+  if (!t) return;
+  const c = ensureChat(t);
+
+  if (hasSeen(t, m.id)) return;
+
+  // Sys-сообщение: применить к состоянию чата
+  if (m.type === 'sys') applySys(c, m);
+
+  markSeen(t, m.id);
+  c.messages.push(m);
+  // Сортируем по времени; при равных — по id (стабильно)
+  c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
+  if (m.ts > c.lastTs) c.lastTs = m.ts;
+
+  // Регистрируем presence от отправителя
+  if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
+
   saveState();
-  renderMessagesIncremental(meta);
-}
 
-function lastHash() {
-  const c = cur();
-  if (!c || !c.messages.length) return '';
-  return c.messages[c.messages.length - 1].hash;
-}
+  if (mine) {
+    // Уже отрисовано локально; перерисовывать не надо, но обновим статусы
+    netStatus();
+    updateUsersBadge();
+    return;
+  }
 
-// ================================================================
-//  APPLY MESSAGE (обновление состояния чата)
-// ================================================================
-function applyMessage(m) {
-  const c = cur();
-  if (!c) return;
-  if (m.type === 'sys') {
-    switch (m.action) {
-      case 'create':
-        if (!c.createdBy) { c.createdBy = m.sid; c.admins = [m.sid]; }
-        break;
-      case 'rename':
-        if (c.admins.includes(m.sid) && m.text) c.name = m.text.slice(0, 40);
-        break;
-      case 'admin+':
-        if (c.admins.includes(m.sid) && m.target && !c.admins.includes(m.target)) {
-          c.admins.push(m.target);
-          c.bans = c.bans.filter(b => b !== m.target);
-        }
-        break;
-      case 'admin-':
-        if (c.admins.includes(m.sid) && m.target && m.target !== c.createdBy) {
-          c.admins = c.admins.filter(a => a !== m.target);
-        }
-        break;
-      case 'ban':
-        if (c.admins.includes(m.sid) && m.target && m.target !== c.createdBy && !c.bans.includes(m.target)) {
-          c.bans.push(m.target);
-          c.admins = c.admins.filter(a => a !== m.target);
-        }
-        break;
-      case 'unban':
-        if (c.admins.includes(m.sid) && m.target) c.bans = c.bans.filter(b => b !== m.target);
-        break;
-    }
+  // Проверяем: сообщение идёт в конец?
+  const visible = getVisibleMessages(c);
+  const lastVisible = visible[visible.length - 1];
+  if (!lastVisible || lastVisible.id === m.id || (m.ts >= (lastVisible.ts || 0))) {
+    // инкрементально
+    if (isVisible(m, c)) appendBubble(m, true);
+    updateUsersBadge();
+  } else {
+    renderAll();
+  }
+
+  // Уведомление
+  if (state.notifications && document.hidden && !isMeSid(m.sid) && m.type !== 'sys') {
+    try {
+      new Notification(m.nick || 'QR Chat', {
+        body: m.type === 'image' ? '📷 Фото' : (m.text || '').slice(0, 100),
+        tag: t
+      });
+    } catch {}
   }
 }
 
+function applySys(c, m) {
+  switch (m.action) {
+    case 'create':
+      if (!c.createdBy) { c.createdBy = m.sid; c.admins = [m.sid]; }
+      else if (!c.admins.includes(m.sid) && c.createdBy === m.sid) c.admins.push(m.sid);
+      break;
+    case 'rename':
+      if (m.text && (c.admins.includes(m.sid) || !c.createdBy)) c.name = m.text.slice(0,40);
+      break;
+    case 'admin+':
+      if (m.target && !c.admins.includes(m.target) && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+        c.admins.push(m.target);
+        c.bans = c.bans.filter(b => b !== m.target);
+      }
+      break;
+    case 'admin-':
+      if (m.target && m.target !== c.createdBy && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+        c.admins = c.admins.filter(a => a !== m.target);
+      }
+      break;
+    case 'ban':
+      if (m.target && m.target !== c.createdBy && !c.bans.includes(m.target)
+          && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+        c.bans.push(m.target);
+        c.admins = c.admins.filter(a => a !== m.target);
+      }
+      break;
+    case 'unban':
+      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+        c.bans = c.bans.filter(b => b !== m.target);
+      }
+      break;
+    case 'delete':
+      if (m.target && !c.deleted.includes(m.target)) {
+        const orig = c.messages.find(x => x.id === m.target);
+        if (orig && (orig.sid === m.sid || c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+          c.deleted.push(m.target);
+        }
+      }
+      break;
+  }
+}
+
+function isMeSid(sid) { return state.me.sid === sid; }
+function isVisible(m, c) {
+  if (!c) c = cur();
+  if (!c) return false;
+  if (m.type === 'sys') return false;                 // отрисуем отдельно
+  if (c.bans.includes(m.sid)) return false;
+  if (c.deleted.includes(m.id)) return false;
+  return true;
+}
+function getVisibleMessages(c) {
+  return c.messages.filter(m => isVisible(m, c));
+}
+
 // ================================================================
-//  SEND MESSAGE
+//  SEND
 // ================================================================
-async function sendMessage(partial) {
-  if (!state.currentChat) return;
-  const c = cur();
-  const kp = await loadOrCreateKeypair();
-  const m = {
-    id: randomHex(8),
+async function send(partial) {
+  const t = state.currentChat;
+  if (!t) return;
+  const c = ensureChat(t);
+  const m = Object.assign({
+    id: rhex(8),
     sid: state.me.sid,
     nick: state.me.nick,
-    ts: nowMs(),
+    ts: Date.now(),
     type: 'text',
-    prev: lastHash(),
-    pubKeyX: state.me.pubJwk.x,
-    pubKeyY: state.me.pubJwk.y,
-    ...partial,
-  };
-  // replyTo info — для отображения (не участвует в канонизации)
+  }, partial);
+
+  // Reply quote text (для отображения)
   if (m.replyTo) {
-    const orig = c.messages.find(x => x.id === m.replyTo);
-    if (orig) m.replyText = (orig.text || '[фото]').slice(0, 80);
+    const o = c.messages.find(x => x.id === m.replyTo);
+    if (o) m.replyText = (o.text || '[фото]').slice(0, 60);
   }
-  m.hash = chainHash(m);
-  m.sig = await signMessage(m);
 
-  // Локально применяем
-  markSeen(state.currentChat, m.id);
-  applyMessage(m);
-  c.messages.push(m);
-  c.lastTs = m.ts;
-  saveState();
-  renderMessagesIncremental(m);
+  // Локально сразу
+  ingestMessage(m, true);
+  if (m.type === 'sys') {
+    if (m.action !== 'react') renderAll(); // sys → перерисовать
+    else scheduleReactRender();
+  }
 
-  // Отправляем
-  const headers = { 'Title': state.me.nick };
+  // Отправка
+  const headers = { 'Title': state.me.nick || 'QRChat' };
   try {
-    let r;
-    if (m.type === 'image' && partial._blob) {
-      const metaCopy = { ...m };
-      delete metaCopy._blob;
-      r = await fetch(`https://ntfy.sh/${encodeURIComponent(state.currentChat)}`, {
-        method: 'PUT',
-        body: partial._blob,
-        headers: { ...headers, 'Filename': 'photo.jpg', 'Message': JSON.stringify(metaCopy) },
-      });
+    if (m.type === 'image' && m._blob) {
+      const meta = Object.assign({}, m);
+      delete meta._blob;
+      await postAttachment(t, m._blob, meta, headers);
     } else {
-      const metaCopy = { ...m };
-      delete metaCopy._blob;
-      r = await fetch(`https://ntfy.sh/${encodeURIComponent(state.currentChat)}`, {
-        method: 'POST',
-        body: JSON.stringify(metaCopy),
-        headers,
-      });
+      await postJSON(t, m, headers);
     }
-    if (!r.ok) throw new Error('ntfy ' + r.status);
   } catch (e) {
-    console.warn('send fail', e);
-    updateStatus('Ошибка отправки');
+    console.warn('send error', e);
+    $('statusText').textContent = 'Ошибка отправки';
   }
 }
 
+// Presence heartbeat
+async function sendPresence() {
+  const t = state.currentChat;
+  if (!t || !state.me.nick) return;
+  try {
+    await fetch(`https://ntfy.sh/${encodeURIComponent(t)}`, {
+      method: 'POST',
+      body: '\u0001P|' + state.me.sid + '|' + state.me.nick
+    });
+    updatePresence(state.me.sid, state.me.nick, Date.now());
+    netStatus();
+    updateUsersBadge();
+  } catch {}
+}
+function startPresence() {
+  stopPresence();
+  sendPresence();
+  presenceTimer = setInterval(sendPresence, 25000);
+  setInterval(() => { if (presenceClean()) { netStatus(); updateUsersBadge(); renderUsersIfOpen(); } }, 15000);
+}
+function stopPresence() {
+  if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
+}
+
 // ================================================================
-//  RENDER — chat messages
+//  RENDER — chat
 // ================================================================
 const chatEl = $('chat');
-let renderedIds = new Set();
 let lastSenderId = null;
 let lastDayStr = '';
+let reactRenderPending = false;
 
-function isVisibleMessage(m) {
-  const c = cur();
-  if (!c) return false;
-  if (isBanned(m.sid)) return false;
-  // deleted?
-  const del = c.messages.find(x => x.type === 'sys' && x.action === 'delete' && x.target === m.id);
-  if (del && (del.sid === m.sid || c.admins.includes(del.sid))) return false;
-  return true;
+function scheduleReactRender() {
+  if (reactRenderPending) return;
+  reactRenderPending = true;
+  setTimeout(() => { reactRenderPending = false; renderAll(); }, 200);
 }
 
 function renderAll() {
   chatEl.innerHTML = '';
-  renderedIds = new Set();
   lastSenderId = null;
   lastDayStr = '';
-  if (!state.currentChat) return;
   const c = cur();
-  const msgs = c.messages.filter(isVisibleMessage);
-  if (!msgs.length) return;
+  if (!c) return;
 
-  const v = verifyChain(c.messages);
-  if (!v.ok) {
-    const el = document.createElement('div');
-    el.className = 'sys';
-    el.innerHTML = '<span class="em">⚠️ Цепочка повреждена</span>';
-    chatEl.appendChild(el);
+  // Проходим по ВСЕМ сообщениям по времени, показываем видимые + системные
+  const all = c.messages.slice().sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
+
+  for (const m of all) {
+    if (m.type === 'sys') {
+      if (m.action === 'react') continue;
+      if (m.action === 'delete') continue;
+      appendSys(m);
+      continue;
+    }
+    if (!isVisible(m, c)) continue;
+    const day = fmtDay(m.ts);
+    if (day !== lastDayStr) {
+      lastDayStr = day;
+      const el = document.createElement('div');
+      el.className = 'day';
+      el.innerHTML = `<span>${day}</span>`;
+      chatEl.appendChild(el);
+      lastSenderId = null;
+    }
+    appendBubble(m, false);
   }
-
-  for (const m of msgs) appendBubble(m, false);
   chatEl.scrollTop = chatEl.scrollHeight;
   updateUsersBadge();
 }
 
-function renderMessagesIncremental(m) {
-  if (!isVisibleMessage(m)) { renderAll(); return; }
+function appendSys(m) {
+  const el = document.createElement('div');
+  el.className = 'sys';
+  const nick = `<span class="em">${esc(m.nick || 'User ' + shortSid(m.sid))}</span>`;
+  const tgt = m.targetNick ? esc(m.targetNick) : shortSid(m.target);
+  let html = '';
+  switch (m.action) {
+    case 'create': html = `${nick} создал чат`; break;
+    case 'rename': html = `${nick} переименовал в «${esc(m.text||'')}»`; break;
+    case 'admin+': html = `${nick} назначил админом ${tgt}`; break;
+    case 'admin-': html = `${nick} снял админа ${tgt}`; break;
+    case 'ban':    html = `${nick} забанил ${tgt}`; break;
+    case 'unban':  html = `${nick} разбанил ${tgt}`; break;
+    default: return;
+  }
+  el.innerHTML = html;
+  chatEl.appendChild(el);
+  lastSenderId = null;
   const day = fmtDay(m.ts);
-  if (day !== lastDayStr) {
-    lastDayStr = day;
-    const el = document.createElement('div');
-    el.className = 'day';
-    el.innerHTML = `<span>${day}</span>`;
-    chatEl.appendChild(el);
-    lastSenderId = null;
-  }
-  appendBubble(m, true);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  updateUsersBadge();
+  if (day !== lastDayStr) lastDayStr = day;
 }
 
-function findMsg(id) { return cur().messages.find(x => x.id === id); }
+function findMsg(id) { const c = cur(); return c ? c.messages.find(x => x.id === id) : null; }
 
 function appendBubble(m, animate) {
-  if (m.type === 'sys') {
-    const el = document.createElement('div');
-    el.className = 'sys';
-    let txt = '';
-    const nick = m.nick || ('User ' + shortSid(m.sid));
-    switch (m.action) {
-      case 'create': txt = `<span class="em">${escapeHtml(nick)}</span> создал чат`; break;
-      case 'rename': txt = `<span class="em">${escapeHtml(nick)}</span> переименовал чат в «${escapeHtml(m.text)}»`; break;
-      case 'admin+': txt = `<span class="em">${escapeHtml(nick)}</span> назначил админом ${escapeHtml(m.targetNick || shortSid(m.target))}`; break;
-      case 'admin-': txt = `<span class="em">${escapeHtml(nick)}</span> снял админа ${escapeHtml(m.targetNick || shortSid(m.target))}`; break;
-      case 'ban':    txt = `<span class="em">${escapeHtml(nick)}</span> забанил ${escapeHtml(m.targetNick || shortSid(m.target))}`; break;
-      case 'unban':  txt = `<span class="em">${escapeHtml(nick)}</span> разбанил ${escapeHtml(m.targetNick || shortSid(m.target))}`; break;
-      case 'delete': txt = `<span class="em">${escapeHtml(nick)}</span> удалил сообщение`; break;
-      case 'react':  return; // реакции не показываем в ленте
-      default: txt = `<span class="em">${escapeHtml(nick)}</span> ${escapeHtml(m.action||'')}`;
-    }
-    el.innerHTML = txt;
-    chatEl.appendChild(el);
-    lastSenderId = null;
-    return;
-  }
-
+  const c = cur();
   const wrap = document.createElement('div');
-  wrap.className = 'msg-wrap ' + (isMe(m.sid) ? 'me' : 'them');
+  wrap.className = 'msg-wrap ' + (isMeSid(m.sid) ? 'me' : 'them');
   if (m.sid === lastSenderId) wrap.classList.add('same-sender');
   wrap.dataset.msgId = m.id;
 
-  if (!isMe(m.sid) && m.sid !== lastSenderId) {
+  if (!isMeSid(m.sid) && m.sid !== lastSenderId) {
     const nick = document.createElement('div');
     nick.className = 'msg-nick';
-    nick.innerHTML = escapeHtml(m.nick || ('User ' + shortSid(m.sid)))
-      + (isAdmin(m.sid) ? ' <span class="admin">ADMIN</span>' : '');
     nick.style.color = nickColor(m.sid);
+    nick.innerHTML = esc(m.nick || 'User ' + shortSid(m.sid))
+      + (c.admins.includes(m.sid) ? ' <span class="admin-tag">ADMIN</span>' : '');
     wrap.appendChild(nick);
   }
 
@@ -766,7 +715,7 @@ function appendBubble(m, animate) {
     const orig = findMsg(m.replyTo);
     const q = document.createElement('div');
     q.className = 'quote';
-    q.textContent = orig ? `${orig.nick || ''}: ${(orig.text || '[фото]').slice(0, 60)}` : 'сообщение';
+    q.textContent = orig ? `${orig.nick || ''}: ${(orig.text || '[фото]').slice(0,60)}` : (m.replyText || 'сообщение');
     b.appendChild(q);
   }
 
@@ -779,15 +728,14 @@ function appendBubble(m, animate) {
     img.addEventListener('error', () => {
       b.classList.remove('img');
       b.classList.add('broken');
-      b.textContent = '[фото недоступно: истекло хранение]';
+      b.textContent = '[фото недоступно]';
     });
     b.appendChild(img);
   } else if (m.text) {
     b.appendChild(document.createTextNode(m.text));
   }
 
-  // Реакции
-  const reacts = collectReactions(m.id);
+  const reacts = collectReactions(m.id, c);
   if (Object.keys(reacts).length) {
     const rdiv = document.createElement('div');
     rdiv.className = 'reactions';
@@ -801,7 +749,7 @@ function appendBubble(m, animate) {
     b.appendChild(rdiv);
   }
 
-  // Long-press → context menu
+  // Long-press
   let lpTimer = null;
   const startLp = (e) => {
     lpTimer = setTimeout(() => { showCtx(e.touches?.[0] || e, m); }, 450);
@@ -814,55 +762,38 @@ function appendBubble(m, animate) {
 
   row.appendChild(b);
   wrap.appendChild(row);
-
   if (animate) wrap.style.animation = 'pop 0.18s ease-out';
   chatEl.appendChild(wrap);
   lastSenderId = m.sid;
 }
 
-// ================================================================
-//  REACTIONS
-// ================================================================
-const REACT_EMOJIS = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
-function collectReactions(msgId) {
-  const c = cur();
-  const out = {};
+function collectReactions(msgId, c) {
+  const counts = {};  // "sid|emoji" -> count
   for (const m of c.messages) {
     if (m.type !== 'sys' || m.action !== 'react' || m.target !== msgId) continue;
-    if (isBanned(m.sid)) continue;
-    // учитываем только последнее действие каждого пользователя по emoji:
-    // если есть более позднее действие от этого sid с тем же emoji — toggle
-    if (!out[m.text]) out[m.text] = [];
-    if (!out[m.text].includes(m.sid)) out[m.text].push(m.sid);
-  }
-  // Учёт "снятия" (повторное нажатие того же emoji тем же sid): считаем чётность
-  const counts = {};
-  for (const m of c.messages) {
-    if (m.type !== 'sys' || m.action !== 'react' || m.target !== msgId) continue;
-    if (isBanned(m.sid)) continue;
+    if (c.bans.includes(m.sid)) continue;
     const k = m.sid + '|' + m.text;
     counts[k] = (counts[k] || 0) + 1;
   }
-  const out2 = {};
+  const out = {};
   for (const [k, n] of Object.entries(counts)) {
     if (n % 2 === 0) continue;
     const [sid, emoji] = k.split('|');
-    if (!out2[emoji]) out2[emoji] = [];
-    out2[emoji].push(sid);
+    (out[emoji] = out[emoji] || []).push(sid);
   }
-  return out2;
+  return out;
 }
 function toggleReaction(msgId, emoji) {
-  sendMessage({ type: 'sys', action: 'react', target: msgId, text: emoji });
-  setTimeout(renderAll, 100);
+  send({ type: 'sys', action: 'react', target: msgId, text: emoji });
 }
 
 // ================================================================
 //  CONTEXT MENU
 // ================================================================
 const ctxEl = $('ctx');
+const REACT_EMOJIS = ['❤️','👍','😂','😮','😢','🔥'];
 function showCtx(evt, m) {
-  const rect = evt.touches?.[0] ? { x: evt.touches[0].clientX, y: evt.touches[0].clientY } : { x: evt.clientX, y: evt.clientY };
+  const p = evt.touches?.[0] || evt;
   ctxEl.innerHTML = '';
 
   const emojis = document.createElement('div');
@@ -875,38 +806,34 @@ function showCtx(evt, m) {
   }
   ctxEl.appendChild(emojis);
 
-  if (m.type !== 'sys') {
-    const bReply = document.createElement('button');
-    bReply.textContent = '↩️ Ответить';
-    bReply.addEventListener('click', () => { setReply(m); ctxEl.classList.remove('show'); });
-    ctxEl.appendChild(bReply);
+  const bReply = document.createElement('button');
+  bReply.textContent = '↩️ Ответить';
+  bReply.addEventListener('click', () => { setReply(m); ctxEl.classList.remove('show'); });
+  ctxEl.appendChild(bReply);
 
-    const bCopy = document.createElement('button');
-    bCopy.textContent = '📋 Копировать';
-    bCopy.addEventListener('click', () => {
-      navigator.clipboard?.writeText(m.text || m.url || '');
-      ctxEl.classList.remove('show');
-    });
-    ctxEl.appendChild(bCopy);
-  }
+  const bCopy = document.createElement('button');
+  bCopy.textContent = '📋 Копировать';
+  bCopy.addEventListener('click', () => {
+    try { navigator.clipboard.writeText(m.text || m.url || ''); } catch {}
+    ctxEl.classList.remove('show');
+  });
+  ctxEl.appendChild(bCopy);
 
-  const canDelete = isAdmin(state.me.sid) || m.sid === state.me.sid;
-  if (canDelete && m.type !== 'sys') {
+  const c = cur();
+  const canDel = c && (c.admins.includes(state.me.sid) || m.sid === state.me.sid || c.createdBy === state.me.sid);
+  if (canDel) {
     const bDel = document.createElement('button');
     bDel.className = 'danger';
     bDel.textContent = '🗑 Удалить';
-    bDel.addEventListener('click', () => {
-      sendMessage({ type: 'sys', action: 'delete', target: m.id });
-      ctxEl.classList.remove('show');
-      setTimeout(renderAll, 200);
-    });
+    bDel.addEventListener('click', () => { send({ type: 'sys', action: 'delete', target: m.id }); ctxEl.classList.remove('show'); });
     ctxEl.appendChild(bDel);
   }
 
   ctxEl.classList.add('show');
-  const w = 200, h = ctxEl.offsetHeight;
-  let x = Math.min(rect.x, window.innerWidth - w - 8);
-  let y = Math.min(rect.y, window.innerHeight - h - 8);
+  const w = 210, h = ctxEl.offsetHeight;
+  let x = Math.min(p.clientX, window.innerWidth - w - 8);
+  let y = Math.min(p.clientY, window.innerHeight - h - 8);
+  x = Math.max(8, x); y = Math.max(8, y);
   ctxEl.style.left = x + 'px';
   ctxEl.style.top = y + 'px';
 }
@@ -920,35 +847,28 @@ document.addEventListener('click', (e) => {
 let replyTo = null;
 function setReply(m) {
   replyTo = m;
-  $('replyText').textContent = (m.nick || '') + ': ' + (m.text || '[фото]').slice(0, 50);
+  $('replyText').textContent = (m.nick || '') + ': ' + (m.text || '[фото]').slice(0,50);
   $('replyBar').classList.add('show');
 }
 function clearReply() { replyTo = null; $('replyBar').classList.remove('show'); }
 $('replyCancel').addEventListener('click', clearReply);
 
 // ================================================================
-//  STATUS / TOPBAR
+//  BADGES
 // ================================================================
-function updateStatus(msg) {
-  const c = cur();
-  if (!c) { $('statusText').textContent = 'Не подключено'; $('statusDot').classList.remove('on'); return; }
-  if (msg) { $('statusText').textContent = msg; return; }
-  const online = Object.keys(presence).length;
-  $('statusText').textContent = chatOnline ? `В сети · ${online}` : 'Переподключение…';
-  $('statusDot').classList.toggle('on', chatOnline);
-  $('chatTitle').textContent = c.name;
-}
 function updateUsersBadge() {
   const c = cur();
   if (!c) return;
-  const sids = new Set(c.messages.filter(m => m.type !== 'sys').map(m => m.sid));
+  const sids = new Set();
+  for (const m of c.messages) if (m.type !== 'sys') sids.add(m.sid);
+  for (const s in presence) if (isOnline(s)) sids.add(s);
   const badge = $('usersBadge');
   badge.textContent = sids.size;
-  badge.style.display = sids.size > 0 ? '' : 'none';
+  badge.style.display = sids.size ? '' : 'none';
 }
 
 // ================================================================
-//  UI — Screens (welcome / chatlist / join / users / menu)
+//  OVERLAYS
 // ================================================================
 const overlay = $('overlay');
 function showOverlay(html) {
@@ -957,76 +877,64 @@ function showOverlay(html) {
 }
 function hideOverlay() { overlay.classList.add('hidden'); }
 
-// --- Экран приветствия (ник) ---
 function screenWelcome() {
   showOverlay(`
     <div class="card">
       <h2>QR Chat</h2>
-      <p class="hint">Мульти-юзер чат без сервера. Данные идут через ntfy.sh, история хранится у каждого локально и подписывается криптографически.</p>
+      <p class="hint">Мульти-юзерный чат без сервера. Все данные через ntfy.sh, история хранится локально.</p>
       <input class="field" id="nickInput" placeholder="Твой ник" maxlength="24" autocomplete="off">
       <button class="btn primary" id="saveNickBtn">Продолжить</button>
     </div>
   `);
   setTimeout(() => $('nickInput').focus(), 100);
-  $('saveNickBtn').addEventListener('click', async () => {
+  $('saveNickBtn').addEventListener('click', () => {
     const v = $('nickInput').value.trim();
     if (!v) return;
-    state.me.nick = v.slice(0, 24);
-    await loadOrCreateKeypair();
-    saveState();
+    state.me.nick = v.slice(0,24);
+    saveNow();
     screenChatList();
   });
 }
 
-// --- Список чатов ---
 function screenChatList() {
   const chats = Object.entries(state.chats);
-  const html = `
+  let listHtml = '';
+  if (!chats.length) listHtml = '<p style="color:var(--muted);text-align:center;padding:20px 0;">Пока пусто</p>';
+  else {
+    for (const [topic, c] of chats) {
+      const vis = getVisibleMessages(c);
+      const last = vis[vis.length-1];
+      listHtml += `
+        <div class="chat-item ${topic === state.currentChat ? 'active' : ''}" data-topic="${esc(topic)}">
+          <div class="chat-avatar">${esc((c.name||'?').slice(0,1).toUpperCase())}</div>
+          <div class="chat-meta">
+            <div class="name">${esc(c.name)}</div>
+            <div class="last">${last ? esc((last.nick||'')+': '+(last.text || '[фото]').slice(0,40)) : '—'}</div>
+          </div>
+        </div>`;
+    }
+  }
+  showOverlay(`
     <div class="card">
       <h2>Мои чаты</h2>
-      <p class="hint">Ты — <b>${escapeHtml(state.me.nick)}</b> · ID ${shortSid(state.me.sid)}</p>
-      <div id="chatListBox">${chats.length ? '' : '<p style="color:var(--muted);text-align:center;padding:20px 0;">Пока пусто</p>'}</div>
+      <p class="hint">Ты — <b>${esc(state.me.nick)}</b> · ${shortSid(state.me.sid)}</p>
+      <div id="chatListBox">${listHtml}</div>
       <button class="btn primary" id="createChatBtn" style="margin-top:12px;">✨ Создать новый чат</button>
-      <button class="btn" id="joinChatBtn">🔑 Присоединиться по ключу</button>
+      <button class="btn" id="joinChatBtn">🔑 Присоединиться</button>
       <button class="btn" id="settingsBtn">⚙️ Настройки</button>
     </div>
-  `;
-  showOverlay(html);
-
-  const box = $('chatListBox');
-  for (const [topic, c] of chats) {
-    const div = document.createElement('div');
-    div.className = 'chat-item' + (topic === state.currentChat ? ' active' : '');
-    const last = c.messages.filter(isVisibleMsgByTopic.bind(null, topic)).slice(-1)[0];
-    div.innerHTML = `
-      <div class="chat-avatar">${escapeHtml((c.name || '?').slice(0,1).toUpperCase())}</div>
-      <div class="chat-meta">
-        <div class="name">${escapeHtml(c.name)}</div>
-        <div class="last">${last ? escapeHtml((last.nick||'') + ': ' + (last.text || '[фото]').slice(0,40)) : '—'}</div>
-      </div>
-    `;
-    div.addEventListener('click', () => enterChat(topic));
-    box.appendChild(div);
-  }
-
+  `);
+  overlay.querySelectorAll('.chat-item').forEach(el => {
+    el.addEventListener('click', () => enterChat(el.dataset.topic, false));
+  });
   $('createChatBtn').addEventListener('click', () => {
-    const t = 'nfc-' + randomHex(8);
+    const t = 'nfc-' + rhex(8);
     enterChat(t, true);
   });
   $('joinChatBtn').addEventListener('click', screenJoin);
   $('settingsBtn').addEventListener('click', screenSettings);
 }
 
-function isVisibleMsgByTopic(topic, m) {
-  const c = state.chats[topic];
-  if (!c) return true;
-  if (c.bans.includes(m.sid)) return false;
-  const del = c.messages.find(x => x.type === 'sys' && x.action === 'delete' && x.target === m.id);
-  if (del && (del.sid === m.sid || c.admins.includes(del.sid))) return false;
-  return true;
-}
-
-// --- Присоединиться ---
 function screenJoin() {
   showOverlay(`
     <div class="card">
@@ -1042,24 +950,23 @@ function screenJoin() {
   $('scanBtn').addEventListener('click', startScan);
   $('manualBtn').addEventListener('click', () => {
     const v = $('manualKey').value.trim();
-    if (v) { enterChat(v, false); }
+    if (v) enterChat(v, false);
   });
   $('backBtn').addEventListener('click', screenChatList);
 }
 
-// --- Настройки ---
 function screenSettings() {
   const themeLabel = { auto: 'Авто', light: 'Светлая', dark: 'Тёмная' };
   showOverlay(`
     <div class="card">
       <h2>Настройки</h2>
-      <p class="hint">Ник: <b>${escapeHtml(state.me.nick)}</b></p>
+      <p class="hint">Ник: <b>${esc(state.me.nick)}</b> · ${shortSid(state.me.sid)}</p>
       <button class="btn" id="changeNickBtn">✎ Сменить ник</button>
-      <button class="btn" id="themeBtn">🎨 Тема: ${themeLabel[state.theme] || 'Авто'}</button>
-      <button class="btn" id="notifBtn">🔔 Уведомления: ${state.notifications ? 'вкл' : 'выкл'}</button>
+      <button class="btn" id="themeBtn">🎨 Тема: ${themeLabel[state.theme]||'Авто'}</button>
+      <button class="btn" id="notifBtn">🔔 Уведомления: ${state.notifications?'вкл':'выкл'}</button>
       <div class="divider">бэкап</div>
-      <button class="btn" id="exportBtn">⬇ Экспорт истории (JSON)</button>
-      <button class="btn" id="importBtn">⬆ Импорт истории</button>
+      <button class="btn" id="exportBtn">⬇ Экспорт (JSON)</button>
+      <button class="btn" id="importBtn">⬆ Импорт</button>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
       <div class="divider">опасно</div>
       <button class="btn danger" id="wipeBtn">🗑 Удалить все данные</button>
@@ -1068,127 +975,128 @@ function screenSettings() {
   `);
   $('changeNickBtn').addEventListener('click', () => {
     const v = prompt('Новый ник:', state.me.nick);
-    if (v && v.trim()) { state.me.nick = v.trim().slice(0,24); saveState(); screenSettings(); }
+    if (v && v.trim()) { state.me.nick = v.trim().slice(0,24); saveNow(); screenSettings(); }
   });
   $('themeBtn').addEventListener('click', () => {
-    const order = ['auto', 'light', 'dark'];
-    state.theme = order[(order.indexOf(state.theme) + 1) % 3];
-    applyTheme(); saveState(); screenSettings();
+    const o = ['auto','light','dark'];
+    state.theme = o[(o.indexOf(state.theme)+1) % 3];
+    applyTheme(); saveNow(); screenSettings();
   });
   $('notifBtn').addEventListener('click', async () => {
-    if (!('Notification' in window)) { alert('Уведомления не поддерживаются'); return; }
+    if (!('Notification' in window)) { alert('Нет поддержки уведомлений'); return; }
     const p = await Notification.requestPermission();
-    state.notifications = p === 'granted';
-    saveState(); screenSettings();
+    state.notifications = (p === 'granted');
+    saveNow(); screenSettings();
   });
   $('exportBtn').addEventListener('click', exportData);
   $('importBtn').addEventListener('click', () => $('importFile').click());
-  $('importFile').addEventListener('change', async (e) => {
-    const f = e.target.files[0];
-    if (f) await importData(f);
+  $('importFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (f) await importData(f);
   });
   $('wipeBtn').addEventListener('click', () => {
-    if (!confirm('Удалить ВСЕ данные (чаты, ключи, ник)? Это необратимо.')) return;
-    localStorage.removeItem(LS_KEY);
+    if (!confirm('Удалить ВСЁ (чаты, историю, ник)?')) return;
+    localStorage.removeItem(LS);
     location.reload();
   });
   $('backBtn').addEventListener('click', screenChatList);
 }
 
-// --- Пользователи ---
+// --- Users ---
 function screenUsers() {
   const c = cur();
   if (!c) return;
-  const sids = new Set(c.messages.filter(m => m.type !== 'sys').map(m => m.sid));
-  // добавляем известных "оффлайн" из presence
-  const allSids = new Set([...sids, ...Object.keys(presence)]);
+  const sids = new Set();
+  for (const m of c.messages) if (m.type !== 'sys') sids.add(m.sid);
+  for (const s in presence) sids.add(s);
+  for (const a of c.admins) sids.add(a);
+  for (const b of c.bans) sids.add(b);
+
   const nickById = {};
   for (const m of c.messages) if (m.nick && !nickById[m.sid]) nickById[m.sid] = m.nick;
-  for (const [sid, p] of Object.entries(presence)) nickById[sid] = p.nick;
+  for (const [s, p] of Object.entries(presence)) nickById[s] = p.nick;
+  nickById[state.me.sid] = state.me.nick;
 
-  const online = s => presence[s] && Date.now() - presence[s].ts < 65000;
-  const list = [...allSids].map(sid => ({
+  const list = [...sids].map(sid => ({
     sid,
     nick: nickById[sid] || ('User ' + shortSid(sid)),
-    online: online(sid),
+    online: isOnline(sid),
     admin: c.admins.includes(sid),
     banned: c.bans.includes(sid),
-    me: isMe(sid),
-  })).sort((a, b) => (b.admin - a.admin) || (b.online - a.online) || a.nick.localeCompare(b.nick));
+    creator: c.createdBy === sid,
+    me: isMeSid(sid)
+  })).sort((a,b) => (b.admin - a.admin) || (b.online - a.online) || a.nick.localeCompare(b.nick));
 
-  const iAmAdmin = isAdmin(state.me.sid);
-  let html = `
+  const iAmAdmin = c.admins.includes(state.me.sid) || c.createdBy === state.me.sid;
+
+  let items = '';
+  for (const u of list) {
+    const actions = [];
+    if (iAmAdmin && !u.me) {
+      if (!u.creator && !u.admin && !u.banned) actions.push(`<button data-act="admin+" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}" class="ok">Админ</button>`);
+      if (u.admin && !u.creator) actions.push(`<button data-act="admin-" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}">Снять</button>`);
+      if (!u.banned && !u.creator) actions.push(`<button data-act="ban" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}" class="danger">Бан</button>`);
+      if (u.banned) actions.push(`<button data-act="unban" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}">Разбан</button>`);
+    }
+    items += `
+      <div class="user-item">
+        <div class="user-avatar" style="background:${nickColor(u.sid)}">
+          ${esc(u.nick.slice(0,1).toUpperCase())}
+          <span class="presence-dot ${u.online?'on':''}"></span>
+        </div>
+        <div class="user-info">
+          <div class="nick">${esc(u.nick)}
+            ${u.admin ? ' <span style="color:var(--green);font-size:11px;">ADMIN</span>' : ''}
+            ${u.creator ? ' <span style="color:var(--green);font-size:11px;">СОЗДАТЕЛЬ</span>' : ''}
+            ${u.me ? ' <span style="color:var(--muted);font-size:11px;">(ты)</span>' : ''}
+            ${u.banned ? ' <span style="color:var(--danger);font-size:11px;">BAN</span>' : ''}
+          </div>
+          <div class="sub">${u.online?'в сети':'офлайн'} · ${shortSid(u.sid)}</div>
+        </div>
+        <div class="user-actions">${actions.join('')}</div>
+      </div>`;
+  }
+
+  showOverlay(`
     <div class="card" style="padding:14px;">
       <h2 style="margin-bottom:10px;">Участники · ${list.length}</h2>
-      <div id="userList"></div>
-      <button class="btn" id="backBtn" style="margin-top:12px;">← К чату</button>
+      <div id="userList">${items}</div>
+      <button class="btn" id="backBtn" style="margin-top:12px;">← Назад</button>
     </div>
-  `;
-  showOverlay(html);
-  const box = $('userList');
-  for (const u of list) {
-    const div = document.createElement('div');
-    div.className = 'user-item';
-    div.innerHTML = `
-      <div class="user-avatar" style="background:${nickColor(u.sid)}">
-        ${escapeHtml(u.nick.slice(0,1).toUpperCase())}
-        <span class="presence-dot ${u.online ? 'on' : ''}"></span>
-      </div>
-      <div class="user-info">
-        <div class="nick">${escapeHtml(u.nick)}${u.admin ? ' <span style="color:var(--green);font-size:11px;">ADMIN</span>' : ''}${u.me ? ' <span style="color:var(--muted);font-size:11px;">(ты)</span>' : ''}${u.banned ? ' <span style="color:var(--danger);font-size:11px;">BAN</span>' : ''}</div>
-        <div class="sub">${u.online ? 'в сети' : 'офлайн'} · ${shortSid(u.sid)}</div>
-      </div>
-      <div class="user-actions"></div>
-    `;
-    const act = div.querySelector('.user-actions');
-    if (iAmAdmin && !u.me) {
-      if (!u.admin && !u.banned) {
-        const b = document.createElement('button');
-        b.textContent = 'Назначить';
-        b.addEventListener('click', () => { sendMessage({ type: 'sys', action: 'admin+', target: u.sid, targetNick: u.nick }); setTimeout(() => { screenUsers(); }, 200); });
-        act.appendChild(b);
-      }
-      if (u.admin && u.sid !== c.createdBy) {
-        const b = document.createElement('button');
-        b.textContent = 'Снять';
-        b.addEventListener('click', () => { sendMessage({ type: 'sys', action: 'admin-', target: u.sid, targetNick: u.nick }); setTimeout(() => { screenUsers(); }, 200); });
-        act.appendChild(b);
-      }
-      if (!u.banned && u.sid !== c.createdBy) {
-        const b = document.createElement('button');
-        b.className = 'danger';
-        b.textContent = 'Бан';
-        b.addEventListener('click', () => { if (confirm('Забанить ' + u.nick + '?')) { sendMessage({ type: 'sys', action: 'ban', target: u.sid, targetNick: u.nick }); setTimeout(() => { screenUsers(); }, 200); } });
-        act.appendChild(b);
-      } else if (u.banned) {
-        const b = document.createElement('button');
-        b.textContent = 'Разбан';
-        b.addEventListener('click', () => { sendMessage({ type: 'sys', action: 'unban', target: u.sid, targetNick: u.nick }); setTimeout(() => { screenUsers(); }, 200); });
-        act.appendChild(b);
-      }
-    }
-    box.appendChild(div);
-  }
-  $('backBtn').addEventListener('click', hideOverlay);
+  `);
+  $('backBtn').addEventListener('click', screenChatMenu);
+  overlay.querySelectorAll('.user-actions button').forEach(b => {
+    b.addEventListener('click', () => {
+      const act = b.dataset.act;
+      const sid = b.dataset.sid;
+      const nick = b.dataset.nick;
+      if (act === 'ban' && !confirm('Забанить ' + nick + '?')) return;
+      send({ type: 'sys', action: act, target: sid, targetNick: nick });
+      setTimeout(screenUsers, 250);
+    });
+  });
+}
+function renderUsersIfOpen() {
+  if (overlay.classList.contains('hidden')) return;
+  if (overlay.querySelector('#userList')) screenUsers();
 }
 
-// --- Меню чата ---
+// --- Chat menu ---
 function screenChatMenu() {
   const c = cur();
   if (!c) return;
-  const iAmAdmin = isAdmin(state.me.sid);
+  const iAmAdmin = c.admins.includes(state.me.sid) || c.createdBy === state.me.sid;
   showOverlay(`
     <div class="card">
-      <h2>${escapeHtml(c.name)}</h2>
-      <p class="hint">${c.messages.filter(m => m.type !== 'sys').length} сообщений · ключ <span style="font-family:monospace">${state.currentChat.slice(-8)}</span></p>
+      <h2>${esc(c.name)}</h2>
+      <p class="hint">${getVisibleMessages(c).length} сообщений · ключ <span style="font-family:monospace">…${state.currentChat.slice(-8)}</span></p>
       <button class="btn primary" id="qrBtn">⊞ Показать QR</button>
       <button class="btn" id="usersBtn2">👥 Участники</button>
-      ${iAmAdmin ? '<button class="btn" id="renameBtn">✎ Переименовать чат</button>' : ''}
-      <button class="btn" id="chatListBtn">📂 Все мои чаты</button>
+      ${iAmAdmin ? '<button class="btn" id="renameBtn">✎ Переименовать</button>' : ''}
+      <button class="btn" id="chatListBtn">📂 Все чаты</button>
       <button class="btn" id="exportChatBtn">⬇ Экспорт чата</button>
       <button class="btn" id="settingsBtn2">⚙️ Настройки</button>
       <div class="divider">опасно</div>
-      <button class="btn danger" id="leaveBtn">🚪 Выйти (удалить локально)</button>
+      <button class="btn danger" id="leaveBtn">🚪 Выйти из чата</button>
       <button class="btn" id="backBtn" style="margin-top:8px;">← К чату</button>
     </div>
   `);
@@ -1196,9 +1104,11 @@ function screenChatMenu() {
     showOverlay(`
       <div class="card">
         <h2>Приглашение</h2>
-        <p class="hint">Пусть друг отсканирует QR</p>
-        <div id="qrBox" class="show" style="display:flex;justify-content:center;"></div>
-        <div id="keyLine">Ключ:<br><span class="key">${state.currentChat}</span></div>
+        <p class="hint">Пусть друг отсканирует</p>
+        <div id="qrBox" style="display:flex;justify-content:center;padding:12px;background:#fff;border-radius:14px;"></div>
+        <div style="font-size:12px;text-align:center;color:var(--muted);word-break:break-all;margin-top:10px;">
+          Ключ:<br><span style="font-family:monospace;background:var(--sys-bg);padding:3px 8px;border-radius:6px;display:inline-block;margin-top:4px;">${state.currentChat}</span>
+        </div>
         <button class="btn" id="backBtn2" style="margin-top:12px;">← Назад</button>
       </div>
     `);
@@ -1210,9 +1120,10 @@ function screenChatMenu() {
   const rn = $('renameBtn');
   if (rn) rn.addEventListener('click', () => {
     const v = prompt('Новое название:', c.name);
-    if (v && v.trim()) { sendMessage({ type: 'sys', action: 'rename', text: v.trim().slice(0,40) }); }
+    if (v && v.trim()) send({ type: 'sys', action: 'rename', text: v.trim().slice(0,40) });
+    setTimeout(screenChatMenu, 300);
   });
-  $('chatListBtn').addEventListener('click', () => { screenChatList(); });
+  $('chatListBtn').addEventListener('click', screenChatList);
   $('exportChatBtn').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -1222,13 +1133,13 @@ function screenChatMenu() {
   });
   $('settingsBtn2').addEventListener('click', screenSettings);
   $('leaveBtn').addEventListener('click', () => {
-    if (!confirm('Выйти из чата и удалить локально?')) return;
+    if (!confirm('Выйти и удалить локально?')) return;
     const t = state.currentChat;
-    delete state.chats[t]; delete state.seenIds[t];
-    if (state.currentChat === t) state.currentChat = null;
-    saveState();
-    if (eventSource) { eventSource.close(); eventSource = null; }
-    stopPresence();
+    delete state.chats[t];
+    delete state.seenIds[t];
+    state.currentChat = null;
+    saveNow();
+    disconnect(); stopPresence();
     $('app').style.display = 'none';
     screenChatList();
   });
@@ -1238,29 +1149,29 @@ function screenChatMenu() {
 // ================================================================
 //  ENTER CHAT
 // ================================================================
-async function enterChat(topic, isNew) {
-  await loadOrCreateKeypair();
+function enterChat(topic, isNew) {
+  topic = String(topic).trim();
+  if (!topic) return;
   state.currentChat = topic;
   const c = ensureChat(topic);
   saveState();
 
   $('app').style.display = 'flex';
   hideOverlay();
-  updateStatus();
+  $('chatTitle').textContent = c.name;
   renderAll();
+  netStatus();
 
-  // если новый — шлём create
-  if (isNew && c.messages.length === 0) {
-    await sendMessage({ type: 'sys', action: 'create' });
+  // Если новый — шлём create
+  if (isNew && !c.createdBy) {
+    c.createdBy = state.me.sid;
+    c.admins = [state.me.sid];
+    saveState();
+    send({ type: 'sys', action: 'create' });
   }
 
   connect();
   startPresence();
-
-  // уведомления
-  if (state.notifications && 'Notification' in window && Notification.permission === 'granted') {
-    // применится в handleIncoming
-  }
 }
 
 // ================================================================
@@ -1277,8 +1188,9 @@ async function startScan() {
     { video: true }
   ];
   let stream = null, lastErr = null;
-  for (const c of tries) {
-    try { stream = await navigator.mediaDevices.getUserMedia(c); break; } catch (e) { lastErr = e; }
+  for (const cst of tries) {
+    try { stream = await navigator.mediaDevices.getUserMedia(cst); break; }
+    catch (e) { lastErr = e; }
   }
   if (!stream) { alert('Камера: ' + (lastErr ? lastErr.name : 'error')); return; }
   mediaStream = stream;
@@ -1288,12 +1200,16 @@ async function startScan() {
   await new Promise(res => { if (video.readyState >= 1) res(); else video.onloadedmetadata = () => res(); });
   try { await video.play(); } catch {}
   await new Promise(r => setTimeout(r, 300));
-  const detector = new BarcodeDetector({ formats: ['qr_code'] });
+  const det = new BarcodeDetector({ formats: ['qr_code'] });
   scanInterval = setInterval(async () => {
     if (video.readyState < 2 || video.videoWidth === 0) return;
     try {
-      const codes = await detector.detect(video);
-      if (codes?.length) { const v = codes[0].rawValue; stopScan(); enterChat(v, false); }
+      const codes = await det.detect(video);
+      if (codes?.length) {
+        const v = codes[0].rawValue;
+        stopScan();
+        enterChat(v, false);
+      }
     } catch {}
   }, 250);
 }
@@ -1306,7 +1222,7 @@ async function stopScan() {
 $('stopScanBtn').addEventListener('click', stopScan);
 
 // ================================================================
-//  SENDING — UI
+//  SEND UI
 // ================================================================
 const msgInput = $('msgInput');
 const sendBtn = $('sendBtn');
@@ -1322,11 +1238,11 @@ async function sendText() {
   autoGrow(msgInput);
   const extra = replyTo ? { replyTo: replyTo.id } : {};
   clearReply();
-  await sendMessage({ type: 'text', text: t, ...extra });
+  await send(Object.assign({ type: 'text', text: t }, extra));
 }
 sendBtn.addEventListener('click', sendText);
 msgInput.addEventListener('input', () => autoGrow(msgInput));
-msgInput.addEventListener('keydown', (e) => {
+msgInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); }
 });
 
@@ -1340,11 +1256,11 @@ fileInput.addEventListener('change', async () => {
     const url = URL.createObjectURL(blob);
     const extra = replyTo ? { replyTo: replyTo.id } : {};
     clearReply();
-    await sendMessage({ type: 'image', url, _blob: blob, ...extra });
-  } catch (e) { alert('Ошибка: ' + e.message); }
+    await send(Object.assign({ type: 'image', url, _blob: blob }, extra));
+  } catch (e) { alert('Ошибка фото: ' + e.message); }
 });
 
-function compressImage(file, maxDim, quality) {
+function compressImage(file, maxDim, q) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -1356,7 +1272,7 @@ function compressImage(file, maxDim, quality) {
       const c = document.createElement('canvas');
       c.width = width; c.height = height;
       c.getContext('2d').drawImage(img, 0, 0, width, height);
-      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob')), 'image/jpeg', quality);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob')), 'image/jpeg', q);
     };
     img.onerror = () => reject(new Error('load'));
     img.src = URL.createObjectURL(file);
@@ -1364,57 +1280,20 @@ function compressImage(file, maxDim, quality) {
 }
 
 // ================================================================
-//  NOTIFICATIONS
-// ================================================================
-const origHandleIncoming = handleIncoming;
-handleIncoming = async function(ev) {
-  let d;
-  try { d = JSON.parse(ev.data); } catch { return; }
-  if (d.event !== 'message') return;
-  let meta;
-  try { meta = JSON.parse(d.message || '{}'); } catch { return; }
-  if (d.attachment?.url) meta.url = d.attachment.url;
-  if (!meta.id || !meta.sid) return;
-  if (hasSeen(state.currentChat, meta.id)) return;
-  const ok = await verifyMessage(meta);
-  if (!ok) return;
-  const c = cur();
-  if (meta.prev !== lastHash()) { c.lastTs = 0; saveState(); connect(); return; }
-  markSeen(state.currentChat, meta.id);
-  applyMessage(meta);
-  c.messages.push(meta);
-  c.lastTs = Math.max(c.lastTs, meta.ts);
-  saveState();
-  renderMessagesIncremental(meta);
-
-  // Уведомление
-  if (state.notifications && document.hidden && !isMe(meta.sid) && meta.type !== 'sys') {
-    try {
-      new Notification(meta.nick || 'QR Chat', {
-        body: meta.type === 'image' ? '📷 Фото' : (meta.text || '').slice(0, 100),
-        icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#07C160"/><text x="50" y="66" text-anchor="middle" font-size="56" fill="white" font-family="sans-serif">Q</text></svg>'),
-        tag: state.currentChat,
-      });
-    } catch {}
-  }
-};
-
-// ================================================================
 //  EXPORT / IMPORT
 // ================================================================
 function exportData() {
   const data = {
-    version: 4,
+    version: 5,
     exportedAt: new Date().toISOString(),
-    me: { sid: state.me.sid, nick: state.me.nick, pubJwk: state.me.pubJwk },
+    me: { sid: state.me.sid, nick: state.me.nick },
     chats: state.chats,
-    seenIds: state.seenIds,
-    pubKeys: state.pubKeys,
+    seenIds: state.seenIds
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'qrchat-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'qrchat-' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
 }
 async function importData(file) {
@@ -1422,22 +1301,19 @@ async function importData(file) {
     const txt = await file.text();
     const d = JSON.parse(txt);
     if (!d.chats) throw new Error('Неверный формат');
-    // merge
-    for (const [topic, c] of Object.entries(d.chats)) {
-      if (!state.chats[topic]) state.chats[topic] = c;
+    for (const [t, c] of Object.entries(d.chats)) {
+      if (!state.chats[t]) state.chats[t] = c;
       else {
-        // объединяем сообщения по id
-        const seen = new Set(state.chats[topic].messages.map(m => m.id));
-        for (const m of c.messages) if (!seen.has(m.id)) state.chats[topic].messages.push(m);
-        state.chats[topic].messages.sort((a,b) => a.ts - b.ts);
-        state.chats[topic].lastTs = Math.max(state.chats[topic].lastTs || 0, c.lastTs || 0);
+        const seen = new Set(state.chats[t].messages.map(m => m.id));
+        for (const m of (c.messages||[])) if (!seen.has(m.id)) state.chats[t].messages.push(m);
+        state.chats[t].messages.sort((a,b) => a.ts - b.ts);
+        state.chats[t].lastTs = Math.max(state.chats[t].lastTs||0, c.lastTs||0);
       }
     }
-    if (d.pubKeys) Object.assign(state.pubKeys, d.pubKeys);
-    saveState();
+    saveNow();
     alert('Импортировано!');
     screenChatList();
-  } catch (e) { alert('Ошибка импорта: ' + e.message); }
+  } catch (e) { alert('Ошибка: ' + e.message); }
 }
 
 // ================================================================
@@ -1445,40 +1321,16 @@ async function importData(file) {
 // ================================================================
 function applyTheme() {
   let t = state.theme;
-  if (t === 'auto') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  if (t === 'auto') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', t);
-  document.querySelector('meta[name="theme-color"]').content = t === 'dark' ? '#17212B' : '#07C160';
+  document.querySelector('meta[name="theme-color"]').content = t==='dark' ? '#17212B' : '#07C160';
 }
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (state.theme === 'auto') applyTheme();
 });
 
 // ================================================================
-//  PWA MANIFEST
-// ================================================================
-(function installManifest() {
-  const icon = 'data:image/svg+xml,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#07C160"/><text x="256" y="340" text-anchor="middle" font-size="280" fill="white" font-family="sans-serif" font-weight="700">Q</text></svg>'
-  );
-  const manifest = {
-    name: 'QR Chat',
-    short_name: 'QRChat',
-    description: 'Децентрализованный чат через ntfy.sh',
-    start_url: location.pathname,
-    scope: location.pathname.replace(/[^/]*$/, ''),
-    display: 'standalone',
-    background_color: '#EDEDED',
-    theme_color: '#07C160',
-    icons: [
-      { src: icon, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' },
-    ],
-  };
-  const link = document.getElementById('manifestLink');
-  link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
-})();
-
-// ================================================================
-//  EVENT LISTENERS
+//  TOPBAR BUTTONS
 // ================================================================
 $('menuBtn').addEventListener('click', screenChatMenu);
 $('usersBtn').addEventListener('click', screenUsers);
@@ -1491,32 +1343,26 @@ $('viewer').addEventListener('click', () => {
 // ================================================================
 //  BOOT
 // ================================================================
-(async function boot() {
+(function boot() {
   loadState();
   applyTheme();
-
-  if (!state.me.nick) {
-    screenWelcome();
-    return;
-  }
-
-  await loadOrCreateKeypair();
-
+  if (!state.me.nick) { screenWelcome(); return; }
   if (state.currentChat && state.chats[state.currentChat]) {
-    await enterChat(state.currentChat, false);
+    enterChat(state.currentChat, false);
   } else {
     screenChatList();
   }
 })();
 
 window.addEventListener('beforeunload', () => {
-  if (eventSource) eventSource.close();
-  if (presenceSource) presenceSource.close();
+  saveNow();
+  disconnect();
+  stopPresence();
   stopScan();
 });
 
-// Экспорт для отладки
-window.__qrchat = { state, enterChat, sendMessage, verifyChain, screenChatList };
+// Debug
+window.__qrchat = { state, enterChat, send, renderAll };
 </script>
 </body>
 </html>
