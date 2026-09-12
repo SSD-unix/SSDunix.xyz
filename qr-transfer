@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QR-обмен ключами + ntfy.sh</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 12px; background: #fafafa; color: #222; }
+  h1 { font-size: 1.15rem; margin: 8px 0 12px; }
+  h2 { font-size: 0.95rem; margin: 18px 0 8px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+  textarea, input { width: 100%; padding: 10px; margin: 4px 0; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+  button { padding: 12px 16px; margin: 4px 4px 4px 0; font-size: 15px; border: none; border-radius: 8px; background: #1a73e8; color: #fff; cursor: pointer; font-weight: 500; }
+  button:disabled { background: #bbb; }
+  button.alt { background: #5f6368; }
+  #qrBox { margin: 12px 0; display: flex; justify-content: center; }
+  #qrBox canvas, #qrBox img { background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  #videoWrap { position: relative; width: 100%; max-width: 400px; margin: 8px auto; display: none; }
+  #video { width: 100%; height: auto; border-radius: 12px; background: #000; display: block; }
+  #log { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; min-height: 60px; max-height: 300px; overflow-y: auto; font-size: 13px; margin-top: 10px; font-family: ui-monospace, monospace; }
+  .status { font-weight: 600; margin-top: 8px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+  .status.err { color: #a50e0e; background: #fce8e6; }
+  .status.ok { color: #0d652d; background: #e6f4ea; }
+  .status.info { color: #174ea6; background: #e8f0fe; }
+  .key { font-family: ui-monospace, monospace; background: #f1f3f4; padding: 3px 8px; border-radius: 6px; word-break: break-all; display: inline-block; margin: 4px 0; font-size: 13px; }
+  .msg { padding: 6px 10px; border-radius: 8px; margin: 4px 0; font-size: 14px; }
+  .msg.me { background: #d2e7ff; text-align: right; }
+  .msg.them { background: #e6ffe2; }
+  .msg.sys { background: #f1f3f4; color: #666; font-size: 12px; }
+  .msg.err { background: #fce8e6; color: #a50e0e; }
+  .row { display: flex; gap: 6px; align-items: center; }
+  .row input { flex: 1; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: #1a73e8; font-size: 14px; padding: 6px 0; }
+</style>
+</head>
+<body>
+  <h1>📱 QR-обмен ключами → ntfy.sh</h1>
+
+  <div id="status" class="status info">Готово.</div>
+
+  <h2>1. Создать ключ (Телефон A)</h2>
+  <button id="genBtn">🔑 Создать ключ и показать QR</button>
+  <div id="keyLine"></div>
+  <div id="qrBox"></div>
+
+  <h2>2. Сканировать QR (Телефон B)</h2>
+  <button id="scanBtn">📷 Включить камеру и сканировать</button>
+  <button id="stopScanBtn" class="alt" disabled>⏹ Стоп</button>
+  <button id="diagBtn" class="alt">🔍 Диагностика камеры</button>
+  <div id="videoWrap">
+    <video id="video" autoplay playsinline muted></video>
+  </div>
+
+  <details>
+    <summary>Камера не работает? Введи ключ вручную</summary>
+    <div class="row">
+      <input id="manualKey" type="text" placeholder="nfc-xxxxxxxxxxxxxxxx" />
+      <button id="manualBtn" class="alt">OK</button>
+    </div>
+  </details>
+
+  <h2>3. Сообщения</h2>
+  <textarea id="msgInput" rows="2" placeholder="Сообщение…" disabled></textarea>
+  <button id="sendBtn" disabled>➤ Отправить</button>
+
+  <h2>Лог</h2>
+  <div id="log"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <script>
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const statusEl = $('status'), logEl = $('log'), qrBox = $('qrBox'), keyLine = $('keyLine');
+  const msgInput = $('msgInput'), sendBtn = $('sendBtn'), genBtn = $('genBtn');
+  const scanBtn = $('scanBtn'), stopScanBtn = $('stopScanBtn'), diagBtn = $('diagBtn');
+  const videoWrap = $('videoWrap'), video = $('video');
+  const manualKey = $('manualKey'), manualBtn = $('manualBtn');
+
+  let topic = null, eventSource = null, mediaStream = null;
+  let scanInterval = null, barcodeDetector = null;
+
+  function log(msg, cls = 'sys') {
+    const div = document.createElement('div');
+    div.className = 'msg ' + cls;
+    div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function setStatus(msg, kind = 'info') {
+    statusEl.textContent = msg;
+    statusEl.className = 'status ' + kind;
+  }
+  function randomTopic() {
+    const arr = new Uint8Array(8);
+    crypto.getRandomValues(arr);
+    return 'nfc-' + Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ============ ntfy ============
+  function subscribe(t) {
+    if (eventSource) eventSource.close();
+    eventSource = new EventSource(`https://ntfy.sh/${encodeURIComponent(t)}/sse`);
+    eventSource.onopen = () => log(`📡 подписан на ${t}`);
+    eventSource.onmessage = (ev) => {
+      try {
+        const d = JSON.parse(ev.data);
+        if (d.event === 'message' && d.message) log('📨 ' + d.message, 'them');
+      } catch {}
+    };
+    eventSource.onerror = () => log('⚠️ SSE переподключение…');
+  }
+  async function publish(t, text) {
+    const r = await fetch(`https://ntfy.sh/${encodeURIComponent(t)}`, {
+      method: 'POST', body: text, headers: { 'Title': 'QR Messenger' }
+    });
+    if (!r.ok) throw new Error('ntfy ' + r.status);
+    log('➤ ' + text, 'me');
+  }
+  function setTopic(t) {
+    topic = t.trim();
+    keyLine.innerHTML = `Ключ: <span class="key">${topic}</span>`;
+    subscribe(topic);
+    msgInput.disabled = false;
+    sendBtn.disabled = false;
+    setStatus('✅ Ключ принят.', 'ok');
+  }
+
+  // ============ Генерация QR ============
+  genBtn.addEventListener('click', () => {
+    if (typeof QRCode === 'undefined') { setStatus('QR-библиотека не загрузилась', 'err'); return; }
+    const t = randomTopic();
+    qrBox.innerHTML = '';
+    new QRCode(qrBox, { text: t, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+    setTopic(t);
+    setStatus('✅ Ключ создан. Покажи QR второму.', 'ok');
+  });
+
+  // ============ Диагностика камеры ============
+  diagBtn.addEventListener('click', async () => {
+    log('=== ДИАГНОСТИКА ===');
+    log('isSecureContext: ' + window.isSecureContext);
+    log('location.protocol: ' + location.protocol);
+    log('mediaDevices: ' + !!navigator.mediaDevices);
+    log('getUserMedia: ' + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+    log('BarcodeDetector: ' + ('BarcodeDetector' in window));
+    log('userAgent: ' + navigator.userAgent);
+
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        log('Найдено камер (videoinput): ' + cams.length);
+        cams.forEach((c, i) => log(`  [${i}] label="${c.label || '(пусто — нет разрешения)'}" id=${c.deviceId.slice(0,8)}…`));
+        if (cams.length === 0) {
+          log('❌ Chrome НЕ ВИДИТ ни одной камеры. Проблема на уровне Android/разрешений, а не в коде.', 'err');
+        }
+      } catch (e) {
+        log('enumerateDevices error: ' + e.name + ' ' + e.message, 'err');
+      }
+    }
+    if ('BarcodeDetector' in window) {
+      try {
+        const f = await BarcodeDetector.getSupportedFormats();
+        log('BarcodeDetector форматы: ' + f.join(', '));
+      } catch (e) { log('getSupportedFormats: ' + e.message); }
+    }
+    log('=== /ДИАГНОСТИКА ===');
+  });
+
+  // ============ Сканирование ============
+  async function startScan() {
+    log('--- старт сканирования ---');
+    if (!window.isSecureContext) {
+      setStatus('❌ Страница не по HTTPS — камера не дастся. Открой через https://', 'err');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('❌ getUserMedia недоступен в этом браузере.', 'err');
+      return;
+    }
+    if (!('BarcodeDetector' in window)) {
+      setStatus('❌ BarcodeDetector не поддерживается. Обнови Chrome.', 'err');
+      return;
+    }
+
+    // Пробуем несколько вариантов — от лучшего к худшему
+    const tries = [
+      { name: 'задняя 1280x720', c: { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } } },
+      { name: 'задняя простая', c: { video: { facingMode: 'environment' } } },
+      { name: 'любая камера',   c: { video: true } },
+      { name: 'передняя',       c: { video: { facingMode: 'user' } } },
+    ];
+
+    let lastErr = null;
+    for (const t of tries) {
+      try {
+        log('пробую: ' + t.name);
+        mediaStream = await navigator.mediaDevices.getUserMedia(t.c);
+        log('✅ открылось: ' + t.name);
+        break;
+      } catch (e) {
+        lastErr = e;
+        log('❌ ' + t.name + ' → ' + e.name + ': ' + e.message, 'err');
+      }
+    }
+    if (!mediaStream) {
+      const n = lastErr ? lastErr.name : '?';
+      let msg = '❌ Камера: ' + n;
+      if (n === 'NotAllowedError') msg = '❌ Доступ к камере запрещён. Разреши в настройках сайта (замочек) и в настройках Android (Приложения → Chrome → Разрешения → Камера).';
+      else if (n === 'NotFoundError' || n === 'DevicesNotFoundError') msg = '❌ Android не видит ни одной камеры. Проверь разрешение Chrome в системных настройках Android.';
+      else if (n === 'NotReadableError') msg = '❌ Камера занята другим приложением. Закрой все вкладки и другие приложения.';
+      else if (n === 'OverconstrainedError') msg = '❌ Камера не поддерживает параметры.';
+      setStatus(msg, 'err');
+      return;
+    }
+
+    // Навешиваем поток на видео
+    video.srcObject = mediaStream;
+
+    // ЖДЁМ loadedmetadata — критично, иначе videoWidth = 0
+    await new Promise((resolve, reject) => {
+      const to = setTimeout(() => reject(new Error('timeout ожидания video metadata')), 5000);
+      video.onloadedmetadata = () => { clearTimeout(to); resolve(); };
+    });
+    log(`video размеры: ${video.videoWidth}x${video.videoHeight}`);
+
+    try {
+      await video.play();
+    } catch (e) {
+      log('video.play() fail: ' + e.message, 'err');
+      setStatus('❌ Не удалось запустить видео: ' + e.message, 'err');
+      return;
+    }
+
+    // Даём камере пару кадров прогреться
+    await new Promise(r => setTimeout(r, 500));
+    log(`после прогрева: ${video.videoWidth}x${video.videoHeight}, readyState=${video.readyState}`);
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      setStatus('❌ Камера отдаёт кадры 0x0. Попробуй другое приложение камеры или перезагрузи телефон.', 'err');
+      return;
+    }
+
+    videoWrap.style.display = 'block';
+
+    barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    scanBtn.disabled = true;
+    stopScanBtn.disabled = false;
+    setStatus('📷 Наведи на QR-код…', 'info');
+
+    let frameCount = 0;
+    scanInterval = setInterval(async () => {
+      if (!barcodeDetector || video.readyState < 2 || video.videoWidth === 0) return;
+      try {
+        frameCount++;
+        const codes = await barcodeDetector.detect(video);
+        if (frameCount % 20 === 0) log(`кадров обработано: ${frameCount}, найдено: ${codes.length}`);
+        if (codes && codes.length > 0) {
+          const v = codes[0].rawValue;
+          log('📷 QR распознан: ' + v);
+          stopScan();
+          setTopic(v);
+        }
+      } catch (e) {
+        log('detect error: ' + e.name + ' ' + e.message, 'err');
+      }
+    }, 250);
+  }
+
+  async function stopScan() {
+    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+    video.srcObject = null;
+    videoWrap.style.display = 'none';
+    scanBtn.disabled = false;
+    stopScanBtn.disabled = true;
+    log('⏹ стоп');
+  }
+
+  scanBtn.addEventListener('click', startScan);
+  stopScanBtn.addEventListener('click', stopScan);
+
+  // ============ Ручной ввод ============
+  manualBtn.addEventListener('click', () => {
+    const v = manualKey.value.trim();
+    if (v) { setTopic(v); log('ключ введён вручную: ' + v); }
+  });
+
+  // ============ Отправка ============
+  sendBtn.addEventListener('click', async () => {
+    const text = msgInput.value.trim();
+    if (!text || !topic) return;
+    msgInput.value = '';
+    try { await publish(topic, text); }
+    catch (e) { log('❌ ' + e.message, 'err'); }
+  });
+  msgInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendBtn.click(); }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (eventSource) eventSource.close();
+    stopScan();
+  });
+  </script>
+</body>
+</html>
