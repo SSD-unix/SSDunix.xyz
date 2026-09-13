@@ -74,6 +74,19 @@
   .msg-wrap.them.same-sender .bubble { border-bottom-left-radius: 18px; border-top-left-radius: 6px; }
   .bubble.img { padding: 4px; background: var(--card); border-radius: 14px; max-width: 72%; }
   .bubble.img img { display: block; width: 100%; max-width: 260px; border-radius: 10px; cursor: pointer; }
+  .bubble.file { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+  .bubble.file .ficon { font-size: 28px; }
+  .bubble.file .fmeta { flex: 1; min-width: 0; }
+  .bubble.file .fname { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bubble.file .fsize { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+  .bubble.loc { padding: 4px; background: var(--card); border-radius: 14px; max-width: 72%; }
+  .bubble.loc img { display: block; width: 100%; max-width: 260px; border-radius: 10px; }
+  .bubble.loc .loc-label { padding: 6px 8px 4px; font-size: 13px; font-weight: 500; }
+  .bubble.poll { min-width: 220px; }
+  .bubble.poll .poll-q { font-weight: 600; margin-bottom: 8px; }
+  .bubble.poll .poll-opt { padding: 8px 10px; border-radius: 8px; background: rgba(0,0,0,0.04); margin-bottom: 4px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; }
+  [data-theme="dark"] .bubble.poll .poll-opt { background: rgba(255,255,255,0.06); }
+  .bubble.poll .poll-opt .poll-c { font-weight: 700; color: var(--green); }
   .bubble .quote { border-left: 3px solid var(--green); padding: 3px 8px; margin-bottom: 4px;
     font-size: 12px; color: var(--muted); background: rgba(0,0,0,0.04); border-radius: 4px;
     max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -168,7 +181,6 @@
   .user-actions button.danger { border-color: var(--danger); color: var(--danger); }
   .user-actions button.ok { border-color: var(--green); color: var(--green); }
 
-  /* ============ SCANNER (mobile-first) ============ */
   .scanner { position: fixed; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; }
   .scanner.show { display: flex; }
   .scanner video { flex: 1; width: 100%; height: 100%; object-fit: cover; }
@@ -203,7 +215,6 @@
   .ctx .emoji-row { display: flex; gap: 2px; padding: 8px; border-bottom: 1px solid var(--border); }
   .ctx .emoji-row button { padding: 6px 10px; font-size: 22px; width: auto; border-radius: 8px; }
 
-  /* ============ MINI APP (mobile-first) ============ */
   .miniapp-overlay {
     position: fixed; inset: 0; background: var(--bg); z-index: 300;
     display: none; flex-direction: column;
@@ -242,6 +253,30 @@
     animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Диалоги для mini app */
+  .dialog-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .dialog-overlay.show { display: flex; animation: fadeIn 0.15s; }
+  .dialog {
+    background: var(--card); border-radius: 18px; padding: 22px;
+    max-width: 340px; width: 100%; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .dialog h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
+  .dialog p { margin: 0 0 18px; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .dialog input { width: 100%; padding: 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
+    font-size: 15px; font-family: inherit; outline: none; margin-bottom: 16px; }
+  .dialog input:focus { border-color: var(--green); }
+  .dialog .actions { display: flex; gap: 8px; }
+  .dialog .actions button { flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .dialog .actions .cancel { background: var(--sys-bg); color: var(--text); }
+  .dialog .actions .ok { background: var(--green); color: #fff; }
 
   .toast {
     position: fixed; bottom: max(30px, calc(env(safe-area-inset-bottom) + 20px));
@@ -320,9 +355,11 @@
       <div>Загрузка…</div>
     </div>
     <iframe id="miniappFrame" class="miniapp-frame"
-      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
+      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin allow-downloads allow-clipboard-write"></iframe>
   </div>
 </div>
+
+<div class="dialog-overlay" id="dialogOverlay"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
@@ -341,6 +378,12 @@ function fmtTime(ts) { return new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-d
 function fmtDay(ts) { return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function esc(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function shortSid(s) { return s ? s.slice(0,4) : '????'; }
+function fmtBytes(n) {
+  if (!n) return '0 B';
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/1024/1024).toFixed(1) + ' MB';
+}
 function nickColor(sid) {
   const c = ['#e57373','#ba68c8','#64b5f6','#4db6ac','#81c784','#ffb74d','#f06292','#7986cb','#4fc3f7','#a1887f'];
   let h = 0; for (const ch of String(sid||'')) h = (h*31 + ch.charCodeAt(0)) >>> 0;
@@ -376,10 +419,10 @@ function rotateServer() {
 }
 
 // ================================================================
-//  STORAGE — стабильный ключ + миграция со всех старых версий
+//  STORAGE
 // ================================================================
-const LS_KEY = 'qrchat_data';                    // ← единый, стабильный
-const LS_LEGACY = ['qrchat_v7','qrchat_v6','qrchat_v5','qrchat_v4','qrchat_v3','qrchat'];
+const LS_KEY = 'qrchat_data';
+const LS_LEGACY = ['qrchat_v8','qrchat_v7','qrchat_v6','qrchat_v5','qrchat_v4','qrchat_v3','qrchat'];
 
 let state = {
   me: { sid: null, nick: null },
@@ -393,16 +436,13 @@ let state = {
 let savePending = null;
 
 function loadState() {
-  // 1. Читаем из нового ключа
   let raw = localStorage.getItem(LS_KEY);
-  // 2. Если пусто — ищем старые, мигрируем
   if (!raw) {
     for (const k of LS_LEGACY) {
       const legacy = localStorage.getItem(k);
       if (legacy) {
         raw = legacy;
         console.log('Migrated from', k, '→', LS_KEY);
-        // Записываем в новый ключ, старый не удаляем (на всякий)
         try { localStorage.setItem(LS_KEY, legacy); } catch {}
         break;
       }
@@ -558,7 +598,7 @@ async function postAttachment(topic, blob, metaObj, headers) {
     method: 'PUT',
     body: blob,
     headers: Object.assign({
-      'Filename': 'file.bin',
+      'Filename': metaObj.filename || 'file.bin',
       'Message': JSON.stringify(metaObj)
     }, headers || {})
   });
@@ -687,6 +727,21 @@ function applySys(c, m) {
     case 'unpin':
       if (c.admins.includes(m.sid) || c.createdBy === m.sid) c.pinned = null;
       break;
+    case 'pollvote':
+      if (m.target && m.text !== undefined) {
+        // применяем локально
+        const pollMsg = c.messages.find(x => x.id === m.target);
+        if (pollMsg && pollMsg.type === 'poll') {
+          pollMsg.votes = pollMsg.votes || {};
+          pollMsg.votes[m.sid] = parseInt(m.text, 10);
+        }
+      }
+      break;
+    case 'join':
+      // просто маркер, ничего не делаем
+      break;
+    case 'leave':
+      break;
   }
 }
 
@@ -702,7 +757,7 @@ function isVisible(m, c) {
 function getVisibleMessages(c) { return c.messages.filter(m => isVisible(m, c)); }
 
 // ================================================================
-//  SEND
+//  SEND — в текущий чат
 // ================================================================
 async function send(partial) {
   const t = state.currentChat;
@@ -715,13 +770,13 @@ async function send(partial) {
 
   if (m.replyTo) {
     const o = c.messages.find(x => x.id === m.replyTo);
-    if (o) m.replyText = (o.text || '[фото]').slice(0, 60);
+    if (o) m.replyText = (o.text || '[медиа]').slice(0, 60);
   }
 
   applyIngestOnly(m);
 
   if (m.type === 'sys') {
-    if (m.action !== 'react' && m.action !== 'delete' && m.action !== 'pin' && m.action !== 'unpin') {
+    if (m.action !== 'react' && m.action !== 'delete' && m.action !== 'pin' && m.action !== 'unpin' && m.action !== 'pollvote') {
       appendSys(m); chatEl.scrollTop = chatEl.scrollHeight;
     } else {
       scheduleReactRender();
@@ -753,6 +808,50 @@ async function send(partial) {
   } catch (e) {
     console.warn('send error', e);
     $('statusText').textContent = 'Ошибка отправки';
+  }
+}
+
+// ================================================================
+//  SEND — в произвольный чат (для mini apps)
+// ================================================================
+async function sendExternal(topic, partial) {
+  if (!topic) throw new Error('Нет чата');
+  const ch = ensureChat(topic);
+  const m = Object.assign({
+    id: rhex(8), sid: state.me.sid, nick: state.me.nick,
+    ts: Date.now(), type: 'text',
+  }, partial);
+
+  // Локально сохраняем
+  if (topic === state.currentChat) {
+    applyIngestOnly(m);
+    // Перерисуем, если наш чат
+    if (m.type === 'sys') {
+      if (!['react','delete','pin','unpin','pollvote'].includes(m.action)) appendSys(m);
+      else scheduleReactRender();
+    } else {
+      appendBubble(m, true);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+  } else {
+    if (!hasSeen(topic, m.id)) {
+      markSeen(topic, m.id);
+      if (m.type === 'sys') applySys(ch, m);
+      ch.messages.push(m);
+      ch.messages.sort((a,b) => a.ts - b.ts);
+      if (m.ts > ch.lastTs) ch.lastTs = m.ts;
+      saveState();
+    }
+  }
+
+  // Отправляем в сеть
+  const headers = { 'Title': state.me.nick || 'QRChat' };
+  if (m._blob) {
+    const meta = Object.assign({}, m);
+    delete meta._blob;
+    await postAttachment(topic, m._blob, meta, headers);
+  } else {
+    await postJSON(topic, m, headers);
   }
 }
 
@@ -807,7 +906,7 @@ function renderAll() {
 
   for (const m of all) {
     if (m.type === 'sys') {
-      if (m.action === 'react' || m.action === 'delete' || m.action === 'pin' || m.action === 'unpin') continue;
+      if (['react','delete','pin','unpin','pollvote'].includes(m.action)) continue;
       appendSys(m); continue;
     }
     if (!isVisible(m, c)) continue;
@@ -841,6 +940,8 @@ function appendSys(m) {
     case 'admin-': html = `${nick} снял админа ${tgt}`; break;
     case 'ban':    html = `${nick} забанил ${tgt}`; break;
     case 'unban':  html = `${nick} разбанил ${tgt}`; break;
+    case 'join':   html = `${nick} присоединился`; break;
+    case 'leave':  html = `${nick} покинул чат`; break;
     default: return;
   }
   el.innerHTML = html;
@@ -876,7 +977,7 @@ function appendBubble(m, animate) {
     const orig = findMsg(m.replyTo);
     const q = document.createElement('div');
     q.className = 'quote';
-    q.textContent = orig ? `${orig.nick || ''}: ${(orig.text || '[фото]').slice(0,60)}` : (m.replyText || 'сообщение');
+    q.textContent = orig ? `${orig.nick || ''}: ${(orig.text || '[медиа]').slice(0,60)}` : (m.replyText || 'сообщение');
     b.appendChild(q);
   }
 
@@ -887,10 +988,51 @@ function appendBubble(m, animate) {
     img.addEventListener('click', () => { $('viewerImg').src = m.url; $('viewer').classList.add('show'); });
     img.addEventListener('error', () => { b.classList.remove('img'); b.classList.add('broken'); b.textContent = '[фото недоступно]'; });
     b.appendChild(img);
+  } else if (m.type === 'file' && m.url) {
+    b.classList.add('file');
+    b.innerHTML = `
+      <div class="ficon">📎</div>
+      <div class="fmeta">
+        <div class="fname">${esc(m.filename || 'файл')}</div>
+        <div class="fsize">${fmtBytes(m.filesize || 0)}</div>
+      </div>
+    `;
+    b.addEventListener('click', () => window.open(m.url, '_blank'));
   } else if (m.type === 'voice' && m.url) {
     const audio = document.createElement('audio');
     audio.controls = true; audio.src = m.url; audio.style.maxWidth = '100%';
     b.appendChild(audio);
+  } else if (m.type === 'location' && m.lat !== undefined) {
+    b.classList.add('loc');
+    const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lon}&zoom=15&size=400x240&markers=${m.lat},${m.lon},red-pushpin`;
+    b.innerHTML = `
+      <img src="${mapUrl}" loading="lazy" onerror="this.style.display='none'">
+      <div class="loc-label">📍 ${esc(m.locLabel || 'Локация')}</div>
+    `;
+    b.addEventListener('click', () => {
+      window.open(`https://www.openstreetmap.org/?mlat=${m.lat}&mlon=${m.lon}#map=16/${m.lat}/${m.lon}`, '_blank');
+    });
+  } else if (m.type === 'poll') {
+    b.classList.add('poll');
+    const votes = m.votes || {};
+    const myVote = votes[state.me.sid];
+    let optsHtml = '';
+    (m.opts || []).forEach((o, i) => {
+      const cnt = Object.values(votes).filter(v => v === i).length;
+      const isMine = myVote === i;
+      optsHtml += `<div class="poll-opt" data-poll="${m.id}" data-idx="${i}" style="${isMine?'border:1px solid var(--green);':''}">
+        <span>${isMine ? '✓ ' : ''}${esc(o)}</span>
+        <span class="poll-c">${cnt}</span>
+      </div>`;
+    });
+    b.innerHTML = `<div class="poll-q">📊 ${esc(m.text || '')}</div>${optsHtml}`;
+    b.addEventListener('click', (e) => {
+      const opt = e.target.closest('.poll-opt');
+      if (!opt) return;
+      const pollId = opt.dataset.poll;
+      const idx = parseInt(opt.dataset.idx, 10);
+      send({ type: 'sys', action: 'pollvote', target: pollId, text: String(idx) });
+    });
   } else if (m.text) {
     b.appendChild(document.createTextNode(m.text));
   }
@@ -919,6 +1061,7 @@ function appendBubble(m, animate) {
 
   let lastTap = 0;
   b.addEventListener('click', (e) => {
+    if (e.target.closest('.poll-opt') || e.target.closest('.react-pill')) return;
     const now = Date.now();
     if (now - lastTap < 350) { toggleReaction(m.id, '❤️'); lastTap = 0; }
     else lastTap = now;
@@ -969,7 +1112,7 @@ function updatePinnedBar() {
   if (!c || !c.pinned) { bar.classList.remove('show'); return; }
   const msg = c.messages.find(m => m.id === c.pinned);
   if (!msg) { bar.classList.remove('show'); return; }
-  $('pinnedText').textContent = (msg.nick || '') + ': ' + (msg.text || '[фото]').slice(0, 50);
+  $('pinnedText').textContent = (msg.nick || '') + ': ' + (msg.text || '[медиа]').slice(0, 50);
   bar.classList.add('show');
 }
 $('unpinBtn').addEventListener('click', () => { send({ type: 'sys', action: 'unpin' }); });
@@ -1012,7 +1155,7 @@ function showCtx(evt, m) {
   }
   if (c && (c.admins.includes(state.me.sid) || c.createdBy === state.me.sid)) {
     const bPin = document.createElement('button');
-    bPin.textContent = c.pinned === m.id ? '📌 Открепить' : '📌 Заkрепить';
+    bPin.textContent = c.pinned === m.id ? '📌 Открепить' : '📌 Закрепить';
     bPin.addEventListener('click', () => { send({ type: 'sys', action: c.pinned === m.id ? 'unpin' : 'pin', target: m.id }); ctxEl.classList.remove('show'); });
     ctxEl.appendChild(bPin);
   }
@@ -1032,7 +1175,7 @@ document.addEventListener('click', (e) => { if (!ctxEl.contains(e.target)) ctxEl
 let replyTo = null;
 function setReply(m) {
   replyTo = m;
-  $('replyText').textContent = (m.nick || '') + ': ' + (m.text || '[фото]').slice(0,50);
+  $('replyText').textContent = (m.nick || '') + ': ' + (m.text || '[медиа]').slice(0,50);
   $('replyBar').classList.add('show');
 }
 function clearReply() { replyTo = null; $('replyBar').classList.remove('show'); }
@@ -1090,7 +1233,7 @@ function screenChatList() {
           <div class="chat-avatar">${esc((c.name||'?').slice(0,1).toUpperCase())}</div>
           <div class="chat-meta">
             <div class="name">${esc(c.name)}</div>
-            <div class="last">${last ? esc((last.nick||'')+': '+(last.text || '[фото]').slice(0,40)) : '—'}</div>
+            <div class="last">${last ? esc((last.nick||'')+': '+(last.text || '[медиа]').slice(0,40)) : '—'}</div>
           </div>
         </div>`;
     }
@@ -1310,6 +1453,8 @@ function enterChat(topic, isNew) {
   if (isNew && !c.createdBy) {
     c.createdBy = state.me.sid; c.admins = [state.me.sid]; saveState();
     send({ type: 'sys', action: 'create' });
+  } else {
+    send({ type: 'sys', action: 'join' });
   }
   connect();
   startPresence();
@@ -1319,6 +1464,7 @@ function enterChat(topic, isNew) {
 //  UNIFIED QR SCANNER
 // ================================================================
 let mediaStream = null, scanInterval = null;
+let scanResolver = null;
 
 async function startScan() {
   if (!window.isSecureContext) { alert('Нужен HTTPS для камеры'); return; }
@@ -1360,19 +1506,27 @@ async function stopScan() {
   if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
   $('video').srcObject = null;
   $('scannerOverlay').classList.remove('show');
+  // Если был резолвер (для mini app) — отдаём null
+  if (scanResolver) {
+    const r = scanResolver; scanResolver = null;
+    r(null);
+  }
 }
 $('stopScanBtn').addEventListener('click', stopScan);
 
-// Главный обработчик: определяет что в QR и делает правильно
 function handleScannedValue(v) {
   if (!v) return;
-  // 1. app-####|url
+  // Если вызван из mini app — возвращаем строку
+  if (scanResolver) {
+    const r = scanResolver; scanResolver = null;
+    r(v);
+    return;
+  }
   if (v.startsWith('app-') && v.includes('|')) {
     const [id, url] = v.split('|', 2);
     openMiniApp({ id, name: 'App ' + id.slice(-4), url });
     return;
   }
-  // 2. miniapp|url
   if (v.startsWith('miniapp|')) {
     const url = v.slice(8);
     let name = 'Mini App';
@@ -1380,7 +1534,6 @@ function handleScannedValue(v) {
     openMiniApp({ id: 'app-' + rhex(3), name, url });
     return;
   }
-  // 3. https:// - спросить
   if (/^https?:\/\//.test(v)) {
     if (confirm('Открыть как мини-приложение?\n\n' + v.slice(0, 100))) {
       let name = 'Mini App';
@@ -1389,12 +1542,11 @@ function handleScannedValue(v) {
     }
     return;
   }
-  // 4. Всё остальное — ключ чата
   enterChat(v, false);
 }
 
 // ================================================================
-//  MINI APP (mobile-optimized)
+//  MINI APP
 // ================================================================
 let currentMiniApp = null;
 
@@ -1410,10 +1562,7 @@ function openMiniApp(app) {
 
   frame.removeAttribute('srcdoc');
   frame.src = 'about:blank';
-  // небольшая задержка, чтобы iframe успел сброситься
-  setTimeout(() => {
-    frame.src = app.url;
-  }, 50);
+  setTimeout(() => { frame.src = app.url; }, 50);
 
   frame.onload = () => loading.classList.add('hidden');
   setTimeout(() => loading.classList.add('hidden'), 6000);
@@ -1452,7 +1601,479 @@ $('miniappMenu').addEventListener('click', () => {
   }
 });
 
-// Мост мини-апп ↔ мессенджер
+// ================================================================
+//  DIALOGS (для mini app)
+// ================================================================
+function dialogAlert({ title, text }) {
+  return new Promise(resolve => {
+    const ov = $('dialogOverlay');
+    ov.innerHTML = `
+      <div class="dialog">
+        <h3>${esc(title || '')}</h3>
+        <p>${esc(text || '')}</p>
+        <div class="actions"><button class="ok" id="dlgOk">OK</button></div>
+      </div>
+    `;
+    ov.classList.add('show');
+    const close = () => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(); };
+    $('dlgOk').addEventListener('click', close);
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  });
+}
+function dialogConfirm({ title, text }) {
+  return new Promise(resolve => {
+    const ov = $('dialogOverlay');
+    ov.innerHTML = `
+      <div class="dialog">
+        <h3>${esc(title || 'Подтвердить')}</h3>
+        <p>${esc(text || '')}</p>
+        <div class="actions">
+          <button class="cancel" id="dlgCancel">Отмена</button>
+          <button class="ok" id="dlgOk">OK</button>
+        </div>
+      </div>
+    `;
+    ov.classList.add('show');
+    const close = v => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(v); };
+    $('dlgOk').addEventListener('click', () => close(true));
+    $('dlgCancel').addEventListener('click', () => close(false));
+    ov.addEventListener('click', e => { if (e.target === ov) close(false); });
+  });
+}
+function dialogPrompt({ title, text, value }) {
+  return new Promise(resolve => {
+    const ov = $('dialogOverlay');
+    ov.innerHTML = `
+      <div class="dialog">
+        <h3>${esc(title || 'Введите')}</h3>
+        ${text ? `<p>${esc(text)}</p>` : ''}
+        <input id="dlgInput" value="${esc(value || '')}" autocomplete="off">
+        <div class="actions">
+          <button class="cancel" id="dlgCancel">Отмена</button>
+          <button class="ok" id="dlgOk">OK</button>
+        </div>
+      </div>
+    `;
+    ov.classList.add('show');
+    const input = $('dlgInput');
+    setTimeout(() => input.focus(), 100);
+    const close = v => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(v); };
+    $('dlgOk').addEventListener('click', () => close(input.value));
+    $('dlgCancel').addEventListener('click', () => close(null));
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') close(input.value); });
+    ov.addEventListener('click', e => { if (e.target === ov) close(null); });
+  });
+}
+
+// ================================================================
+//  HELPERS для bridge
+// ================================================================
+function pickFileHelper({ accept = '*/*', multiple = false } = {}) {
+  return new Promise(resolve => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = accept;
+    inp.multiple = multiple;
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', async () => {
+      const files = [...inp.files];
+      document.body.removeChild(inp);
+      if (!files.length) return resolve([]);
+      const out = [];
+      for (const f of files) {
+        const dataUrl = await new Promise(r => {
+          const fr = new FileReader();
+          fr.onload = () => r(fr.result);
+          fr.readAsDataURL(f);
+        });
+        out.push({ name: f.name, type: f.type, size: f.size, dataUrl });
+      }
+      resolve(out);
+    });
+    inp.addEventListener('cancel', () => {
+      document.body.removeChild(inp);
+      resolve([]);
+    });
+    inp.click();
+  });
+}
+
+function takePhotoHelper() {
+  return new Promise(resolve => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.capture = 'environment';
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', async () => {
+      const f = inp.files[0];
+      document.body.removeChild(inp);
+      if (!f) return resolve(null);
+      const dataUrl = await new Promise(r => {
+        const fr = new FileReader();
+        fr.onload = () => r(fr.result);
+        fr.readAsDataURL(f);
+      });
+      resolve({ name: f.name, type: f.type, size: f.size, dataUrl });
+    });
+    inp.addEventListener('cancel', () => {
+      document.body.removeChild(inp);
+      resolve(null);
+    });
+    inp.click();
+  });
+}
+
+function getLocationHelper() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('Геолокация недоступна'));
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy }),
+      e => reject(new Error(e.message || 'Ошибка геолокации')),
+      { timeout: 15000, enableHighAccuracy: true }
+    );
+  });
+}
+
+function scanQRHelper() {
+  return new Promise((resolve, reject) => {
+    scanResolver = { resolve };
+    startScan().catch(e => {
+      scanResolver = null;
+      reject(e);
+    });
+  });
+}
+
+function shareHelper({ title, text, url }) {
+  if (navigator.share) {
+    return navigator.share({ title, text, url }).catch(() => {});
+  }
+  // fallback — копируем в буфер
+  const s = url || text || title || '';
+  try { navigator.clipboard.writeText(s); } catch {}
+  QRChat_toast('Скопировано в буфер');
+}
+
+// ================================================================
+//  BRIDGE для mini apps
+// ================================================================
+async function bridgeCall(method, params) {
+  const c = cur();
+  const t = params.topic || state.currentChat;
+
+  switch (method) {
+    // ---- Профиль ----
+    case 'getUser': return { sid: state.me.sid, nick: state.me.nick };
+    case 'setNick': {
+      const nick = String(params.nick || '').trim().slice(0, 24);
+      if (!nick) throw new Error('Пустой ник');
+      state.me.nick = nick;
+      saveNow();
+      return { ok: true, nick };
+    }
+
+    // ---- Чаты ----
+    case 'getChats':
+      return Object.entries(state.chats).map(([key, ch]) => ({
+        key, name: ch.name,
+        messages: getVisibleMessages(ch).length,
+        isCurrent: key === state.currentChat
+      }));
+    case 'getChat': {
+      const ch = t ? ensureChat(t) : null;
+      if (!ch) throw new Error('Нет чата');
+      return {
+        key: t,
+        name: ch.name,
+        members: [...new Set(ch.messages.filter(m=>m.type!=='sys').map(m=>m.nick))],
+        admin: ch.admins.includes(state.me.sid) || ch.createdBy === state.me.sid,
+        messageCount: getVisibleMessages(ch).length
+      };
+    }
+    case 'getMembers': {
+      const ch = t ? ensureChat(t) : null;
+      if (!ch) throw new Error('Нет чата');
+      const sids = new Set();
+      for (const m of ch.messages) if (m.type !== 'sys') sids.add(m.sid);
+      for (const a of ch.admins) sids.add(a);
+      const nickById = {};
+      for (const m of ch.messages) if (m.nick && !nickById[m.sid]) nickById[m.sid] = m.nick;
+      for (const [sid, p] of Object.entries(presence)) nickById[sid] = p.nick;
+      return [...sids].map(sid => ({
+        sid,
+        nick: nickById[sid] || ('User ' + shortSid(sid)),
+        online: isOnline(sid),
+        admin: ch.admins.includes(sid),
+        banned: ch.bans.includes(sid),
+        me: sid === state.me.sid
+      }));
+    }
+    case 'isAdmin': {
+      const ch = t ? ensureChat(t) : null;
+      if (!ch) return false;
+      return ch.admins.includes(state.me.sid) || ch.createdBy === state.me.sid;
+    }
+    case 'createChat': {
+      const name = String(params.name || '').trim().slice(0, 40);
+      const newT = 'nfc-' + rhex(8);
+      const ch = ensureChat(newT);
+      ch.createdBy = state.me.sid;
+      ch.admins = [state.me.sid];
+      if (name) ch.name = name;
+      saveState();
+      await sendExternal(newT, { type: 'sys', action: 'create' });
+      return { key: newT, name: ch.name };
+    }
+    case 'joinChat': {
+      const topic = String(params.topic || '').trim();
+      if (!topic) throw new Error('Нужен topic');
+      enterChat(topic, false);
+      return { ok: true, key: topic };
+    }
+    case 'leaveChat': {
+      const topic = params.topic || state.currentChat;
+      if (!topic) throw new Error('Нет чата');
+      // Отправляем leave
+      try {
+        await sendExternal(topic, { type: 'sys', action: 'leave' });
+      } catch {}
+      delete state.chats[topic];
+      delete state.seenIds[topic];
+      if (state.currentChat === topic) {
+        state.currentChat = null;
+        disconnect(); stopPresence();
+        $('app').style.display = 'none';
+        screenChatList();
+      }
+      saveNow();
+      return { ok: true };
+    }
+    case 'renameChat': {
+      const name = String(params.name || '').trim().slice(0, 40);
+      if (!name) throw new Error('Пустое имя');
+      if (t === state.currentChat) {
+        await send({ type: 'sys', action: 'rename', text: name });
+      } else {
+        await sendExternal(t, { type: 'sys', action: 'rename', text: name });
+      }
+      return { ok: true };
+    }
+
+    // ---- Сообщения ----
+    case 'getHistory': {
+      const ch = t ? ensureChat(t) : null;
+      if (!ch) throw new Error('Нет чата');
+      const limit = Math.min(params.limit || 30, 200);
+      return getVisibleMessages(ch).slice(-limit).map(m => ({
+        id: m.id, nick: m.nick, text: m.text, type: m.type, ts: m.ts, url: m.url,
+        lat: m.lat, lon: m.lon, opts: m.opts
+      }));
+    }
+    case 'sendMessage': {
+      const text = String(params.text || '').slice(0, 4000);
+      if (!text) throw new Error('Пустой текст');
+      if (t === state.currentChat) await send({ type: 'text', text });
+      else await sendExternal(t, { type: 'text', text });
+      return { ok: true };
+    }
+    case 'sendReply': {
+      const text = String(params.text || '').slice(0, 4000);
+      const replyId = params.replyTo;
+      if (!text || !replyId) throw new Error('Нужны replyTo и text');
+      if (t === state.currentChat) await send({ type: 'text', text, replyTo: replyId });
+      else await sendExternal(t, { type: 'text', text, replyTo: replyId });
+      return { ok: true };
+    }
+    case 'sendFile': {
+      const dataUrl = params.dataUrl;
+      const filename = params.filename || 'file';
+      if (!dataUrl) throw new Error('Нет dataUrl');
+      const resp = await fetch(dataUrl);
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const isImg = /^image\//.test(blob.type);
+      const meta = {
+        type: isImg ? 'image' : 'file',
+        url, _blob: blob,
+        filename, filesize: blob.size
+      };
+      if (t === state.currentChat) await send(meta);
+      else await sendExternal(t, meta);
+      return { ok: true };
+    }
+    case 'sendLocation': {
+      const lat = parseFloat(params.lat);
+      const lon = parseFloat(params.lon);
+      if (isNaN(lat) || isNaN(lon)) throw new Error('Плохие координаты');
+      const meta = { type: 'location', lat, lon, locLabel: params.label || '' };
+      if (t === state.currentChat) await send(meta);
+      else await sendExternal(t, meta);
+      return { ok: true };
+    }
+    case 'sendPoll': {
+      const question = String(params.question || '').slice(0, 200);
+      const opts = (params.options || []).slice(0, 6).map(o => String(o).slice(0, 80));
+      if (!question || opts.length < 2) throw new Error('Нужны вопрос и 2+ варианта');
+      const meta = { type: 'poll', text: question, opts, votes: {} };
+      if (t === state.currentChat) await send(meta);
+      else await sendExternal(t, meta);
+      return { ok: true };
+    }
+    case 'deleteMessage': {
+      const id = params.id;
+      if (!id) throw new Error('Нет id');
+      if (t === state.currentChat) await send({ type: 'sys', action: 'delete', target: id });
+      else await sendExternal(t, { type: 'sys', action: 'delete', target: id });
+      return { ok: true };
+    }
+    case 'sendAnonymous': {
+      const targetTopic = params.topic;
+      const text = String(params.text || '').slice(0, 1000);
+      if (!targetTopic || !text) throw new Error('Нужны topic и text');
+      if (!state.chats[targetTopic]) throw new Error('Чат не найден');
+      const anonSid = 'anon-' + rhex(6);
+      const anonNick = 'Аноним-' + Math.floor(Math.random() * 900 + 100);
+      const meta = {
+        id: rhex(8), sid: anonSid, nick: anonNick,
+        ts: Date.now(), type: 'text', text
+      };
+      await postJSON(targetTopic, meta, { 'Title': anonNick });
+      return { ok: true, nick: anonNick };
+    }
+
+    // ---- UI ----
+    case 'showToast':
+      QRChat_toast(String(params.text || ''));
+      return { ok: true };
+    case 'showAlert':
+      await dialogAlert({ title: params.title, text: params.text });
+      return { ok: true };
+    case 'showConfirm': {
+      const r = await dialogConfirm({ title: params.title, text: params.text });
+      return { ok: r };
+    }
+    case 'showPrompt': {
+      const r = await dialogPrompt({ title: params.title, text: params.text, value: params.value });
+      return { ok: r !== null, value: r };
+    }
+    case 'setTitle':
+      $('miniappTitle').textContent = String(params.text || 'Mini App').slice(0, 40);
+      return { ok: true };
+    case 'setTheme':
+      if (['auto','light','dark'].includes(params.theme)) {
+        state.theme = params.theme;
+        applyTheme(); saveNow();
+      }
+      return { ok: true };
+
+    // ---- Устройство ----
+    case 'haptic':
+      try { navigator.vibrate && navigator.vibrate(params.pattern || 15); } catch {}
+      return { ok: true };
+    case 'getLocation':
+      return await getLocationHelper();
+    case 'scanQR':
+      return { value: await scanQRHelper() };
+    case 'pickFile':
+      return await pickFileHelper({ accept: params.accept || '*/*', multiple: !!params.multiple });
+    case 'takePhoto':
+      return await takePhotoHelper();
+    case 'getClipboard': {
+      try {
+        const txt = await navigator.clipboard.readText();
+        return { text: txt };
+      } catch (e) { throw new Error('Нет доступа к буферу'); }
+    }
+    case 'setClipboard': {
+      try { await navigator.clipboard.writeText(String(params.text || '')); return { ok: true }; }
+      catch (e) { throw new Error('Нет доступа к буферу'); }
+    }
+    case 'getDeviceInfo':
+      return {
+        platform: navigator.platform,
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        screen: { w: screen.width, h: screen.height },
+        dpr: devicePixelRatio,
+        theme: state.theme,
+        dark: document.documentElement.getAttribute('data-theme') === 'dark'
+      };
+    case 'openLink':
+      if (params.url) window.open(params.url, '_blank', 'noopener');
+      return { ok: true };
+    case 'share':
+      await shareHelper({ title: params.title, text: params.text, url: params.url });
+      return { ok: true };
+
+    // ---- Уведомления ----
+    case 'notify': {
+      if (!('Notification' in window)) throw new Error('Нет поддержки');
+      if (Notification.permission !== 'granted') {
+        const p = await Notification.requestPermission();
+        if (p !== 'granted') throw new Error('Отклонено');
+      }
+      new Notification(String(params.title || 'QR Chat'), {
+        body: String(params.body || '').slice(0, 200),
+        tag: 'miniapp-' + (currentMiniApp?.id || '')
+      });
+      return { ok: true };
+    }
+
+    // ---- Хранилище ----
+    case 'getStorage': {
+      const key = 'miniapp:' + (currentMiniApp?.id || '') + ':' + params.key;
+      return localStorage.getItem(key);
+    }
+    case 'setStorage': {
+      const k2 = 'miniapp:' + (currentMiniApp?.id || '') + ':' + params.key;
+      localStorage.setItem(k2, params.value);
+      return { ok: true };
+    }
+    case 'listStorage': {
+      const prefix = 'miniapp:' + (currentMiniApp?.id || '') + ':';
+      const out = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) out.push(k.slice(prefix.length));
+      }
+      return out;
+    }
+    case 'clearStorage': {
+      const prefix = 'miniapp:' + (currentMiniApp?.id || '') + ':';
+      const toDel = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) toDel.push(k);
+      }
+      toDel.forEach(k => localStorage.removeItem(k));
+      return { ok: true, count: toDel.length };
+    }
+    case 'getGlobalStorage': {
+      const key = 'miniapp-global:' + params.key;
+      return localStorage.getItem(key);
+    }
+    case 'setGlobalStorage': {
+      const k2 = 'miniapp-global:' + params.key;
+      localStorage.setItem(k2, params.value);
+      return { ok: true };
+    }
+
+    // ---- Mini app ----
+    case 'close':
+      closeMiniApp();
+      return { ok: true };
+
+    default:
+      throw new Error('Unknown method: ' + method);
+  }
+}
+
+// ================================================================
+//  MESSAGE LISTENER (общий)
+// ================================================================
 window.addEventListener('message', async (e) => {
   const d = e.data;
   if (!d || !d.__qrc) return;
@@ -1460,73 +2081,16 @@ window.addEventListener('message', async (e) => {
     if (e.source) e.source.postMessage({ __qrc: 1, id: d.id, result, error }, '*');
   };
   try {
-    const c = cur();
-    switch (d.method) {
-      case 'getUser':
-        reply({ sid: state.me.sid, nick: state.me.nick });
-        break;
-      case 'getChat':
-        if (!c) throw new Error('Нет активного чата');
-        reply({
-          key: state.currentChat,
-          name: c.name,
-          members: [...new Set(c.messages.filter(m=>m.type!=='sys').map(m=>m.nick))],
-          admin: c.admins.includes(state.me.sid)
-        });
-        break;
-      case 'getHistory': {
-        if (!c) throw new Error('Нет активного чата');
-        const limit = Math.min(d.params?.limit || 30, 200);
-        const msgs = getVisibleMessages(c).slice(-limit).map(m => ({
-          nick: m.nick, text: m.text, ts: m.ts, type: m.type
-        }));
-        reply(msgs);
-        break;
-      }
-      case 'sendMessage':
-        if (!d.params?.text) throw new Error('Пустой текст');
-        await send({ type: 'text', text: String(d.params.text).slice(0, 4000) });
-        reply({ ok: true });
-        break;
-      case 'sendPhoto': {
-        if (!d.params?.dataUrl) throw new Error('Пустой dataUrl');
-        const resp = await fetch(d.params.dataUrl);
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        await send({ type: 'image', url, _blob: blob });
-        reply({ ok: true });
-        break;
-      }
-      case 'close':
-        closeMiniApp(); reply({ ok: true });
-        break;
-      case 'setTitle':
-        $('miniappTitle').textContent = String(d.params?.text || 'Mini App').slice(0, 40);
-        reply({ ok: true });
-        break;
-      case 'showToast':
-        QRChat_toast(String(d.params?.text || ''));
-        reply({ ok: true });
-        break;
-      case 'getStorage': {
-        const key = 'miniapp:' + (currentMiniApp?.id || '') + ':' + d.params?.key;
-        reply(localStorage.getItem(key));
-        break;
-      }
-      case 'setStorage': {
-        const k2 = 'miniapp:' + (currentMiniApp?.id || '') + ':' + d.params?.key;
-        localStorage.setItem(k2, d.params?.value);
-        reply({ ok: true });
-        break;
-      }
-      default:
-        throw new Error('Unknown method: ' + d.method);
-    }
+    const result = await bridgeCall(d.method, d.params || {});
+    reply(result);
   } catch (err) {
     reply(null, err.message);
   }
 });
 
+// ================================================================
+//  TOAST
+// ================================================================
 function QRChat_toast(text) {
   const el = document.createElement('div');
   el.className = 'toast';
@@ -1544,7 +2108,7 @@ function QRChat_toast(text) {
 // ================================================================
 function exportData() {
   const data = {
-    version: 8, exportedAt: new Date().toISOString(),
+    version: 9, exportedAt: new Date().toISOString(),
     me: { sid: state.me.sid, nick: state.me.nick },
     chats: state.chats, seenIds: state.seenIds
   };
@@ -1592,7 +2156,7 @@ function applyTheme() {
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (state.theme === 'auto') applyTheme(); });
 
 // ================================================================
-//  TOPBAR BUTTONS
+//  TOPBAR
 // ================================================================
 $('menuBtn').addEventListener('click', screenChatMenu);
 $('usersBtn').addEventListener('click', screenUsers);
@@ -1703,7 +2267,7 @@ window.addEventListener('beforeunload', () => {
   saveNow(); disconnect(); stopPresence(); stopScan();
 });
 
-window.__qrchat = { state, enterChat, send, renderAll, NTFY_SERVERS, rotateServer, openMiniApp };
+window.__qrchat = { state, enterChat, send, sendExternal, renderAll, NTFY_SERVERS, rotateServer, openMiniApp };
 </script>
 </body>
 </html>
