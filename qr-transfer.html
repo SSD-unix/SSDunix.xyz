@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07C160" />
 <title>QR Chat</title>
+<link rel="manifest" id="manifestLink">
 <style>
   :root {
     --green: #07C160; --green-dark: #06AD56;
@@ -79,6 +80,7 @@
     max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   [data-theme="dark"] .bubble .quote { background: rgba(255,255,255,0.06); }
   .bubble.broken { background: #ffecec; color: #b00; font-size: 12px; font-style: italic; }
+  .bubble.pinned { border: 2px solid var(--green); box-shadow: 0 0 0 2px rgba(7,193,96,0.2); }
   .reactions { display: flex; gap: 3px; margin: 4px 0 0 4px; flex-wrap: wrap; }
   .react-pill { background: var(--card); border: 1px solid var(--border); padding: 2px 8px;
     border-radius: 10px; font-size: 12px; cursor: pointer; user-select: none; }
@@ -104,6 +106,12 @@
   .reply-bar.show { display: flex; }
   .reply-bar .rb-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
   .reply-bar button { background: transparent; border: none; font-size: 18px; color: var(--muted); cursor: pointer; }
+  .pinned-bar { background: var(--card); border-radius: 10px; padding: 8px 12px;
+    margin-bottom: 8px; display: none; align-items: center; gap: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-size: 13px; }
+  .pinned-bar.show { display: flex; }
+  .pinned-bar .pb-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pinned-bar button { background: transparent; border: none; font-size: 16px; color: var(--muted); cursor: pointer; }
 
   .overlay { position: fixed; inset: 0; background: var(--overlay-bg);
     display: flex; align-items: stretch; z-index: 50; overflow-y: auto; }
@@ -207,7 +215,13 @@
     <button class="icon-btn" id="usersBtn">👥<span class="badge" id="usersBadge" style="display:none;">0</span></button>
   </header>
 
-  <main class="chat" id="chat"></main>
+  <main class="chat" id="chat">
+    <div class="pinned-bar" id="pinnedBar">
+      <span>📌</span>
+      <div class="pb-text" id="pinnedText"></div>
+      <button id="unpinBtn">✕</button>
+    </div>
+  </main>
 
   <footer class="composer">
     <div class="reply-bar" id="replyBar">
@@ -215,6 +229,7 @@
       <button id="replyCancel">✕</button>
     </div>
     <button class="icon-btn" id="photoBtn" title="Фото">📎</button>
+    <button class="icon-btn" id="micBtn" title="Голосовое">🎤</button>
     <input type="file" id="fileInput" accept="image/*" hidden>
     <textarea id="msgInput" placeholder="Сообщение…" rows="1"></textarea>
     <button class="send-btn" id="sendBtn">
@@ -243,7 +258,7 @@
 //  UTILS
 // ================================================================
 const $ = id => document.getElementById(id);
-const LS = 'qrchat_v5';
+const LS = 'qrchat_v6';
 function rhex(n) {
   const a = new Uint8Array(n);
   crypto.getRandomValues(a);
@@ -260,15 +275,45 @@ function nickColor(sid) {
 }
 
 // ================================================================
+//  NTFY SERVERS (резервные)
+// ================================================================
+const NTFY_SERVERS = [
+  'https://ntfy.sh',
+  'https://ntfy.tedomum.net',
+  'https://ntfy.jae.fi',
+  'https://ntfy.adminforge.de',
+  'https://ntfy.envs.net',
+  'https://ntfy.mzte.de',
+  'https://ntfy.hostux.net',
+  'https://ntfy.fossman.de'
+];
+let currentServerIdx = 0;
+let currentServer = NTFY_SERVERS[0];
+
+function getServerUrl(topic, since) {
+  const base = currentServer;
+  const url = new URL(`${base}/${encodeURIComponent(topic)}/sse`);
+  if (since) url.searchParams.set('since', since);
+  return url.toString();
+}
+function rotateServer() {
+  currentServerIdx = (currentServerIdx + 1) % NTFY_SERVERS.length;
+  currentServer = NTFY_SERVERS[currentServerIdx];
+  console.warn('Rotating ntfy server →', currentServer);
+  $('statusText').textContent = 'Смена сервера…';
+}
+
+// ================================================================
 //  STATE
 // ================================================================
 let state = {
   me: { sid: null, nick: null },
   currentChat: null,
-  chats: {},   // topic -> { name, createdBy, admins:[], bans:[], deleted:[], messages:[], lastTs }
-  seenIds: {}, // topic -> [id]
+  chats: {},   // topic -> { name, createdBy, admins:[], bans:[], deleted:[], pinned:null, messages:[], lastTs }
+  seenIds: {},
   theme: 'auto',
-  notifications: false
+  notifications: false,
+  lastExport: 0
 };
 let savePending = null;
 function loadState() {
@@ -299,12 +344,9 @@ function ensureChat(t) {
   if (!state.chats[t]) {
     state.chats[t] = {
       name: 'Чат ' + t.slice(-4),
-      createdBy: null,
-      admins: [],
-      bans: [],
-      deleted: [],
-      messages: [],
-      lastTs: 0
+      createdBy: null, admins: [], bans: [], deleted: [],
+      pinned: null,
+      messages: [], lastTs: 0
     };
   }
   if (!state.seenIds[t]) state.seenIds[t] = [];
@@ -329,7 +371,7 @@ function markSeen(t, id) {
 // ================================================================
 //  PRESENCE (in-memory)
 // ================================================================
-let presence = {};   // sid -> { nick, ts }
+let presence = {};
 let presenceTimer = null;
 function updatePresence(sid, nick, ts) {
   presence[sid] = { nick: nick || ('User ' + shortSid(sid)), ts: ts || Date.now() };
@@ -343,12 +385,13 @@ function presenceClean() {
 }
 
 // ================================================================
-//  NETWORK  (single SSE per chat + POST to same topic)
+//  NETWORK
 // ================================================================
 let es = null;
 let esTopic = null;
 let netOnline = false;
 let reconnectTimer = null;
+let failCount = 0;
 
 function netStatus() {
   $('statusDot').classList.toggle('on', netOnline);
@@ -363,18 +406,21 @@ function connect() {
   if (!state.currentChat) return;
   const t = state.currentChat;
   const c = ensureChat(t);
-  // since = на 60 секунд назад от lastTs (запас на рассинхрон часов)
   const since = c.lastTs ? Math.max(0, Math.floor(c.lastTs/1000) - 60) : 'all';
-  const url = `https://ntfy.sh/${encodeURIComponent(t)}/sse?since=${since}`;
+  const url = getServerUrl(t, since);
 
   es = new EventSource(url);
   esTopic = t;
 
-  es.onopen = () => { netOnline = true; netStatus(); };
+  es.onopen = () => { netOnline = true; failCount = 0; netStatus(); };
   es.onerror = () => {
     netOnline = false;
     netStatus();
-    // ES сам переподключится, но подстрахуемся
+    failCount++;
+    if (failCount >= 2) {
+      rotateServer();
+      failCount = 0;
+    }
     if (reconnectTimer) clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(() => {
       if (state.currentChat === t) connect();
@@ -406,31 +452,29 @@ function handleMessage(ev) {
     return;
   }
 
-  // Обычное сообщение: JSON
   let m;
   try { m = JSON.parse(d.message || '{}'); } catch { return; }
   if (!m.id || !m.sid) return;
-
-  // Attachment URL
   if (d.attachment && d.attachment.url) m.url = d.attachment.url;
-
-  // Время: если sender не проставил — берём серверное
   if (!m.ts) m.ts = (d.time || Math.floor(Date.now()/1000)) * 1000;
 
   ingestMessage(m, false);
 }
 
 async function postJSON(topic, obj, headers) {
-  const r = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+  const url = `${currentServer}/${encodeURIComponent(topic)}`;
+  const r = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(obj),
     headers: headers || {}
   });
+  if (r.status === 429) { rotateServer(); throw new Error('429 rate limit'); }
   if (!r.ok) throw new Error('ntfy ' + r.status);
 }
 
 async function postAttachment(topic, blob, metaObj, headers) {
-  const r = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+  const url = `${currentServer}/${encodeURIComponent(topic)}`;
+  const r = await fetch(url, {
     method: 'PUT',
     body: blob,
     headers: Object.assign({
@@ -438,53 +482,80 @@ async function postAttachment(topic, blob, metaObj, headers) {
       'Message': JSON.stringify(metaObj)
     }, headers || {})
   });
+  if (r.status === 429) { rotateServer(); throw new Error('429 rate limit'); }
   if (!r.ok) throw new Error('ntfy ' + r.status);
 }
 
 // ================================================================
 //  INGEST
 // ================================================================
+function applyIngestOnly(m) {
+  const t = state.currentChat;
+  if (!t) return;
+  const c = ensureChat(t);
+  if (hasSeen(t, m.id)) return;
+
+  if (m.type === 'sys') applySys(c, m);
+  markSeen(t, m.id);
+  c.messages.push(m);
+  c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
+  if (m.ts > c.lastTs) c.lastTs = m.ts;
+  if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
+  saveState();
+}
+
 function ingestMessage(m, mine) {
   const t = state.currentChat;
   if (!t) return;
   const c = ensureChat(t);
-
   if (hasSeen(t, m.id)) return;
 
-  // Sys-сообщение: применить к состоянию чата
-  if (m.type === 'sys') applySys(c, m);
+  if (m.type === 'sys') {
+    applySys(c, m);
+    markSeen(t, m.id);
+    c.messages.push(m);
+    c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
+    if (m.ts > c.lastTs) c.lastTs = m.ts;
+    if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
+    saveState();
 
-  markSeen(t, m.id);
-  c.messages.push(m);
-  // Сортируем по времени; при равных — по id (стабильно)
-  c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
-  if (m.ts > c.lastTs) c.lastTs = m.ts;
-
-  // Регистрируем presence от отправителя
-  if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
-
-  saveState();
-
-  if (mine) {
-    // Уже отрисовано локально; перерисовывать не надо, но обновим статусы
-    netStatus();
-    updateUsersBadge();
+    if (m.action === 'react' || m.action === 'delete' || m.action === 'pin' || m.action === 'unpin') {
+      scheduleReactRender();
+    } else {
+      if (m.ts < lastRenderedTs) renderAll();
+      else appendSys(m);
+    }
+    updateUsersBadge(); netStatus();
     return;
   }
 
-  // Проверяем: сообщение идёт в конец?
-  const visible = getVisibleMessages(c);
-  const lastVisible = visible[visible.length - 1];
-  if (!lastVisible || lastVisible.id === m.id || (m.ts >= (lastVisible.ts || 0))) {
-    // инкрементально
-    if (isVisible(m, c)) appendBubble(m, true);
-    updateUsersBadge();
-  } else {
-    renderAll();
-  }
+  markSeen(t, m.id);
+  c.messages.push(m);
+  c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
+  if (m.ts > c.lastTs) c.lastTs = m.ts;
+  if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
+  saveState();
 
-  // Уведомление
-  if (state.notifications && document.hidden && !isMeSid(m.sid) && m.type !== 'sys') {
+  if (!isVisible(m, c)) return;
+
+  if (m.ts < lastRenderedTs) {
+    renderAll();
+  } else {
+    const day = fmtDay(m.ts);
+    if (day !== lastDayStr) {
+      lastDayStr = day;
+      const el = document.createElement('div');
+      el.className = 'day';
+      el.innerHTML = `<span>${day}</span>`;
+      chatEl.appendChild(el);
+      lastSenderId = null;
+    }
+    appendBubble(m, true);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+  updateUsersBadge(); netStatus();
+
+  if (state.notifications && document.hidden && !isMeSid(m.sid)) {
     try {
       new Notification(m.nick || 'QR Chat', {
         body: m.type === 'image' ? '📷 Фото' : (m.text || '').slice(0, 100),
@@ -505,34 +576,36 @@ function applySys(c, m) {
       break;
     case 'admin+':
       if (m.target && !c.admins.includes(m.target) && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
-        c.admins.push(m.target);
-        c.bans = c.bans.filter(b => b !== m.target);
+        c.admins.push(m.target); c.bans = c.bans.filter(b => b !== m.target);
       }
       break;
     case 'admin-':
-      if (m.target && m.target !== c.createdBy && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+      if (m.target && m.target !== c.createdBy && (c.admins.includes(m.sid) || c.createdBy === m.sid))
         c.admins = c.admins.filter(a => a !== m.target);
-      }
       break;
     case 'ban':
       if (m.target && m.target !== c.createdBy && !c.bans.includes(m.target)
           && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
-        c.bans.push(m.target);
-        c.admins = c.admins.filter(a => a !== m.target);
+        c.bans.push(m.target); c.admins = c.admins.filter(a => a !== m.target);
       }
       break;
     case 'unban':
-      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid))
         c.bans = c.bans.filter(b => b !== m.target);
-      }
       break;
     case 'delete':
       if (m.target && !c.deleted.includes(m.target)) {
         const orig = c.messages.find(x => x.id === m.target);
-        if (orig && (orig.sid === m.sid || c.admins.includes(m.sid) || c.createdBy === m.sid)) {
+        if (orig && (orig.sid === m.sid || c.admins.includes(m.sid) || c.createdBy === m.sid))
           c.deleted.push(m.target);
-        }
       }
+      break;
+    case 'pin':
+      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid))
+        c.pinned = m.target;
+      break;
+    case 'unpin':
+      if (c.admins.includes(m.sid) || c.createdBy === m.sid) c.pinned = null;
       break;
   }
 }
@@ -541,44 +614,56 @@ function isMeSid(sid) { return state.me.sid === sid; }
 function isVisible(m, c) {
   if (!c) c = cur();
   if (!c) return false;
-  if (m.type === 'sys') return false;                 // отрисуем отдельно
+  if (m.type === 'sys') return false;
   if (c.bans.includes(m.sid)) return false;
   if (c.deleted.includes(m.id)) return false;
   return true;
 }
-function getVisibleMessages(c) {
-  return c.messages.filter(m => isVisible(m, c));
-}
+function getVisibleMessages(c) { return c.messages.filter(m => isVisible(m, c)); }
 
 // ================================================================
-//  SEND
+//  SEND (ИСПРАВЛЕНО)
 // ================================================================
 async function send(partial) {
   const t = state.currentChat;
   if (!t) return;
   const c = ensureChat(t);
   const m = Object.assign({
-    id: rhex(8),
-    sid: state.me.sid,
-    nick: state.me.nick,
-    ts: Date.now(),
-    type: 'text',
+    id: rhex(8), sid: state.me.sid, nick: state.me.nick,
+    ts: Date.now(), type: 'text',
   }, partial);
 
-  // Reply quote text (для отображения)
   if (m.replyTo) {
     const o = c.messages.find(x => x.id === m.replyTo);
     if (o) m.replyText = (o.text || '[фото]').slice(0, 60);
   }
 
-  // Локально сразу
-  ingestMessage(m, true);
+  // 1. ЛОКАЛЬНО: записать в состояние
+  applyIngestOnly(m);
+
+  // 2. ЛОКАЛЬНО: мгновенно отрисовать
   if (m.type === 'sys') {
-    if (m.action !== 'react') renderAll(); // sys → перерисовать
-    else scheduleReactRender();
+    if (m.action !== 'react' && m.action !== 'delete' && m.action !== 'pin' && m.action !== 'unpin') {
+      appendSys(m); chatEl.scrollTop = chatEl.scrollHeight;
+    } else {
+      scheduleReactRender();
+    }
+  } else {
+    const day = fmtDay(m.ts);
+    if (day !== lastDayStr) {
+      lastDayStr = day;
+      const el = document.createElement('div');
+      el.className = 'day';
+      el.innerHTML = `<span>${day}</span>`;
+      chatEl.appendChild(el);
+      lastSenderId = null;
+    }
+    appendBubble(m, true);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    updateUsersBadge();
   }
 
-  // Отправка
+  // 3. ОТПРАВКА в сеть
   const headers = { 'Title': state.me.nick || 'QRChat' };
   try {
     if (m.type === 'image' && m._blob) {
@@ -599,13 +684,12 @@ async function sendPresence() {
   const t = state.currentChat;
   if (!t || !state.me.nick) return;
   try {
-    await fetch(`https://ntfy.sh/${encodeURIComponent(t)}`, {
+    await fetch(`${currentServer}/${encodeURIComponent(t)}`, {
       method: 'POST',
       body: '\u0001P|' + state.me.sid + '|' + state.me.nick
     });
     updatePresence(state.me.sid, state.me.nick, Date.now());
-    netStatus();
-    updateUsersBadge();
+    netStatus(); updateUsersBadge();
   } catch {}
 }
 function startPresence() {
@@ -619,35 +703,34 @@ function stopPresence() {
 }
 
 // ================================================================
-//  RENDER — chat
+//  RENDER
 // ================================================================
 const chatEl = $('chat');
 let lastSenderId = null;
 let lastDayStr = '';
-let reactRenderPending = false;
+let lastRenderedTs = 0;
+let reactRenderTimer = null;
 
 function scheduleReactRender() {
-  if (reactRenderPending) return;
-  reactRenderPending = true;
-  setTimeout(() => { reactRenderPending = false; renderAll(); }, 200);
+  if (reactRenderTimer) clearTimeout(reactRenderTimer);
+  reactRenderTimer = setTimeout(() => { reactRenderTimer = null; renderAll(); }, 120);
 }
 
 function renderAll() {
+  // Сохраняем pinned bar
+  const pinnedBar = $('pinnedBar');
   chatEl.innerHTML = '';
-  lastSenderId = null;
-  lastDayStr = '';
+  chatEl.appendChild(pinnedBar);
+  lastSenderId = null; lastDayStr = ''; lastRenderedTs = 0;
   const c = cur();
-  if (!c) return;
+  if (!c) { updatePinnedBar(); return; }
 
-  // Проходим по ВСЕМ сообщениям по времени, показываем видимые + системные
   const all = c.messages.slice().sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
 
   for (const m of all) {
     if (m.type === 'sys') {
-      if (m.action === 'react') continue;
-      if (m.action === 'delete') continue;
-      appendSys(m);
-      continue;
+      if (m.action === 'react' || m.action === 'delete' || m.action === 'pin' || m.action === 'unpin') continue;
+      appendSys(m); continue;
     }
     if (!isVisible(m, c)) continue;
     const day = fmtDay(m.ts);
@@ -660,9 +743,11 @@ function renderAll() {
       lastSenderId = null;
     }
     appendBubble(m, false);
+    if (m.ts > lastRenderedTs) lastRenderedTs = m.ts;
   }
   chatEl.scrollTop = chatEl.scrollHeight;
   updateUsersBadge();
+  updatePinnedBar();
 }
 
 function appendSys(m) {
@@ -683,8 +768,6 @@ function appendSys(m) {
   el.innerHTML = html;
   chatEl.appendChild(el);
   lastSenderId = null;
-  const day = fmtDay(m.ts);
-  if (day !== lastDayStr) lastDayStr = day;
 }
 
 function findMsg(id) { const c = cur(); return c ? c.messages.find(x => x.id === id) : null; }
@@ -707,9 +790,9 @@ function appendBubble(m, animate) {
 
   const row = document.createElement('div');
   row.className = 'msg-row';
-
   const b = document.createElement('div');
   b.className = 'bubble';
+  if (c.pinned === m.id) b.classList.add('pinned');
 
   if (m.replyTo) {
     const orig = findMsg(m.replyTo);
@@ -722,19 +805,19 @@ function appendBubble(m, animate) {
   if (m.type === 'image' && m.url) {
     b.classList.add('img');
     const img = document.createElement('img');
-    img.src = m.url;
-    img.loading = 'lazy';
+    img.src = m.url; img.loading = 'lazy';
     img.addEventListener('click', () => { $('viewerImg').src = m.url; $('viewer').classList.add('show'); });
-    img.addEventListener('error', () => {
-      b.classList.remove('img');
-      b.classList.add('broken');
-      b.textContent = '[фото недоступно]';
-    });
+    img.addEventListener('error', () => { b.classList.remove('img'); b.classList.add('broken'); b.textContent = '[фото недоступно]'; });
     b.appendChild(img);
+  } else if (m.type === 'voice' && m.url) {
+    const audio = document.createElement('audio');
+    audio.controls = true; audio.src = m.url; audio.style.maxWidth = '100%';
+    b.appendChild(audio);
   } else if (m.text) {
     b.appendChild(document.createTextNode(m.text));
   }
 
+  // Реакции
   const reacts = collectReactions(m.id, c);
   if (Object.keys(reacts).length) {
     const rdiv = document.createElement('div');
@@ -751,24 +834,45 @@ function appendBubble(m, animate) {
 
   // Long-press
   let lpTimer = null;
-  const startLp = (e) => {
-    lpTimer = setTimeout(() => { showCtx(e.touches?.[0] || e, m); }, 450);
-  };
+  const startLp = (e) => { lpTimer = setTimeout(() => { showCtx(e.touches?.[0] || e, m); }, 450); };
   const cancelLp = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
   b.addEventListener('touchstart', startLp, { passive: true });
   b.addEventListener('touchend', cancelLp);
   b.addEventListener('touchmove', cancelLp, { passive: true });
   b.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtx(e, m); });
 
+  // Двойной тап → ❤️
+  let lastTap = 0;
+  b.addEventListener('click', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 350) { toggleReaction(m.id, '❤️'); lastTap = 0; }
+    else lastTap = now;
+  });
+
+  // Свайп влево → ответ
+  let touchStartX = 0, touchStartY = 0, isSwiping = false;
+  b.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; isSwiping = false;
+  }, { passive: true });
+  b.addEventListener('touchmove', (e) => {
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (!isSwiping && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      isSwiping = true;
+      if (dx < 0) { setReply(m); if (navigator.vibrate) navigator.vibrate(15); }
+    }
+  }, { passive: true });
+
   row.appendChild(b);
   wrap.appendChild(row);
   if (animate) wrap.style.animation = 'pop 0.18s ease-out';
   chatEl.appendChild(wrap);
   lastSenderId = m.sid;
+  if (m.ts > lastRenderedTs) lastRenderedTs = m.ts;
 }
 
 function collectReactions(msgId, c) {
-  const counts = {};  // "sid|emoji" -> count
+  const counts = {};
   for (const m of c.messages) {
     if (m.type !== 'sys' || m.action !== 'react' || m.target !== msgId) continue;
     if (c.bans.includes(m.sid)) continue;
@@ -783,9 +887,18 @@ function collectReactions(msgId, c) {
   }
   return out;
 }
-function toggleReaction(msgId, emoji) {
-  send({ type: 'sys', action: 'react', target: msgId, text: emoji });
+function toggleReaction(msgId, emoji) { send({ type: 'sys', action: 'react', target: msgId, text: emoji }); }
+
+function updatePinnedBar() {
+  const c = cur();
+  const bar = $('pinnedBar');
+  if (!c || !c.pinned) { bar.classList.remove('show'); return; }
+  const msg = c.messages.find(m => m.id === c.pinned);
+  if (!msg) { bar.classList.remove('show'); return; }
+  $('pinnedText').textContent = (msg.nick || '') + ': ' + (msg.text || '[фото]').slice(0, 50);
+  bar.classList.add('show');
 }
+$('unpinBtn').addEventListener('click', () => { send({ type: 'sys', action: 'unpin' }); });
 
 // ================================================================
 //  CONTEXT MENU
@@ -795,7 +908,6 @@ const REACT_EMOJIS = ['❤️','👍','😂','😮','😢','🔥'];
 function showCtx(evt, m) {
   const p = evt.touches?.[0] || evt;
   ctxEl.innerHTML = '';
-
   const emojis = document.createElement('div');
   emojis.className = 'emoji-row';
   for (const e of REACT_EMOJIS) {
@@ -813,20 +925,22 @@ function showCtx(evt, m) {
 
   const bCopy = document.createElement('button');
   bCopy.textContent = '📋 Копировать';
-  bCopy.addEventListener('click', () => {
-    try { navigator.clipboard.writeText(m.text || m.url || ''); } catch {}
-    ctxEl.classList.remove('show');
-  });
+  bCopy.addEventListener('click', () => { try { navigator.clipboard.writeText(m.text || m.url || ''); } catch {} ctxEl.classList.remove('show'); });
   ctxEl.appendChild(bCopy);
 
   const c = cur();
   const canDel = c && (c.admins.includes(state.me.sid) || m.sid === state.me.sid || c.createdBy === state.me.sid);
   if (canDel) {
     const bDel = document.createElement('button');
-    bDel.className = 'danger';
-    bDel.textContent = '🗑 Удалить';
+    bDel.className = 'danger'; bDel.textContent = '🗑 Удалить';
     bDel.addEventListener('click', () => { send({ type: 'sys', action: 'delete', target: m.id }); ctxEl.classList.remove('show'); });
     ctxEl.appendChild(bDel);
+  }
+  if (c && (c.admins.includes(state.me.sid) || c.createdBy === state.me.sid)) {
+    const bPin = document.createElement('button');
+    bPin.textContent = c.pinned === m.id ? '📌 Открепить' : '📌 Закрепить';
+    bPin.addEventListener('click', () => { send({ type: 'sys', action: c.pinned === m.id ? 'unpin' : 'pin', target: m.id }); ctxEl.classList.remove('show'); });
+    ctxEl.appendChild(bPin);
   }
 
   ctxEl.classList.add('show');
@@ -834,12 +948,9 @@ function showCtx(evt, m) {
   let x = Math.min(p.clientX, window.innerWidth - w - 8);
   let y = Math.min(p.clientY, window.innerHeight - h - 8);
   x = Math.max(8, x); y = Math.max(8, y);
-  ctxEl.style.left = x + 'px';
-  ctxEl.style.top = y + 'px';
+  ctxEl.style.left = x + 'px'; ctxEl.style.top = y + 'px';
 }
-document.addEventListener('click', (e) => {
-  if (!ctxEl.contains(e.target)) ctxEl.classList.remove('show');
-});
+document.addEventListener('click', (e) => { if (!ctxEl.contains(e.target)) ctxEl.classList.remove('show'); });
 
 // ================================================================
 //  REPLY
@@ -871,17 +982,14 @@ function updateUsersBadge() {
 //  OVERLAYS
 // ================================================================
 const overlay = $('overlay');
-function showOverlay(html) {
-  overlay.innerHTML = `<div class="screen">${html}</div>`;
-  overlay.classList.remove('hidden');
-}
+function showOverlay(html) { overlay.innerHTML = `<div class="screen">${html}</div>`; overlay.classList.remove('hidden'); }
 function hideOverlay() { overlay.classList.add('hidden'); }
 
 function screenWelcome() {
   showOverlay(`
     <div class="card">
       <h2>QR Chat</h2>
-      <p class="hint">Мульти-юзерный чат без сервера. Все данные через ntfy.sh, история хранится локально.</p>
+      <p class="hint">Мульти-юзерный чат. Данные через ntfy, история локально. Автоматический выбор сервера.</p>
       <input class="field" id="nickInput" placeholder="Твой ник" maxlength="24" autocomplete="off">
       <button class="btn primary" id="saveNickBtn">Продолжить</button>
     </div>
@@ -891,8 +999,7 @@ function screenWelcome() {
     const v = $('nickInput').value.trim();
     if (!v) return;
     state.me.nick = v.slice(0,24);
-    saveNow();
-    screenChatList();
+    saveNow(); screenChatList();
   });
 }
 
@@ -927,10 +1034,7 @@ function screenChatList() {
   overlay.querySelectorAll('.chat-item').forEach(el => {
     el.addEventListener('click', () => enterChat(el.dataset.topic, false));
   });
-  $('createChatBtn').addEventListener('click', () => {
-    const t = 'nfc-' + rhex(8);
-    enterChat(t, true);
-  });
+  $('createChatBtn').addEventListener('click', () => { const t = 'nfc-' + rhex(8); enterChat(t, true); });
   $('joinChatBtn').addEventListener('click', screenJoin);
   $('settingsBtn').addEventListener('click', screenSettings);
 }
@@ -948,10 +1052,7 @@ function screenJoin() {
     </div>
   `);
   $('scanBtn').addEventListener('click', startScan);
-  $('manualBtn').addEventListener('click', () => {
-    const v = $('manualKey').value.trim();
-    if (v) enterChat(v, false);
-  });
+  $('manualBtn').addEventListener('click', () => { const v = $('manualKey').value.trim(); if (v) enterChat(v, false); });
   $('backBtn').addEventListener('click', screenChatList);
 }
 
@@ -964,6 +1065,9 @@ function screenSettings() {
       <button class="btn" id="changeNickBtn">✎ Сменить ник</button>
       <button class="btn" id="themeBtn">🎨 Тема: ${themeLabel[state.theme]||'Авто'}</button>
       <button class="btn" id="notifBtn">🔔 Уведомления: ${state.notifications?'вкл':'выкл'}</button>
+      <div class="divider">сервер</div>
+      <button class="btn" id="serverBtn">🌐 Сервер: ${currentServer.replace('https://','')}</button>
+      <button class="btn" id="serverNextBtn">🔄 Сменить сервер</button>
       <div class="divider">бэкап</div>
       <button class="btn" id="exportBtn">⬇ Экспорт (JSON)</button>
       <button class="btn" id="importBtn">⬆ Импорт</button>
@@ -985,18 +1089,21 @@ function screenSettings() {
   $('notifBtn').addEventListener('click', async () => {
     if (!('Notification' in window)) { alert('Нет поддержки уведомлений'); return; }
     const p = await Notification.requestPermission();
-    state.notifications = (p === 'granted');
-    saveNow(); screenSettings();
+    state.notifications = (p === 'granted'); saveNow(); screenSettings();
+  });
+  $('serverBtn').addEventListener('click', () => {
+    showOverlay(`<div class="card"><h2>Сервер</h2><p class="hint">Текущий: <b>${esc(currentServer)}</b></p><button class="btn" id="closeServer">OK</button></div>`);
+    $('closeServer').addEventListener('click', screenSettings);
+  });
+  $('serverNextBtn').addEventListener('click', () => {
+    rotateServer(); saveNow(); alert('Сервер: ' + currentServer); screenSettings();
   });
   $('exportBtn').addEventListener('click', exportData);
   $('importBtn').addEventListener('click', () => $('importFile').click());
-  $('importFile').addEventListener('change', async e => {
-    const f = e.target.files[0]; if (f) await importData(f);
-  });
+  $('importFile').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await importData(f); });
   $('wipeBtn').addEventListener('click', () => {
     if (!confirm('Удалить ВСЁ (чаты, историю, ник)?')) return;
-    localStorage.removeItem(LS);
-    location.reload();
+    localStorage.removeItem(LS); location.reload();
   });
   $('backBtn').addEventListener('click', screenChatList);
 }
@@ -1010,24 +1117,16 @@ function screenUsers() {
   for (const s in presence) sids.add(s);
   for (const a of c.admins) sids.add(a);
   for (const b of c.bans) sids.add(b);
-
   const nickById = {};
   for (const m of c.messages) if (m.nick && !nickById[m.sid]) nickById[m.sid] = m.nick;
   for (const [s, p] of Object.entries(presence)) nickById[s] = p.nick;
   nickById[state.me.sid] = state.me.nick;
-
   const list = [...sids].map(sid => ({
-    sid,
-    nick: nickById[sid] || ('User ' + shortSid(sid)),
-    online: isOnline(sid),
-    admin: c.admins.includes(sid),
-    banned: c.bans.includes(sid),
-    creator: c.createdBy === sid,
-    me: isMeSid(sid)
+    sid, nick: nickById[sid] || ('User ' + shortSid(sid)),
+    online: isOnline(sid), admin: c.admins.includes(sid), banned: c.bans.includes(sid),
+    creator: c.createdBy === sid, me: isMeSid(sid)
   })).sort((a,b) => (b.admin - a.admin) || (b.online - a.online) || a.nick.localeCompare(b.nick));
-
   const iAmAdmin = c.admins.includes(state.me.sid) || c.createdBy === state.me.sid;
-
   let items = '';
   for (const u of list) {
     const actions = [];
@@ -1055,7 +1154,6 @@ function screenUsers() {
         <div class="user-actions">${actions.join('')}</div>
       </div>`;
   }
-
   showOverlay(`
     <div class="card" style="padding:14px;">
       <h2 style="margin-bottom:10px;">Участники · ${list.length}</h2>
@@ -1066,19 +1164,14 @@ function screenUsers() {
   $('backBtn').addEventListener('click', screenChatMenu);
   overlay.querySelectorAll('.user-actions button').forEach(b => {
     b.addEventListener('click', () => {
-      const act = b.dataset.act;
-      const sid = b.dataset.sid;
-      const nick = b.dataset.nick;
+      const act = b.dataset.act; const sid = b.dataset.sid; const nick = b.dataset.nick;
       if (act === 'ban' && !confirm('Забанить ' + nick + '?')) return;
       send({ type: 'sys', action: act, target: sid, targetNick: nick });
       setTimeout(screenUsers, 250);
     });
   });
 }
-function renderUsersIfOpen() {
-  if (overlay.classList.contains('hidden')) return;
-  if (overlay.querySelector('#userList')) screenUsers();
-}
+function renderUsersIfOpen() { if (overlay.classList.contains('hidden')) return; if (overlay.querySelector('#userList')) screenUsers(); }
 
 // --- Chat menu ---
 function screenChatMenu() {
@@ -1135,10 +1228,8 @@ function screenChatMenu() {
   $('leaveBtn').addEventListener('click', () => {
     if (!confirm('Выйти и удалить локально?')) return;
     const t = state.currentChat;
-    delete state.chats[t];
-    delete state.seenIds[t];
-    state.currentChat = null;
-    saveNow();
+    delete state.chats[t]; delete state.seenIds[t];
+    state.currentChat = null; saveNow();
     disconnect(); stopPresence();
     $('app').style.display = 'none';
     screenChatList();
@@ -1155,21 +1246,15 @@ function enterChat(topic, isNew) {
   state.currentChat = topic;
   const c = ensureChat(topic);
   saveState();
-
   $('app').style.display = 'flex';
   hideOverlay();
   $('chatTitle').textContent = c.name;
   renderAll();
   netStatus();
-
-  // Если новый — шлём create
   if (isNew && !c.createdBy) {
-    c.createdBy = state.me.sid;
-    c.admins = [state.me.sid];
-    saveState();
+    c.createdBy = state.me.sid; c.admins = [state.me.sid]; saveState();
     send({ type: 'sys', action: 'create' });
   }
-
   connect();
   startPresence();
 }
@@ -1189,8 +1274,7 @@ async function startScan() {
   ];
   let stream = null, lastErr = null;
   for (const cst of tries) {
-    try { stream = await navigator.mediaDevices.getUserMedia(cst); break; }
-    catch (e) { lastErr = e; }
+    try { stream = await navigator.mediaDevices.getUserMedia(cst); break; } catch (e) { lastErr = e; }
   }
   if (!stream) { alert('Камера: ' + (lastErr ? lastErr.name : 'error')); return; }
   mediaStream = stream;
@@ -1205,11 +1289,7 @@ async function startScan() {
     if (video.readyState < 2 || video.videoWidth === 0) return;
     try {
       const codes = await det.detect(video);
-      if (codes?.length) {
-        const v = codes[0].rawValue;
-        stopScan();
-        enterChat(v, false);
-      }
+      if (codes?.length) { const v = codes[0].rawValue; stopScan(); enterChat(v, false); }
     } catch {}
   }, 250);
 }
@@ -1227,6 +1307,7 @@ $('stopScanBtn').addEventListener('click', stopScan);
 const msgInput = $('msgInput');
 const sendBtn = $('sendBtn');
 const photoBtn = $('photoBtn');
+const micBtn = $('micBtn');
 const fileInput = $('fileInput');
 
 function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
@@ -1234,22 +1315,18 @@ function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.
 async function sendText() {
   const t = msgInput.value.trim();
   if (!t) return;
-  msgInput.value = '';
-  autoGrow(msgInput);
+  msgInput.value = ''; autoGrow(msgInput);
   const extra = replyTo ? { replyTo: replyTo.id } : {};
   clearReply();
   await send(Object.assign({ type: 'text', text: t }, extra));
 }
 sendBtn.addEventListener('click', sendText);
 msgInput.addEventListener('input', () => autoGrow(msgInput));
-msgInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); }
-});
+msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); } });
 
 photoBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', async () => {
-  const f = fileInput.files[0];
-  fileInput.value = '';
+  const f = fileInput.files[0]; fileInput.value = '';
   if (!f) return;
   try {
     const blob = await compressImage(f, 1600, 0.82);
@@ -1258,6 +1335,34 @@ fileInput.addEventListener('change', async () => {
     clearReply();
     await send(Object.assign({ type: 'image', url, _blob: blob }, extra));
   } catch (e) { alert('Ошибка фото: ' + e.message); }
+});
+
+// Голосовые сообщения
+let mediaRecorder = null, audioChunks = [];
+micBtn.addEventListener('click', async () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      if (blob.size < 100) return;
+      const url = URL.createObjectURL(blob);
+      const extra = replyTo ? { replyTo: replyTo.id } : {};
+      clearReply();
+      await send(Object.assign({ type: 'voice', url, _blob: blob }, extra));
+    };
+    mediaRecorder.start();
+    micBtn.style.background = '#ffebee';
+    micBtn.style.color = '#d93025';
+    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 60000);
+  } catch (e) { alert('Микрофон: ' + e.message); }
 });
 
 function compressImage(file, maxDim, q) {
@@ -1284,17 +1389,16 @@ function compressImage(file, maxDim, q) {
 // ================================================================
 function exportData() {
   const data = {
-    version: 5,
-    exportedAt: new Date().toISOString(),
+    version: 6, exportedAt: new Date().toISOString(),
     me: { sid: state.me.sid, nick: state.me.nick },
-    chats: state.chats,
-    seenIds: state.seenIds
+    chats: state.chats, seenIds: state.seenIds
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'qrchat-' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
+  state.lastExport = Date.now(); saveNow();
 }
 async function importData(file) {
   try {
@@ -1310,11 +1414,16 @@ async function importData(file) {
         state.chats[t].lastTs = Math.max(state.chats[t].lastTs||0, c.lastTs||0);
       }
     }
-    saveNow();
-    alert('Импортировано!');
-    screenChatList();
+    saveNow(); alert('Импортировано!'); screenChatList();
   } catch (e) { alert('Ошибка: ' + e.message); }
 }
+
+// Автоэкспорт раз в неделю
+setInterval(() => {
+  if (Date.now() - state.lastExport > 7*24*3600*1000 && Object.keys(state.chats).length) {
+    exportData();
+  }
+}, 3600*1000);
 
 // ================================================================
 //  THEME
@@ -1325,20 +1434,15 @@ function applyTheme() {
   document.documentElement.setAttribute('data-theme', t);
   document.querySelector('meta[name="theme-color"]').content = t==='dark' ? '#17212B' : '#07C160';
 }
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if (state.theme === 'auto') applyTheme();
-});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (state.theme === 'auto') applyTheme(); });
 
 // ================================================================
-//  TOPBAR BUTTONS
+//  TOPBAR
 // ================================================================
 $('menuBtn').addEventListener('click', screenChatMenu);
 $('usersBtn').addEventListener('click', screenUsers);
 $('titleBlock').addEventListener('click', screenUsers);
-$('viewer').addEventListener('click', () => {
-  $('viewer').classList.remove('show');
-  $('viewerImg').src = '';
-});
+$('viewer').addEventListener('click', () => { $('viewer').classList.remove('show'); $('viewerImg').src = ''; });
 
 // ================================================================
 //  BOOT
@@ -1347,22 +1451,15 @@ $('viewer').addEventListener('click', () => {
   loadState();
   applyTheme();
   if (!state.me.nick) { screenWelcome(); return; }
-  if (state.currentChat && state.chats[state.currentChat]) {
-    enterChat(state.currentChat, false);
-  } else {
-    screenChatList();
-  }
+  if (state.currentChat && state.chats[state.currentChat]) enterChat(state.currentChat, false);
+  else screenChatList();
 })();
 
 window.addEventListener('beforeunload', () => {
-  saveNow();
-  disconnect();
-  stopPresence();
-  stopScan();
+  saveNow(); disconnect(); stopPresence(); stopScan();
 });
 
-// Debug
-window.__qrchat = { state, enterChat, send, renderAll };
+window.__qrchat = { state, enterChat, send, renderAll, NTFY_SERVERS, rotateServer };
 </script>
 </body>
 </html>
