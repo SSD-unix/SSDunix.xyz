@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07C160" />
 <title>QR Chat</title>
-<link rel="manifest" id="manifestLink">
 <style>
   :root {
     --green: #07C160; --green-dark: #06AD56;
@@ -198,6 +197,85 @@
   .ctx button.danger { color: var(--danger); }
   .ctx .emoji-row { display: flex; gap: 2px; padding: 8px; border-bottom: 1px solid var(--border); }
   .ctx .emoji-row button { padding: 6px 10px; font-size: 22px; width: auto; border-radius: 8px; }
+
+  /* ============ MINI APPS ============ */
+  .miniapp-overlay {
+    position: fixed; inset: 0; background: #fff; z-index: 300;
+    display: none; flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+  }
+  [data-theme="dark"] .miniapp-overlay { background: #0E1621; }
+  .miniapp-overlay.show { display: flex; }
+  .miniapp-bar {
+    height: 52px; display: flex; align-items: center; gap: 4px;
+    padding: 0 8px; background: var(--header); border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .miniapp-bar .title {
+    flex: 1; text-align: center; font-weight: 600; font-size: 15px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .miniapp-frame {
+    flex: 1; border: none; width: 100%; background: #fff;
+  }
+  [data-theme="dark"] .miniapp-frame { background: #0E1621; }
+
+  .miniapp-loading {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; background: #fff; z-index: 1;
+    flex-direction: column; gap: 12px; color: var(--muted); font-size: 14px;
+  }
+  [data-theme="dark"] .miniapp-loading { background: #0E1621; }
+  .miniapp-loading.hidden { display: none; }
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid var(--border);
+    border-top-color: var(--green); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.85); color: #fff; padding: 10px 18px;
+    border-radius: 20px; font-size: 14px; z-index: 400;
+    animation: toastIn 0.2s ease-out; max-width: 80%;
+    text-align: center; pointer-events: none;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  .app-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 12px;
+  }
+  .app-card {
+    background: var(--sys-bg); border-radius: 14px; padding: 14px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; position: relative; text-align: center;
+    transition: transform 0.1s;
+  }
+  .app-card:active { transform: scale(0.96); }
+  .app-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700;
+  }
+  .app-name {
+    font-size: 11px; color: var(--text); font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    width: 100%; text-align: center;
+  }
+  .app-del {
+    position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+    border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff;
+    border: none; font-size: 12px; cursor: pointer; padding: 0;
+    display: none; align-items: center; justify-content: center;
+  }
+  .app-card:hover .app-del { display: flex; }
 </style>
 </head>
 <body>
@@ -250,6 +328,22 @@
 <div class="viewer" id="viewer"><img id="viewerImg" alt=""></div>
 <div class="ctx" id="ctx"></div>
 
+<div class="miniapp-overlay" id="miniappOverlay">
+  <div class="miniapp-bar">
+    <button class="icon-btn" id="miniappClose">✕</button>
+    <div class="title" id="miniappTitle">Mini App</div>
+    <button class="icon-btn" id="miniappMenu">⋯</button>
+  </div>
+  <div style="flex:1; position:relative;">
+    <div class="miniapp-loading" id="miniappLoading">
+      <div class="spinner"></div>
+      <div>Загрузка…</div>
+    </div>
+    <iframe id="miniappFrame" class="miniapp-frame"
+      sandbox="allow-scripts allow-forms allow-popups allow-modals"></iframe>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
@@ -258,7 +352,7 @@
 //  UTILS
 // ================================================================
 const $ = id => document.getElementById(id);
-const LS = 'qrchat_v6';
+const LS = 'qrchat_v7';
 function rhex(n) {
   const a = new Uint8Array(n);
   crypto.getRandomValues(a);
@@ -275,7 +369,7 @@ function nickColor(sid) {
 }
 
 // ================================================================
-//  NTFY SERVERS (резервные)
+//  NTFY SERVERS
 // ================================================================
 const NTFY_SERVERS = [
   'https://ntfy.sh',
@@ -285,14 +379,13 @@ const NTFY_SERVERS = [
   'https://ntfy.envs.net',
   'https://ntfy.mzte.de',
   'https://ntfy.hostux.net',
-  'https://ntfy.fossman.de'
+  'https://ntfy.fossmann.dev'
 ];
 let currentServerIdx = 0;
 let currentServer = NTFY_SERVERS[0];
 
 function getServerUrl(topic, since) {
-  const base = currentServer;
-  const url = new URL(`${base}/${encodeURIComponent(topic)}/sse`);
+  const url = new URL(`${currentServer}/${encodeURIComponent(topic)}/sse`);
   if (since) url.searchParams.set('since', since);
   return url.toString();
 }
@@ -309,8 +402,9 @@ function rotateServer() {
 let state = {
   me: { sid: null, nick: null },
   currentChat: null,
-  chats: {},   // topic -> { name, createdBy, admins:[], bans:[], deleted:[], pinned:null, messages:[], lastTs }
+  chats: {},
   seenIds: {},
+  miniApps: [],
   theme: 'auto',
   notifications: false,
   lastExport: 0
@@ -324,6 +418,7 @@ function loadState() {
   state.me = state.me || {};
   state.chats = state.chats || {};
   state.seenIds = state.seenIds || {};
+  state.miniApps = state.miniApps || [];
   if (!state.me.sid) state.me.sid = rhex(6);
 }
 function saveState() {
@@ -369,10 +464,11 @@ function markSeen(t, id) {
 }
 
 // ================================================================
-//  PRESENCE (in-memory)
+//  PRESENCE
 // ================================================================
 let presence = {};
 let presenceTimer = null;
+let presenceCleanTimer = null;
 function updatePresence(sid, nick, ts) {
   presence[sid] = { nick: nick || ('User ' + shortSid(sid)), ts: ts || Date.now() };
 }
@@ -417,10 +513,7 @@ function connect() {
     netOnline = false;
     netStatus();
     failCount++;
-    if (failCount >= 2) {
-      rotateServer();
-      failCount = 0;
-    }
+    if (failCount >= 2) { rotateServer(); failCount = 0; }
     if (reconnectTimer) clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(() => {
       if (state.currentChat === t) connect();
@@ -443,7 +536,6 @@ function handleMessage(ev) {
   try { d = JSON.parse(ev.data); } catch { return; }
   if (d.event !== 'message') return;
 
-  // Presence
   if (typeof d.message === 'string' && d.message.startsWith('\u0001P|')) {
     const [, sid, nick] = d.message.split('|');
     if (sid) updatePresence(sid, nick);
@@ -478,7 +570,7 @@ async function postAttachment(topic, blob, metaObj, headers) {
     method: 'PUT',
     body: blob,
     headers: Object.assign({
-      'Filename': 'photo.jpg',
+      'Filename': 'file.bin',
       'Message': JSON.stringify(metaObj)
     }, headers || {})
   });
@@ -622,7 +714,7 @@ function isVisible(m, c) {
 function getVisibleMessages(c) { return c.messages.filter(m => isVisible(m, c)); }
 
 // ================================================================
-//  SEND (ИСПРАВЛЕНО)
+//  SEND
 // ================================================================
 async function send(partial) {
   const t = state.currentChat;
@@ -638,10 +730,8 @@ async function send(partial) {
     if (o) m.replyText = (o.text || '[фото]').slice(0, 60);
   }
 
-  // 1. ЛОКАЛЬНО: записать в состояние
   applyIngestOnly(m);
 
-  // 2. ЛОКАЛЬНО: мгновенно отрисовать
   if (m.type === 'sys') {
     if (m.action !== 'react' && m.action !== 'delete' && m.action !== 'pin' && m.action !== 'unpin') {
       appendSys(m); chatEl.scrollTop = chatEl.scrollHeight;
@@ -663,10 +753,9 @@ async function send(partial) {
     updateUsersBadge();
   }
 
-  // 3. ОТПРАВКА в сеть
   const headers = { 'Title': state.me.nick || 'QRChat' };
   try {
-    if (m.type === 'image' && m._blob) {
+    if (m._blob) {
       const meta = Object.assign({}, m);
       delete meta._blob;
       await postAttachment(t, m._blob, meta, headers);
@@ -679,7 +768,6 @@ async function send(partial) {
   }
 }
 
-// Presence heartbeat
 async function sendPresence() {
   const t = state.currentChat;
   if (!t || !state.me.nick) return;
@@ -696,10 +784,13 @@ function startPresence() {
   stopPresence();
   sendPresence();
   presenceTimer = setInterval(sendPresence, 25000);
-  setInterval(() => { if (presenceClean()) { netStatus(); updateUsersBadge(); renderUsersIfOpen(); } }, 15000);
+  presenceCleanTimer = setInterval(() => {
+    if (presenceClean()) { netStatus(); updateUsersBadge(); renderUsersIfOpen(); }
+  }, 15000);
 }
 function stopPresence() {
   if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
+  if (presenceCleanTimer) { clearInterval(presenceCleanTimer); presenceCleanTimer = null; }
 }
 
 // ================================================================
@@ -717,7 +808,6 @@ function scheduleReactRender() {
 }
 
 function renderAll() {
-  // Сохраняем pinned bar
   const pinnedBar = $('pinnedBar');
   chatEl.innerHTML = '';
   chatEl.appendChild(pinnedBar);
@@ -817,7 +907,6 @@ function appendBubble(m, animate) {
     b.appendChild(document.createTextNode(m.text));
   }
 
-  // Реакции
   const reacts = collectReactions(m.id, c);
   if (Object.keys(reacts).length) {
     const rdiv = document.createElement('div');
@@ -832,7 +921,6 @@ function appendBubble(m, animate) {
     b.appendChild(rdiv);
   }
 
-  // Long-press
   let lpTimer = null;
   const startLp = (e) => { lpTimer = setTimeout(() => { showCtx(e.touches?.[0] || e, m); }, 450); };
   const cancelLp = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
@@ -841,7 +929,6 @@ function appendBubble(m, animate) {
   b.addEventListener('touchmove', cancelLp, { passive: true });
   b.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtx(e, m); });
 
-  // Двойной тап → ❤️
   let lastTap = 0;
   b.addEventListener('click', (e) => {
     const now = Date.now();
@@ -849,7 +936,6 @@ function appendBubble(m, animate) {
     else lastTap = now;
   });
 
-  // Свайп влево → ответ
   let touchStartX = 0, touchStartY = 0, isSwiping = false;
   b.addEventListener('touchstart', (e) => {
     touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; isSwiping = false;
@@ -989,7 +1075,7 @@ function screenWelcome() {
   showOverlay(`
     <div class="card">
       <h2>QR Chat</h2>
-      <p class="hint">Мульти-юзерный чат. Данные через ntfy, история локально. Автоматический выбор сервера.</p>
+      <p class="hint">Мульти-юзерный чат. Данные через ntfy, история локально. Резервные серверы. Мини-приложения.</p>
       <input class="field" id="nickInput" placeholder="Твой ник" maxlength="24" autocomplete="off">
       <button class="btn primary" id="saveNickBtn">Продолжить</button>
     </div>
@@ -1028,6 +1114,7 @@ function screenChatList() {
       <div id="chatListBox">${listHtml}</div>
       <button class="btn primary" id="createChatBtn" style="margin-top:12px;">✨ Создать новый чат</button>
       <button class="btn" id="joinChatBtn">🔑 Присоединиться</button>
+      <button class="btn" id="miniappsListBtn">🧩 Мини-приложения</button>
       <button class="btn" id="settingsBtn">⚙️ Настройки</button>
     </div>
   `);
@@ -1036,6 +1123,7 @@ function screenChatList() {
   });
   $('createChatBtn').addEventListener('click', () => { const t = 'nfc-' + rhex(8); enterChat(t, true); });
   $('joinChatBtn').addEventListener('click', screenJoin);
+  $('miniappsListBtn').addEventListener('click', screenMiniApps);
   $('settingsBtn').addEventListener('click', screenSettings);
 }
 
@@ -1051,7 +1139,7 @@ function screenJoin() {
       <button class="btn" id="backBtn" style="margin-top:8px;">← Назад</button>
     </div>
   `);
-  $('scanBtn').addEventListener('click', startScan);
+  $('scanBtn').addEventListener('click', () => { scanMode = 'chat'; startScan(); });
   $('manualBtn').addEventListener('click', () => { const v = $('manualKey').value.trim(); if (v) enterChat(v, false); });
   $('backBtn').addEventListener('click', screenChatList);
 }
@@ -1066,7 +1154,7 @@ function screenSettings() {
       <button class="btn" id="themeBtn">🎨 Тема: ${themeLabel[state.theme]||'Авто'}</button>
       <button class="btn" id="notifBtn">🔔 Уведомления: ${state.notifications?'вкл':'выкл'}</button>
       <div class="divider">сервер</div>
-      <button class="btn" id="serverBtn">🌐 Сервер: ${currentServer.replace('https://','')}</button>
+      <button class="btn" id="serverBtn">🌐 ${esc(currentServer.replace('https://',''))}</button>
       <button class="btn" id="serverNextBtn">🔄 Сменить сервер</button>
       <div class="divider">бэкап</div>
       <button class="btn" id="exportBtn">⬇ Экспорт (JSON)</button>
@@ -1092,8 +1180,7 @@ function screenSettings() {
     state.notifications = (p === 'granted'); saveNow(); screenSettings();
   });
   $('serverBtn').addEventListener('click', () => {
-    showOverlay(`<div class="card"><h2>Сервер</h2><p class="hint">Текущий: <b>${esc(currentServer)}</b></p><button class="btn" id="closeServer">OK</button></div>`);
-    $('closeServer').addEventListener('click', screenSettings);
+    alert('Текущий: ' + currentServer + '\n\nВсего серверов: ' + NTFY_SERVERS.length + '\n\n' + NTFY_SERVERS.join('\n'));
   });
   $('serverNextBtn').addEventListener('click', () => {
     rotateServer(); saveNow(); alert('Сервер: ' + currentServer); screenSettings();
@@ -1108,7 +1195,6 @@ function screenSettings() {
   $('backBtn').addEventListener('click', screenChatList);
 }
 
-// --- Users ---
 function screenUsers() {
   const c = cur();
   if (!c) return;
@@ -1173,7 +1259,6 @@ function screenUsers() {
 }
 function renderUsersIfOpen() { if (overlay.classList.contains('hidden')) return; if (overlay.querySelector('#userList')) screenUsers(); }
 
-// --- Chat menu ---
 function screenChatMenu() {
   const c = cur();
   if (!c) return;
@@ -1184,6 +1269,7 @@ function screenChatMenu() {
       <p class="hint">${getVisibleMessages(c).length} сообщений · ключ <span style="font-family:monospace">…${state.currentChat.slice(-8)}</span></p>
       <button class="btn primary" id="qrBtn">⊞ Показать QR</button>
       <button class="btn" id="usersBtn2">👥 Участники</button>
+      <button class="btn" id="miniappsBtn">🧩 Мини-приложения</button>
       ${iAmAdmin ? '<button class="btn" id="renameBtn">✎ Переименовать</button>' : ''}
       <button class="btn" id="chatListBtn">📂 Все чаты</button>
       <button class="btn" id="exportChatBtn">⬇ Экспорт чата</button>
@@ -1210,6 +1296,7 @@ function screenChatMenu() {
     $('backBtn2').addEventListener('click', screenChatMenu);
   });
   $('usersBtn2').addEventListener('click', screenUsers);
+  $('miniappsBtn').addEventListener('click', screenMiniApps);
   const rn = $('renameBtn');
   if (rn) rn.addEventListener('click', () => {
     const v = prompt('Новое название:', c.name);
@@ -1263,6 +1350,8 @@ function enterChat(topic, isNew) {
 //  QR SCANNER
 // ================================================================
 let mediaStream = null, scanInterval = null;
+let scanMode = 'chat';
+
 async function startScan() {
   if (!window.isSecureContext) { alert('Нужен HTTPS для камеры'); return; }
   if (!navigator.mediaDevices?.getUserMedia) { alert('Камера недоступна'); return; }
@@ -1289,7 +1378,22 @@ async function startScan() {
     if (video.readyState < 2 || video.videoWidth === 0) return;
     try {
       const codes = await det.detect(video);
-      if (codes?.length) { const v = codes[0].rawValue; stopScan(); enterChat(v, false); }
+      if (codes?.length) {
+        const v = codes[0].rawValue;
+        stopScan();
+        if (scanMode === 'miniapp') {
+          scanMode = 'chat';
+          parseMiniAppInput(v);
+        } else if (v.startsWith('app-') && v.includes('|')) {
+          parseMiniAppInput(v);
+        } else if (v.startsWith('miniapp|') || /^https?:\/\//.test(v)) {
+          if (confirm('Открыть как мини-приложение?\n' + v.slice(0, 80))) {
+            parseMiniAppInput(v);
+          }
+        } else {
+          enterChat(v, false);
+        }
+      }
     } catch {}
   }, 250);
 }
@@ -1337,11 +1441,11 @@ fileInput.addEventListener('change', async () => {
   } catch (e) { alert('Ошибка фото: ' + e.message); }
 });
 
-// Голосовые сообщения
 let mediaRecorder = null, audioChunks = [];
 micBtn.addEventListener('click', async () => {
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     mediaRecorder.stop();
+    micBtn.style.background = ''; micBtn.style.color = '';
     return;
   }
   try {
@@ -1351,6 +1455,7 @@ micBtn.addEventListener('click', async () => {
     mediaRecorder.ondataavailable = e => { if (e.data.size) audioChunks.push(e.data); };
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
+      micBtn.style.background = ''; micBtn.style.color = '';
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
       if (blob.size < 100) return;
       const url = URL.createObjectURL(blob);
@@ -1361,7 +1466,11 @@ micBtn.addEventListener('click', async () => {
     mediaRecorder.start();
     micBtn.style.background = '#ffebee';
     micBtn.style.color = '#d93025';
-    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 60000);
+    setTimeout(() => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    }, 60000);
   } catch (e) { alert('Микрофон: ' + e.message); }
 });
 
@@ -1385,13 +1494,462 @@ function compressImage(file, maxDim, q) {
 }
 
 // ================================================================
+//  MINI APPS
+// ================================================================
+const MINIAPP_SDK = `
+<script>
+(function(){
+  const api = {
+    _id: 0, _pending: {},
+    call(method, params) {
+      return new Promise((res, rej) => {
+        const id = ++this._id;
+        this._pending[id] = {res, rej};
+        parent.postMessage({__qrc: 1, id, method, params: params || {}}, '*');
+      });
+    },
+    getUser()         { return this.call('getUser'); },
+    getChat()         { return this.call('getChat'); },
+    getHistory(limit) { return this.call('getHistory', {limit: limit || 30}); },
+    sendMessage(text) { return this.call('sendMessage', {text}); },
+    sendPhoto(dataUrl){ return this.call('sendPhoto', {dataUrl}); },
+    close()           { return this.call('close'); },
+    setTitle(t)       { return this.call('setTitle', {text: t}); },
+    showToast(t)      { return this.call('showToast', {text: t}); },
+    getStorage(k)     { return this.call('getStorage', {key: k}); },
+    setStorage(k, v)  { return this.call('setStorage', {key: k, value: v}); }
+  };
+  window.addEventListener('message', e => {
+    const d = e.data;
+    if (!d || !d.__qrc) return;
+    const p = api._pending[d.id];
+    if (!p) return;
+    delete api._pending[d.id];
+    d.error ? p.rej(new Error(d.error)) : p.res(d.result);
+  });
+  window.QRChat = api;
+})();
+<\/script>
+`;
+
+const DEMO_APPS = {
+  demo: {
+    name: 'Demo API',
+    icon: '🧪',
+    html: `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 20px; margin: 0; }
+  button { display: block; width: 100%; padding: 14px; margin: 8px 0;
+    border-radius: 12px; border: none; background: #07C160; color: #fff;
+    font-size: 15px; font-weight: 600; cursor: pointer; }
+  button.alt { background: #F1F3F4; color: #111; }
+  pre { background: #f5f5f5; padding: 12px; border-radius: 8px;
+    font-size: 12px; white-space: pre-wrap; word-break: break-word;
+    max-height: 200px; overflow-y: auto; }
+  h2 { font-size: 18px; margin-top: 0; }
+</style></head><body>
+<h2>🧪 Demo Mini App</h2>
+<button onclick="test('getUser')">Get user</button>
+<button onclick="test('getChat')">Get chat</button>
+<button onclick="test('getHistory')">Get history</button>
+<button onclick="send()">Send message</button>
+<button class="alt" onclick="QRChat.showToast('Привет!')">Show toast</button>
+<button class="alt" onclick="QRChat.setTitle('Demo App')">Set title</button>
+<button class="alt" onclick="QRChat.close()">Close</button>
+<pre id="out">Готов к работе.</pre>
+${MINIAPP_SDK}
+<script>
+async function test(m) {
+  try {
+    const r = await QRChat[m]();
+    document.getElementById('out').textContent = JSON.stringify(r, null, 2);
+  } catch(e) { document.getElementById('out').textContent = 'Error: ' + e.message; }
+}
+async function send() {
+  const txt = prompt('Что отправить в чат?', 'Привет из мини-аппа!');
+  if (!txt) return;
+  try {
+    await QRChat.sendMessage(txt);
+    document.getElementById('out').textContent = 'Отправлено: ' + txt;
+  } catch(e) { document.getElementById('out').textContent = 'Error: ' + e.message; }
+}
+<\/script>
+</body></html>`
+  },
+
+  dice: {
+    name: 'Кубик',
+    icon: '🎲',
+    html: `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 20px; margin: 0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 80vh; text-align: center; }
+  .dice { font-size: 120px; margin: 20px 0; transition: transform 0.4s; }
+  .dice.rolling { animation: shake 0.4s infinite; }
+  @keyframes shake { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
+  button { padding: 16px 32px; font-size: 18px; font-weight: 700;
+    border-radius: 14px; border: none; background: #07C160; color: #fff;
+    cursor: pointer; margin: 8px; }
+  .result { font-size: 22px; font-weight: 700; color: #07C160; margin: 12px 0; }
+</style></head><body>
+<div class="dice" id="d">🎲</div>
+<div class="result" id="r"></div>
+<button onclick="roll()">Бросить</button>
+<button onclick="sendToChat()" style="background:#5f6368;">Отправить в чат</button>
+${MINIAPP_SDK}
+<script>
+let lastResult = 0;
+function roll() {
+  const d = document.getElementById('d');
+  d.classList.add('rolling');
+  setTimeout(() => {
+    lastResult = 1 + Math.floor(Math.random() * 6);
+    const faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+    d.textContent = faces[lastResult-1];
+    d.classList.remove('rolling');
+    document.getElementById('r').textContent = 'Выпало: ' + lastResult;
+  }, 600);
+}
+async function sendToChat() {
+  if (!lastResult) { QRChat.showToast('Сначала брось кубик'); return; }
+  await QRChat.sendMessage('🎲 Кубик: ' + lastResult);
+  QRChat.showToast('Отправлено в чат');
+}
+<\/script>
+</body></html>`
+  },
+
+  calc: {
+    name: 'Калькулятор',
+    icon: '🧮',
+    html: `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 16px; margin: 0; }
+  .display { font-size: 32px; text-align: right; padding: 20px;
+    background: #f5f5f5; border-radius: 12px; margin-bottom: 12px;
+    min-height: 40px; word-break: break-all; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .grid button { padding: 20px; font-size: 20px; font-weight: 600;
+    border: none; border-radius: 12px; background: #F1F3F4; color: #111;
+    cursor: pointer; }
+  .grid button.op { background: #07C160; color: #fff; }
+  .grid button.eq { background: #5f6368; color: #fff; grid-column: span 1; }
+  .send-row { margin-top: 12px; }
+  .send-row button { width: 100%; padding: 14px; font-size: 15px; font-weight: 600;
+    border-radius: 12px; border: none; background: #07C160; color: #fff; cursor: pointer; }
+</style></head><body>
+<div class="display" id="d">0</div>
+<div class="grid">
+  <button onclick="k('7')">7</button><button onclick="k('8')">8</button><button onclick="k('9')">9</button><button class="op" onclick="k('/')">÷</button>
+  <button onclick="k('4')">4</button><button onclick="k('5')">5</button><button onclick="k('6')">6</button><button class="op" onclick="k('*')">×</button>
+  <button onclick="k('1')">1</button><button onclick="k('2')">2</button><button onclick="k('3')">3</button><button class="op" onclick="k('-')">−</button>
+  <button onclick="k('0')">0</button><button onclick="k('.')">.</button><button class="eq" onclick="eq()">=</button><button class="op" onclick="k('+')">+</button>
+  <button class="op" onclick="clr()" style="grid-column: span 4;">C</button>
+</div>
+<div class="send-row"><button onclick="send()">📤 Отправить результат в чат</button></div>
+${MINIAPP_SDK}
+<script>
+let expr = '';
+function update() { document.getElementById('d').textContent = expr || '0'; }
+function k(c) { expr += c; update(); }
+function clr() { expr = ''; update(); }
+function eq() {
+  try {
+    const safe = expr.replace(/[^0-9+\\-*/.()]/g, '');
+    const result = Function('"use strict";return (' + safe + ')')();
+    expr = String(result);
+    update();
+  } catch { expr = 'Ошибка'; update(); }
+}
+async function send() {
+  if (!expr || expr === 'Ошибка') return;
+  await QRChat.sendMessage('🧮 ' + expr);
+  QRChat.showToast('Отправлено');
+}
+<\/script>
+</body></html>`
+  }
+};
+
+let currentMiniApp = null;
+
+function openMiniApp(app) {
+  currentMiniApp = app;
+  const frame = $('miniappFrame');
+  const loading = $('miniappLoading');
+  const ov = $('miniappOverlay');
+
+  $('miniappTitle').textContent = app.name || 'Mini App';
+  loading.classList.remove('hidden');
+  ov.classList.add('show');
+
+  if (app.demo && DEMO_APPS[app.demo]) {
+    frame.removeAttribute('src');
+    frame.srcdoc = DEMO_APPS[app.demo].html;
+  } else if (app.srcdoc) {
+    frame.removeAttribute('src');
+    frame.srcdoc = app.srcdoc;
+  } else {
+    frame.removeAttribute('srcdoc');
+    frame.src = app.url;
+  }
+
+  frame.onload = () => loading.classList.add('hidden');
+  setTimeout(() => loading.classList.add('hidden'), 5000);
+}
+
+function closeMiniApp() {
+  $('miniappOverlay').classList.remove('show');
+  $('miniappFrame').removeAttribute('src');
+  $('miniappFrame').srcdoc = '';
+  currentMiniApp = null;
+}
+
+$('miniappClose').addEventListener('click', closeMiniApp);
+$('miniappMenu').addEventListener('click', () => {
+  if (!currentMiniApp) return;
+  const acts = ['🔗 Поделиться QR', '💾 Сохранить в мои', '🗑 Удалить из моих', '❌ Закрыть'];
+  const choice = prompt('Действие:\n' + acts.map((a,i) => (i+1)+'. '+a).join('\n'), '1');
+  if (choice === '1') {
+    const url = currentMiniApp.url || ('srcdoc:' + currentMiniApp.demo);
+    const qr = `app-${(currentMiniApp.id||'').slice(-4) || rhex(2)}|${url}`;
+    showOverlay(`
+      <div class="card">
+        <h2>Поделиться</h2>
+        <p class="hint">Пусть друг отсканирует</p>
+        <div id="qrBox" style="display:flex;justify-content:center;padding:12px;background:#fff;border-radius:14px;"></div>
+        <div style="font-size:11px;text-align:center;color:var(--muted);word-break:break-all;margin-top:10px;">
+          <span style="font-family:monospace;background:var(--sys-bg);padding:3px 6px;border-radius:6px;">${esc(qr.slice(0,60))}…</span>
+        </div>
+        <button class="btn" id="backBtn3" style="margin-top:12px;">← Назад</button>
+      </div>
+    `);
+    new QRCode($('qrBox'), { text: qr, width: 220, height: 220,
+      colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
+    $('backBtn3').addEventListener('click', hideOverlay);
+  } else if (choice === '2') {
+    state.miniApps = state.miniApps || [];
+    if (!state.miniApps.find(a => a.id === currentMiniApp.id)) {
+      state.miniApps.push(currentMiniApp);
+      saveNow(); QRChat_toast('Сохранено');
+    } else QRChat_toast('Уже сохранено');
+  } else if (choice === '3') {
+    state.miniApps = (state.miniApps || []).filter(a => a.id !== currentMiniApp.id);
+    saveNow(); QRChat_toast('Удалено'); closeMiniApp();
+  } else if (choice === '4') {
+    closeMiniApp();
+  }
+});
+
+// Мост мини-апп ↔ мессенджер
+window.addEventListener('message', async (e) => {
+  const d = e.data;
+  if (!d || !d.__qrc) return;
+  const reply = (result, error) => {
+    if (e.source) e.source.postMessage({ __qrc: 1, id: d.id, result, error }, '*');
+  };
+  try {
+    const c = cur();
+    switch (d.method) {
+      case 'getUser':
+        reply({ sid: state.me.sid, nick: state.me.nick });
+        break;
+      case 'getChat':
+        if (!c) throw new Error('Нет активного чата');
+        reply({
+          key: state.currentChat,
+          name: c.name,
+          members: [...new Set(c.messages.filter(m=>m.type!=='sys').map(m=>m.nick))],
+          admin: c.admins.includes(state.me.sid)
+        });
+        break;
+      case 'getHistory': {
+        if (!c) throw new Error('Нет активного чата');
+        const limit = Math.min(d.params?.limit || 30, 200);
+        const msgs = getVisibleMessages(c).slice(-limit).map(m => ({
+          nick: m.nick, text: m.text, ts: m.ts, type: m.type
+        }));
+        reply(msgs);
+        break;
+      }
+      case 'sendMessage':
+        if (!d.params?.text) throw new Error('Пустой текст');
+        await send({ type: 'text', text: String(d.params.text).slice(0, 4000) });
+        reply({ ok: true });
+        break;
+      case 'sendPhoto': {
+        if (!d.params?.dataUrl) throw new Error('Пустой dataUrl');
+        const resp = await fetch(d.params.dataUrl);
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        await send({ type: 'image', url, _blob: blob });
+        reply({ ok: true });
+        break;
+      }
+      case 'close':
+        closeMiniApp(); reply({ ok: true });
+        break;
+      case 'setTitle':
+        $('miniappTitle').textContent = String(d.params?.text || 'Mini App').slice(0, 40);
+        reply({ ok: true });
+        break;
+      case 'showToast':
+        QRChat_toast(String(d.params?.text || ''));
+        reply({ ok: true });
+        break;
+      case 'getStorage': {
+        const key = 'miniapp:' + (currentMiniApp?.id || '') + ':' + d.params?.key;
+        reply(localStorage.getItem(key));
+        break;
+      }
+      case 'setStorage': {
+        const k2 = 'miniapp:' + (currentMiniApp?.id || '') + ':' + d.params?.key;
+        localStorage.setItem(k2, d.params?.value);
+        reply({ ok: true });
+        break;
+      }
+      default:
+        throw new Error('Unknown method: ' + d.method);
+    }
+  } catch (err) {
+    reply(null, err.message);
+  }
+});
+
+function QRChat_toast(text) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(() => el.remove(), 300);
+  }, 2000);
+}
+
+function screenMiniApps() {
+  const apps = state.miniApps || [];
+  const demoBtns = Object.entries(DEMO_APPS).map(([id, a]) =>
+    `<div class="app-card" data-demo="${id}">
+      <div class="app-icon">${a.icon}</div>
+      <div class="app-name">${esc(a.name)}</div>
+    </div>`
+  ).join('');
+
+  const savedBtns = apps.map((a, i) =>
+    `<div class="app-card" data-saved="${i}">
+      <button class="app-del" data-del="${i}">✕</button>
+      <div class="app-icon">${esc((a.name||'?').slice(0,1).toUpperCase())}</div>
+      <div class="app-name">${esc(a.name)}</div>
+    </div>`
+  ).join('');
+
+  showOverlay(`
+    <div class="card">
+      <h2>Мини-приложения</h2>
+      <p class="hint">Демо для теста API</p>
+      <div class="app-grid">${demoBtns}</div>
+      ${savedBtns ? '<p class="hint" style="margin-top:16px;">Мои</p><div class="app-grid">'+savedBtns+'</div>' : ''}
+      <div class="divider">добавить</div>
+      <input class="field" id="appUrlInput" placeholder="https://... или app-####|https://..." autocomplete="off">
+      <button class="btn" id="addAppBtn">➕ Добавить по ссылке</button>
+      <button class="btn" id="scanAppBtn">📷 Сканировать QR мини-аппа</button>
+      <button class="btn" id="backBtn" style="margin-top:8px;">← Назад</button>
+    </div>
+  `);
+
+  overlay.querySelectorAll('[data-demo]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.demo;
+      const a = DEMO_APPS[id];
+      openMiniApp({ id: 'demo-' + id, name: a.name, demo: id, icon: a.icon });
+      hideOverlay();
+    });
+  });
+
+  overlay.querySelectorAll('[data-saved]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.classList.contains('app-del')) return;
+      const idx = parseInt(el.dataset.saved);
+      openMiniApp(state.miniApps[idx]);
+      hideOverlay();
+    });
+  });
+
+  overlay.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.del);
+      if (!confirm('Удалить из моих?')) return;
+      state.miniApps.splice(idx, 1);
+      saveNow();
+      screenMiniApps();
+    });
+  });
+
+  $('addAppBtn').addEventListener('click', () => {
+    const v = $('appUrlInput').value.trim();
+    if (!v) return;
+    parseMiniAppInput(v);
+  });
+  $('scanAppBtn').addEventListener('click', () => {
+    scanMode = 'miniapp';
+    startScan();
+  });
+  $('backBtn').addEventListener('click', screenChatList);
+}
+
+function parseMiniAppInput(text) {
+  text = text.trim();
+  if (text.startsWith('app-') && text.includes('|')) {
+    const [id, url] = text.split('|', 2);
+    const app = { id, name: 'App ' + id.slice(-4), url, addedAt: Date.now() };
+    state.miniApps = state.miniApps || [];
+    if (!state.miniApps.find(a => a.id === app.id)) state.miniApps.push(app);
+    saveNow();
+    openMiniApp(app);
+    hideOverlay();
+    return;
+  }
+  if (text.startsWith('miniapp|')) {
+    const url = text.slice(8);
+    let name = 'Mini App';
+    try { name = new URL(url).hostname; } catch {}
+    const app = { id: 'app-' + rhex(3), name, url, addedAt: Date.now() };
+    state.miniApps = state.miniApps || [];
+    state.miniApps.push(app);
+    saveNow();
+    openMiniApp(app);
+    hideOverlay();
+    return;
+  }
+  if (/^https?:\/\//.test(text)) {
+    let name = 'Mini App';
+    try { name = new URL(text).hostname; } catch {}
+    const app = { id: 'app-' + rhex(3), name, url: text, addedAt: Date.now() };
+    state.miniApps = state.miniApps || [];
+    state.miniApps.push(app);
+    saveNow();
+    openMiniApp(app);
+    hideOverlay();
+    return;
+  }
+  alert('Не понимаю формат. Нужно: app-####|https://... или https://...');
+}
+
+// ================================================================
 //  EXPORT / IMPORT
 // ================================================================
 function exportData() {
   const data = {
-    version: 6, exportedAt: new Date().toISOString(),
+    version: 7, exportedAt: new Date().toISOString(),
     me: { sid: state.me.sid, nick: state.me.nick },
-    chats: state.chats, seenIds: state.seenIds
+    chats: state.chats, seenIds: state.seenIds, miniApps: state.miniApps
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -1414,11 +1972,14 @@ async function importData(file) {
         state.chats[t].lastTs = Math.max(state.chats[t].lastTs||0, c.lastTs||0);
       }
     }
+    if (d.miniApps) {
+      state.miniApps = state.miniApps || [];
+      for (const a of d.miniApps) if (!state.miniApps.find(x => x.id === a.id)) state.miniApps.push(a);
+    }
     saveNow(); alert('Импортировано!'); screenChatList();
   } catch (e) { alert('Ошибка: ' + e.message); }
 }
 
-// Автоэкспорт раз в неделю
 setInterval(() => {
   if (Date.now() - state.lastExport > 7*24*3600*1000 && Object.keys(state.chats).length) {
     exportData();
@@ -1432,7 +1993,8 @@ function applyTheme() {
   let t = state.theme;
   if (t === 'auto') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', t);
-  document.querySelector('meta[name="theme-color"]').content = t==='dark' ? '#17212B' : '#07C160';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = t==='dark' ? '#17212B' : '#07C160';
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (state.theme === 'auto') applyTheme(); });
 
@@ -1459,7 +2021,7 @@ window.addEventListener('beforeunload', () => {
   saveNow(); disconnect(); stopPresence(); stopScan();
 });
 
-window.__qrchat = { state, enterChat, send, renderAll, NTFY_SERVERS, rotateServer };
+window.__qrchat = { state, enterChat, send, renderAll, NTFY_SERVERS, rotateServer, openMiniApp, DEMO_APPS };
 </script>
 </body>
 </html>
