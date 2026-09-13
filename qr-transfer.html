@@ -232,14 +232,9 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     color: var(--text); padding: 0 4px;
   }
-  .miniapp-frame-wrap {
-    flex: 1; position: relative; overflow: hidden; background: var(--bg);
-  }
-  .miniapp-frame {
-    position: absolute; inset: 0;
-    border: none; width: 100%; height: 100%;
-    background: #fff; display: block;
-  }
+  .miniapp-frame-wrap { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
+  .miniapp-frame { position: absolute; inset: 0; border: none; width: 100%; height: 100%;
+    background: #fff; display: block; }
   [data-theme="dark"] .miniapp-frame { background: #0E1621; }
   .miniapp-loading {
     position: absolute; inset: 0; display: flex; align-items: center;
@@ -247,25 +242,20 @@
     flex-direction: column; gap: 12px; color: var(--muted); font-size: 14px;
   }
   .miniapp-loading.hidden { display: none; }
-  .spinner {
-    width: 32px; height: 32px; border: 3px solid var(--border);
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border);
     border-top-color: var(--green); border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+    animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Диалоги для mini app */
   .dialog-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.5);
     z-index: 500; display: none; align-items: center; justify-content: center;
     padding: 20px;
   }
   .dialog-overlay.show { display: flex; animation: fadeIn 0.15s; }
-  .dialog {
-    background: var(--card); border-radius: 18px; padding: 22px;
+  .dialog { background: var(--card); border-radius: 18px; padding: 22px;
     max-width: 340px; width: 100%; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  }
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
   .dialog h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
   .dialog p { margin: 0 0 18px; font-size: 14px; color: var(--muted); line-height: 1.4; }
   .dialog input { width: 100%; padding: 12px; border-radius: 10px;
@@ -374,7 +364,6 @@ function rhex(n) {
   crypto.getRandomValues(a);
   return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
 }
-function fmtTime(ts) { return new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDay(ts) { return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function esc(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function shortSid(s) { return s ? s.slice(0,4) : '????'; }
@@ -388,6 +377,17 @@ function nickColor(sid) {
   const c = ['#e57373','#ba68c8','#64b5f6','#4db6ac','#81c784','#ffb74d','#f06292','#7986cb','#4fc3f7','#a1887f'];
   let h = 0; for (const ch of String(sid||'')) h = (h*31 + ch.charCodeAt(0)) >>> 0;
   return c[h % c.length];
+}
+// ntfy принимает в заголовках только ISO-8859-1
+function sanitizeHeaders(headers) {
+  const safe = {};
+  if (!headers) return safe;
+  for (const [k, v] of Object.entries(headers)) {
+    if (typeof v === 'string' && /^[\x00-\xFF]*$/.test(v)) {
+      safe[k] = v;
+    }
+  }
+  return safe;
 }
 
 // ================================================================
@@ -422,7 +422,7 @@ function rotateServer() {
 //  STORAGE
 // ================================================================
 const LS_KEY = 'qrchat_data';
-const LS_LEGACY = ['qrchat_v8','qrchat_v7','qrchat_v6','qrchat_v5','qrchat_v4','qrchat_v3','qrchat'];
+const LS_LEGACY = ['qrchat_v9','qrchat_v8','qrchat_v7','qrchat_v6','qrchat_v5','qrchat_v4','qrchat_v3','qrchat'];
 
 let state = {
   me: { sid: null, nick: null },
@@ -475,8 +475,7 @@ function ensureChat(t) {
     state.chats[t] = {
       name: 'Чат ' + t.slice(-4),
       createdBy: null, admins: [], bans: [], deleted: [],
-      pinned: null,
-      messages: [], lastTs: 0
+      pinned: null, messages: [], lastTs: 0
     };
   }
   if (!state.seenIds[t]) state.seenIds[t] = [];
@@ -577,7 +576,6 @@ function handleMessage(ev) {
   if (!m.id || !m.sid) return;
   if (d.attachment && d.attachment.url) m.url = d.attachment.url;
   if (!m.ts) m.ts = (d.time || Math.floor(Date.now()/1000)) * 1000;
-
   ingestMessage(m, false);
 }
 
@@ -586,7 +584,7 @@ async function postJSON(topic, obj, headers) {
   const r = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(obj),
-    headers: headers || {}
+    headers: sanitizeHeaders(headers)
   });
   if (r.status === 429) { rotateServer(); throw new Error('429 rate limit'); }
   if (!r.ok) throw new Error('ntfy ' + r.status);
@@ -594,13 +592,14 @@ async function postJSON(topic, obj, headers) {
 
 async function postAttachment(topic, blob, metaObj, headers) {
   const url = `${currentServer}/${encodeURIComponent(topic)}`;
+  const safeFilename = String(metaObj.filename || 'file.bin').replace(/[^\x20-\x7E]/g, '_').slice(0, 100);
   const r = await fetch(url, {
     method: 'PUT',
     body: blob,
     headers: Object.assign({
-      'Filename': metaObj.filename || 'file.bin',
+      'Filename': safeFilename,
       'Message': JSON.stringify(metaObj)
-    }, headers || {})
+    }, sanitizeHeaders(headers))
   });
   if (r.status === 429) { rotateServer(); throw new Error('429 rate limit'); }
   if (!r.ok) throw new Error('ntfy ' + r.status);
@@ -639,7 +638,7 @@ function ingestMessage(m, mine) {
     if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
     saveState();
 
-    if (m.action === 'react' || m.action === 'delete' || m.action === 'pin' || m.action === 'unpin') {
+    if (m.action === 'react' || m.action === 'delete' || m.action === 'pin' || m.action === 'unpin' || m.action === 'pollvote') {
       scheduleReactRender();
     } else {
       if (m.ts < lastRenderedTs) renderAll();
@@ -677,8 +676,8 @@ function ingestMessage(m, mine) {
 
   if (state.notifications && document.hidden && !isMeSid(m.sid)) {
     try {
-      new Notification(m.nick || 'QR Chat', {
-        body: m.type === 'image' ? '📷 Фото' : (m.text || '').slice(0, 100),
+      new Notification('QR Chat', {
+        body: (m.nick || '') + ': ' + (m.type === 'image' ? '📷 Фото' : (m.text || '').slice(0, 100)),
         tag: t
       });
     } catch {}
@@ -721,26 +720,19 @@ function applySys(c, m) {
       }
       break;
     case 'pin':
-      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid))
-        c.pinned = m.target;
+      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid)) c.pinned = m.target;
       break;
     case 'unpin':
       if (c.admins.includes(m.sid) || c.createdBy === m.sid) c.pinned = null;
       break;
     case 'pollvote':
       if (m.target && m.text !== undefined) {
-        // применяем локально
         const pollMsg = c.messages.find(x => x.id === m.target);
         if (pollMsg && pollMsg.type === 'poll') {
           pollMsg.votes = pollMsg.votes || {};
           pollMsg.votes[m.sid] = parseInt(m.text, 10);
         }
       }
-      break;
-    case 'join':
-      // просто маркер, ничего не делаем
-      break;
-    case 'leave':
       break;
   }
 }
@@ -757,7 +749,7 @@ function isVisible(m, c) {
 function getVisibleMessages(c) { return c.messages.filter(m => isVisible(m, c)); }
 
 // ================================================================
-//  SEND — в текущий чат
+//  SEND
 // ================================================================
 async function send(partial) {
   const t = state.currentChat;
@@ -776,7 +768,7 @@ async function send(partial) {
   applyIngestOnly(m);
 
   if (m.type === 'sys') {
-    if (m.action !== 'react' && m.action !== 'delete' && m.action !== 'pin' && m.action !== 'unpin' && m.action !== 'pollvote') {
+    if (!['react','delete','pin','unpin','pollvote'].includes(m.action)) {
       appendSys(m); chatEl.scrollTop = chatEl.scrollHeight;
     } else {
       scheduleReactRender();
@@ -796,7 +788,7 @@ async function send(partial) {
     updateUsersBadge();
   }
 
-  const headers = { 'Title': state.me.nick || 'QRChat' };
+  const headers = { 'Title': 'QRChat' };
   try {
     if (m._blob) {
       const meta = Object.assign({}, m);
@@ -811,9 +803,6 @@ async function send(partial) {
   }
 }
 
-// ================================================================
-//  SEND — в произвольный чат (для mini apps)
-// ================================================================
 async function sendExternal(topic, partial) {
   if (!topic) throw new Error('Нет чата');
   const ch = ensureChat(topic);
@@ -822,10 +811,8 @@ async function sendExternal(topic, partial) {
     ts: Date.now(), type: 'text',
   }, partial);
 
-  // Локально сохраняем
   if (topic === state.currentChat) {
     applyIngestOnly(m);
-    // Перерисуем, если наш чат
     if (m.type === 'sys') {
       if (!['react','delete','pin','unpin','pollvote'].includes(m.action)) appendSys(m);
       else scheduleReactRender();
@@ -844,8 +831,7 @@ async function sendExternal(topic, partial) {
     }
   }
 
-  // Отправляем в сеть
-  const headers = { 'Title': state.me.nick || 'QRChat' };
+  const headers = { 'Title': 'QRChat' };
   if (m._blob) {
     const meta = Object.assign({}, m);
     delete meta._blob;
@@ -940,8 +926,6 @@ function appendSys(m) {
     case 'admin-': html = `${nick} снял админа ${tgt}`; break;
     case 'ban':    html = `${nick} забанил ${tgt}`; break;
     case 'unban':  html = `${nick} разбанил ${tgt}`; break;
-    case 'join':   html = `${nick} присоединился`; break;
-    case 'leave':  html = `${nick} покинул чат`; break;
     default: return;
   }
   el.innerHTML = html;
@@ -990,13 +974,9 @@ function appendBubble(m, animate) {
     b.appendChild(img);
   } else if (m.type === 'file' && m.url) {
     b.classList.add('file');
-    b.innerHTML = `
-      <div class="ficon">📎</div>
-      <div class="fmeta">
-        <div class="fname">${esc(m.filename || 'файл')}</div>
-        <div class="fsize">${fmtBytes(m.filesize || 0)}</div>
-      </div>
-    `;
+    b.innerHTML = `<div class="ficon">📎</div><div class="fmeta">
+      <div class="fname">${esc(m.filename || 'файл')}</div>
+      <div class="fsize">${fmtBytes(m.filesize || 0)}</div></div>`;
     b.addEventListener('click', () => window.open(m.url, '_blank'));
   } else if (m.type === 'voice' && m.url) {
     const audio = document.createElement('audio');
@@ -1005,13 +985,9 @@ function appendBubble(m, animate) {
   } else if (m.type === 'location' && m.lat !== undefined) {
     b.classList.add('loc');
     const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lon}&zoom=15&size=400x240&markers=${m.lat},${m.lon},red-pushpin`;
-    b.innerHTML = `
-      <img src="${mapUrl}" loading="lazy" onerror="this.style.display='none'">
-      <div class="loc-label">📍 ${esc(m.locLabel || 'Локация')}</div>
-    `;
-    b.addEventListener('click', () => {
-      window.open(`https://www.openstreetmap.org/?mlat=${m.lat}&mlon=${m.lon}#map=16/${m.lat}/${m.lon}`, '_blank');
-    });
+    b.innerHTML = `<img src="${mapUrl}" loading="lazy" onerror="this.style.display='none'">
+      <div class="loc-label">📍 ${esc(m.locLabel || 'Локация')}</div>`;
+    b.addEventListener('click', () => window.open(`https://www.openstreetmap.org/?mlat=${m.lat}&mlon=${m.lon}#map=16/${m.lat}/${m.lon}`, '_blank'));
   } else if (m.type === 'poll') {
     b.classList.add('poll');
     const votes = m.votes || {};
@@ -1021,17 +997,13 @@ function appendBubble(m, animate) {
       const cnt = Object.values(votes).filter(v => v === i).length;
       const isMine = myVote === i;
       optsHtml += `<div class="poll-opt" data-poll="${m.id}" data-idx="${i}" style="${isMine?'border:1px solid var(--green);':''}">
-        <span>${isMine ? '✓ ' : ''}${esc(o)}</span>
-        <span class="poll-c">${cnt}</span>
-      </div>`;
+        <span>${isMine ? '✓ ' : ''}${esc(o)}</span><span class="poll-c">${cnt}</span></div>`;
     });
     b.innerHTML = `<div class="poll-q">📊 ${esc(m.text || '')}</div>${optsHtml}`;
     b.addEventListener('click', (e) => {
       const opt = e.target.closest('.poll-opt');
       if (!opt) return;
-      const pollId = opt.dataset.poll;
-      const idx = parseInt(opt.dataset.idx, 10);
-      send({ type: 'sys', action: 'pollvote', target: pollId, text: String(idx) });
+      send({ type: 'sys', action: 'pollvote', target: opt.dataset.poll, text: opt.dataset.idx });
     });
   } else if (m.text) {
     b.appendChild(document.createTextNode(m.text));
@@ -1206,7 +1178,7 @@ function screenWelcome() {
   showOverlay(`
     <div class="card">
       <h2>QR Chat</h2>
-      <p class="hint">Мульти-юзерный чат. Данные через ntfy, история локально. Один сканер для всего.</p>
+      <p class="hint">Мульти-юзерный чат. Данные через ntfy, история локально.</p>
       <input class="field" id="nickInput" placeholder="Твой ник" maxlength="24" autocomplete="off">
       <button class="btn primary" id="saveNickBtn">Продолжить</button>
     </div>
@@ -1287,12 +1259,12 @@ function screenSettings() {
     applyTheme(); saveNow(); screenSettings();
   });
   $('notifBtn').addEventListener('click', async () => {
-    if (!('Notification' in window)) { alert('Нет поддержки уведомлений'); return; }
+    if (!('Notification' in window)) { alert('Нет поддержки'); return; }
     const p = await Notification.requestPermission();
     state.notifications = (p === 'granted'); saveNow(); screenSettings();
   });
   $('serverBtn').addEventListener('click', () => {
-    alert('Текущий: ' + currentServer + '\n\nВсего серверов: ' + NTFY_SERVERS.length + '\n\n' + NTFY_SERVERS.join('\n'));
+    alert('Текущий: ' + currentServer + '\n\nВсего: ' + NTFY_SERVERS.length + '\n\n' + NTFY_SERVERS.join('\n'));
   });
   $('serverNextBtn').addEventListener('click', () => {
     rotateServer(); saveNow(); alert('Сервер: ' + currentServer); screenSettings();
@@ -1301,7 +1273,7 @@ function screenSettings() {
   $('importBtn').addEventListener('click', () => $('importFile').click());
   $('importFile').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await importData(f); });
   $('wipeBtn').addEventListener('click', () => {
-    if (!confirm('Удалить ВСЁ (чаты, историю, ник)?')) return;
+    if (!confirm('Удалить ВСЁ?')) return;
     localStorage.removeItem(LS_KEY);
     LS_LEGACY.forEach(k => localStorage.removeItem(k));
     location.reload();
@@ -1453,23 +1425,21 @@ function enterChat(topic, isNew) {
   if (isNew && !c.createdBy) {
     c.createdBy = state.me.sid; c.admins = [state.me.sid]; saveState();
     send({ type: 'sys', action: 'create' });
-  } else {
-    send({ type: 'sys', action: 'join' });
   }
   connect();
   startPresence();
 }
 
 // ================================================================
-//  UNIFIED QR SCANNER
+//  QR SCANNER
 // ================================================================
 let mediaStream = null, scanInterval = null;
 let scanResolver = null;
 
 async function startScan() {
-  if (!window.isSecureContext) { alert('Нужен HTTPS для камеры'); return; }
+  if (!window.isSecureContext) { alert('Нужен HTTPS'); return; }
   if (!navigator.mediaDevices?.getUserMedia) { alert('Камера недоступна'); return; }
-  if (!('BarcodeDetector' in window)) { alert('BarcodeDetector не поддерживается. Chrome 83+.'); return; }
+  if (!('BarcodeDetector' in window)) { alert('BarcodeDetector не поддерживается'); return; }
   const tries = [
     { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } } },
     { video: { facingMode: 'environment' } },
@@ -1506,7 +1476,6 @@ async function stopScan() {
   if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
   $('video').srcObject = null;
   $('scannerOverlay').classList.remove('show');
-  // Если был резолвер (для mini app) — отдаём null
   if (scanResolver) {
     const r = scanResolver; scanResolver = null;
     r(null);
@@ -1516,7 +1485,6 @@ $('stopScanBtn').addEventListener('click', stopScan);
 
 function handleScannedValue(v) {
   if (!v) return;
-  // Если вызван из mini app — возвращаем строку
   if (scanResolver) {
     const r = scanResolver; scanResolver = null;
     r(v);
@@ -1583,7 +1551,6 @@ $('miniappMenu').addEventListener('click', () => {
     showOverlay(`
       <div class="card">
         <h2>Поделиться</h2>
-        <p class="hint">Пусть друг отсканирует QR сканером в чате</p>
         <div id="qrBox" style="display:flex;justify-content:center;padding:12px;background:#fff;border-radius:14px;"></div>
         <div style="font-size:11px;text-align:center;color:var(--muted);word-break:break-all;margin-top:10px;">
           <span style="font-family:monospace;background:var(--sys-bg);padding:3px 6px;border-radius:6px;">${esc(qr.slice(0, 80))}</span>
@@ -1602,18 +1569,13 @@ $('miniappMenu').addEventListener('click', () => {
 });
 
 // ================================================================
-//  DIALOGS (для mini app)
+//  DIALOGS
 // ================================================================
 function dialogAlert({ title, text }) {
   return new Promise(resolve => {
     const ov = $('dialogOverlay');
-    ov.innerHTML = `
-      <div class="dialog">
-        <h3>${esc(title || '')}</h3>
-        <p>${esc(text || '')}</p>
-        <div class="actions"><button class="ok" id="dlgOk">OK</button></div>
-      </div>
-    `;
+    ov.innerHTML = `<div class="dialog"><h3>${esc(title||'')}</h3><p>${esc(text||'')}</p>
+      <div class="actions"><button class="ok" id="dlgOk">OK</button></div></div>`;
     ov.classList.add('show');
     const close = () => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(); };
     $('dlgOk').addEventListener('click', close);
@@ -1623,16 +1585,8 @@ function dialogAlert({ title, text }) {
 function dialogConfirm({ title, text }) {
   return new Promise(resolve => {
     const ov = $('dialogOverlay');
-    ov.innerHTML = `
-      <div class="dialog">
-        <h3>${esc(title || 'Подтвердить')}</h3>
-        <p>${esc(text || '')}</p>
-        <div class="actions">
-          <button class="cancel" id="dlgCancel">Отмена</button>
-          <button class="ok" id="dlgOk">OK</button>
-        </div>
-      </div>
-    `;
+    ov.innerHTML = `<div class="dialog"><h3>${esc(title||'Подтвердить')}</h3><p>${esc(text||'')}</p>
+      <div class="actions"><button class="cancel" id="dlgCancel">Отмена</button><button class="ok" id="dlgOk">OK</button></div></div>`;
     ov.classList.add('show');
     const close = v => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(v); };
     $('dlgOk').addEventListener('click', () => close(true));
@@ -1643,17 +1597,10 @@ function dialogConfirm({ title, text }) {
 function dialogPrompt({ title, text, value }) {
   return new Promise(resolve => {
     const ov = $('dialogOverlay');
-    ov.innerHTML = `
-      <div class="dialog">
-        <h3>${esc(title || 'Введите')}</h3>
-        ${text ? `<p>${esc(text)}</p>` : ''}
-        <input id="dlgInput" value="${esc(value || '')}" autocomplete="off">
-        <div class="actions">
-          <button class="cancel" id="dlgCancel">Отмена</button>
-          <button class="ok" id="dlgOk">OK</button>
-        </div>
-      </div>
-    `;
+    ov.innerHTML = `<div class="dialog"><h3>${esc(title||'Введите')}</h3>
+      ${text ? `<p>${esc(text)}</p>` : ''}
+      <input id="dlgInput" value="${esc(value||'')}" autocomplete="off">
+      <div class="actions"><button class="cancel" id="dlgCancel">Отмена</button><button class="ok" id="dlgOk">OK</button></div></div>`;
     ov.classList.add('show');
     const input = $('dlgInput');
     setTimeout(() => input.focus(), 100);
@@ -1666,14 +1613,12 @@ function dialogPrompt({ title, text, value }) {
 }
 
 // ================================================================
-//  HELPERS для bridge
+//  HELPERS
 // ================================================================
 function pickFileHelper({ accept = '*/*', multiple = false } = {}) {
   return new Promise(resolve => {
     const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = accept;
-    inp.multiple = multiple;
+    inp.type = 'file'; inp.accept = accept; inp.multiple = multiple;
     inp.style.display = 'none';
     document.body.appendChild(inp);
     inp.addEventListener('change', async () => {
@@ -1691,20 +1636,14 @@ function pickFileHelper({ accept = '*/*', multiple = false } = {}) {
       }
       resolve(out);
     });
-    inp.addEventListener('cancel', () => {
-      document.body.removeChild(inp);
-      resolve([]);
-    });
+    inp.addEventListener('cancel', () => { document.body.removeChild(inp); resolve([]); });
     inp.click();
   });
 }
-
 function takePhotoHelper() {
   return new Promise(resolve => {
     const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = 'image/*';
-    inp.capture = 'environment';
+    inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
     inp.style.display = 'none';
     document.body.appendChild(inp);
     inp.addEventListener('change', async () => {
@@ -1718,14 +1657,10 @@ function takePhotoHelper() {
       });
       resolve({ name: f.name, type: f.type, size: f.size, dataUrl });
     });
-    inp.addEventListener('cancel', () => {
-      document.body.removeChild(inp);
-      resolve(null);
-    });
+    inp.addEventListener('cancel', () => { document.body.removeChild(inp); resolve(null); });
     inp.click();
   });
 }
-
 function getLocationHelper() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error('Геолокация недоступна'));
@@ -1736,7 +1671,6 @@ function getLocationHelper() {
     );
   });
 }
-
 function scanQRHelper() {
   return new Promise((resolve, reject) => {
     scanResolver = { resolve };
@@ -1746,36 +1680,26 @@ function scanQRHelper() {
     });
   });
 }
-
 function shareHelper({ title, text, url }) {
-  if (navigator.share) {
-    return navigator.share({ title, text, url }).catch(() => {});
-  }
-  // fallback — копируем в буфер
+  if (navigator.share) return navigator.share({ title, text, url }).catch(() => {});
   const s = url || text || title || '';
   try { navigator.clipboard.writeText(s); } catch {}
-  QRChat_toast('Скопировано в буфер');
+  QRChat_toast('Скопировано');
 }
 
 // ================================================================
-//  BRIDGE для mini apps
+//  BRIDGE
 // ================================================================
 async function bridgeCall(method, params) {
-  const c = cur();
   const t = params.topic || state.currentChat;
-
   switch (method) {
-    // ---- Профиль ----
     case 'getUser': return { sid: state.me.sid, nick: state.me.nick };
     case 'setNick': {
       const nick = String(params.nick || '').trim().slice(0, 24);
       if (!nick) throw new Error('Пустой ник');
-      state.me.nick = nick;
-      saveNow();
+      state.me.nick = nick; saveNow();
       return { ok: true, nick };
     }
-
-    // ---- Чаты ----
     case 'getChats':
       return Object.entries(state.chats).map(([key, ch]) => ({
         key, name: ch.name,
@@ -1786,8 +1710,7 @@ async function bridgeCall(method, params) {
       const ch = t ? ensureChat(t) : null;
       if (!ch) throw new Error('Нет чата');
       return {
-        key: t,
-        name: ch.name,
+        key: t, name: ch.name,
         members: [...new Set(ch.messages.filter(m=>m.type!=='sys').map(m=>m.nick))],
         admin: ch.admins.includes(state.me.sid) || ch.createdBy === state.me.sid,
         messageCount: getVisibleMessages(ch).length
@@ -1803,12 +1726,9 @@ async function bridgeCall(method, params) {
       for (const m of ch.messages) if (m.nick && !nickById[m.sid]) nickById[m.sid] = m.nick;
       for (const [sid, p] of Object.entries(presence)) nickById[sid] = p.nick;
       return [...sids].map(sid => ({
-        sid,
-        nick: nickById[sid] || ('User ' + shortSid(sid)),
-        online: isOnline(sid),
-        admin: ch.admins.includes(sid),
-        banned: ch.bans.includes(sid),
-        me: sid === state.me.sid
+        sid, nick: nickById[sid] || ('User ' + shortSid(sid)),
+        online: isOnline(sid), admin: ch.admins.includes(sid),
+        banned: ch.bans.includes(sid), me: sid === state.me.sid
       }));
     }
     case 'isAdmin': {
@@ -1836,10 +1756,7 @@ async function bridgeCall(method, params) {
     case 'leaveChat': {
       const topic = params.topic || state.currentChat;
       if (!topic) throw new Error('Нет чата');
-      // Отправляем leave
-      try {
-        await sendExternal(topic, { type: 'sys', action: 'leave' });
-      } catch {}
+      try { await sendExternal(topic, { type: 'sys', action: 'leave' }); } catch {}
       delete state.chats[topic];
       delete state.seenIds[topic];
       if (state.currentChat === topic) {
@@ -1854,15 +1771,10 @@ async function bridgeCall(method, params) {
     case 'renameChat': {
       const name = String(params.name || '').trim().slice(0, 40);
       if (!name) throw new Error('Пустое имя');
-      if (t === state.currentChat) {
-        await send({ type: 'sys', action: 'rename', text: name });
-      } else {
-        await sendExternal(t, { type: 'sys', action: 'rename', text: name });
-      }
+      if (t === state.currentChat) await send({ type: 'sys', action: 'rename', text: name });
+      else await sendExternal(t, { type: 'sys', action: 'rename', text: name });
       return { ok: true };
     }
-
-    // ---- Сообщения ----
     case 'getHistory': {
       const ch = t ? ensureChat(t) : null;
       if (!ch) throw new Error('Нет чата');
@@ -1896,8 +1808,7 @@ async function bridgeCall(method, params) {
       const url = URL.createObjectURL(blob);
       const isImg = /^image\//.test(blob.type);
       const meta = {
-        type: isImg ? 'image' : 'file',
-        url, _blob: blob,
+        type: isImg ? 'image' : 'file', url, _blob: blob,
         filename, filesize: blob.size
       };
       if (t === state.currentChat) await send(meta);
@@ -1940,17 +1851,11 @@ async function bridgeCall(method, params) {
         id: rhex(8), sid: anonSid, nick: anonNick,
         ts: Date.now(), type: 'text', text
       };
-      await postJSON(targetTopic, meta, { 'Title': anonNick });
+      await postJSON(targetTopic, meta, { 'Title': 'QRChat' });
       return { ok: true, nick: anonNick };
     }
-
-    // ---- UI ----
-    case 'showToast':
-      QRChat_toast(String(params.text || ''));
-      return { ok: true };
-    case 'showAlert':
-      await dialogAlert({ title: params.title, text: params.text });
-      return { ok: true };
+    case 'showToast': QRChat_toast(String(params.text || '')); return { ok: true };
+    case 'showAlert': await dialogAlert({ title: params.title, text: params.text }); return { ok: true };
     case 'showConfirm': {
       const r = await dialogConfirm({ title: params.title, text: params.text });
       return { ok: r };
@@ -1968,24 +1873,16 @@ async function bridgeCall(method, params) {
         applyTheme(); saveNow();
       }
       return { ok: true };
-
-    // ---- Устройство ----
     case 'haptic':
       try { navigator.vibrate && navigator.vibrate(params.pattern || 15); } catch {}
       return { ok: true };
-    case 'getLocation':
-      return await getLocationHelper();
-    case 'scanQR':
-      return { value: await scanQRHelper() };
-    case 'pickFile':
-      return await pickFileHelper({ accept: params.accept || '*/*', multiple: !!params.multiple });
-    case 'takePhoto':
-      return await takePhotoHelper();
+    case 'getLocation': return await getLocationHelper();
+    case 'scanQR': return { value: await scanQRHelper() };
+    case 'pickFile': return await pickFileHelper({ accept: params.accept || '*/*', multiple: !!params.multiple });
+    case 'takePhoto': return await takePhotoHelper();
     case 'getClipboard': {
-      try {
-        const txt = await navigator.clipboard.readText();
-        return { text: txt };
-      } catch (e) { throw new Error('Нет доступа к буферу'); }
+      try { const txt = await navigator.clipboard.readText(); return { text: txt }; }
+      catch (e) { throw new Error('Нет доступа к буферу'); }
     }
     case 'setClipboard': {
       try { await navigator.clipboard.writeText(String(params.text || '')); return { ok: true }; }
@@ -1993,8 +1890,7 @@ async function bridgeCall(method, params) {
     }
     case 'getDeviceInfo':
       return {
-        platform: navigator.platform,
-        userAgent: navigator.userAgent,
+        platform: navigator.platform, userAgent: navigator.userAgent,
         language: navigator.language,
         screen: { w: screen.width, h: screen.height },
         dpr: devicePixelRatio,
@@ -2007,8 +1903,6 @@ async function bridgeCall(method, params) {
     case 'share':
       await shareHelper({ title: params.title, text: params.text, url: params.url });
       return { ok: true };
-
-    // ---- Уведомления ----
     case 'notify': {
       if (!('Notification' in window)) throw new Error('Нет поддержки');
       if (Notification.permission !== 'granted') {
@@ -2021,8 +1915,6 @@ async function bridgeCall(method, params) {
       });
       return { ok: true };
     }
-
-    // ---- Хранилище ----
     case 'getStorage': {
       const key = 'miniapp:' + (currentMiniApp?.id || '') + ':' + params.key;
       return localStorage.getItem(key);
@@ -2052,28 +1944,20 @@ async function bridgeCall(method, params) {
       return { ok: true, count: toDel.length };
     }
     case 'getGlobalStorage': {
-      const key = 'miniapp-global:' + params.key;
-      return localStorage.getItem(key);
+      return localStorage.getItem('miniapp-global:' + params.key);
     }
     case 'setGlobalStorage': {
-      const k2 = 'miniapp-global:' + params.key;
-      localStorage.setItem(k2, params.value);
+      localStorage.setItem('miniapp-global:' + params.key, params.value);
       return { ok: true };
     }
-
-    // ---- Mini app ----
     case 'close':
       closeMiniApp();
       return { ok: true };
-
     default:
       throw new Error('Unknown method: ' + method);
   }
 }
 
-// ================================================================
-//  MESSAGE LISTENER (общий)
-// ================================================================
 window.addEventListener('message', async (e) => {
   const d = e.data;
   if (!d || !d.__qrc) return;
@@ -2108,7 +1992,7 @@ function QRChat_toast(text) {
 // ================================================================
 function exportData() {
   const data = {
-    version: 9, exportedAt: new Date().toISOString(),
+    version: 10, exportedAt: new Date().toISOString(),
     me: { sid: state.me.sid, nick: state.me.nick },
     chats: state.chats, seenIds: state.seenIds
   };
@@ -2225,11 +2109,7 @@ micBtn.addEventListener('click', async () => {
     mediaRecorder.start();
     micBtn.style.background = '#ffebee';
     micBtn.style.color = '#d93025';
-    setTimeout(() => {
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-    }, 60000);
+    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 60000);
   } catch (e) { alert('Микрофон: ' + e.message); }
 });
 
