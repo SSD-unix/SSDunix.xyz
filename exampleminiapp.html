@@ -2,19 +2,32 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <title>Анонимка</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0; padding: 20px 16px; background: #fafafa; color: #111;
-    min-height: 100vh; display: flex; flex-direction: column; }
+    background: #fafafa; color: #111; font-size: 16px;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom); }
+  .wrap { padding: 20px 16px; min-height: 100%; display: flex; flex-direction: column; }
   h1 { font-size: 22px; margin: 0 0 4px; }
-  .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
-  .chat-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 18px; }
+
+  .warning { background: #fff8e1; border-left: 3px solid #ffb300;
+    padding: 12px 14px; border-radius: 10px; font-size: 13px;
+    color: #6d5000; margin-bottom: 18px; line-height: 1.4; }
+  .warning b { color: #4a3400; }
+
+  .label { font-size: 12px; font-weight: 700; color: #888;
+    text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; }
+
+  .chat-list { display: flex; flex-direction: column; gap: 8px; }
   .chat-item { padding: 14px 16px; background: #fff; border-radius: 14px;
     cursor: pointer; display: flex; align-items: center; gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 2px solid transparent;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 2px solid transparent;
     transition: border-color 0.15s, background 0.15s; }
   .chat-item:active { background: #f5f5f5; }
   .chat-item.selected { border-color: #07C160; background: #f0fbf4; }
@@ -30,49 +43,46 @@
     opacity: 0; transition: opacity 0.15s; }
   .chat-item.selected .check { opacity: 1; }
 
-  textarea { width: 100%; min-height: 100px; padding: 14px;
+  textarea { width: 100%; min-height: 110px; padding: 14px;
     border-radius: 14px; border: 1px solid #e0e0e0; font-size: 15px;
-    font-family: inherit; background: #fff; resize: none; outline: none;
-    margin-bottom: 12px; }
+    font-family: inherit; background: #fff; resize: none; outline: none; }
   textarea:focus { border-color: #07C160; }
 
   .btn { width: 100%; padding: 16px; border-radius: 14px; border: none;
     font-size: 16px; font-weight: 600; cursor: pointer;
-    font-family: inherit; margin-bottom: 8px; transition: transform 0.1s;
+    font-family: inherit; margin-top: 8px; transition: transform 0.1s;
     background: #07C160; color: #fff;
     box-shadow: 0 4px 12px rgba(7,193,96,0.3); }
   .btn:active { transform: scale(0.98); }
   .btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
   .btn.secondary { background: #f1f3f4; color: #111; box-shadow: none; }
 
-  .warning { background: #fff8e1; border-left: 3px solid #ffb300;
-    padding: 12px 14px; border-radius: 10px; font-size: 13px;
-    color: #6d5000; margin-bottom: 16px; line-height: 1.4; }
-
-  .empty { text-align: center; color: #999; padding: 30px 0; font-size: 14px; }
+  .empty { text-align: center; color: #999; padding: 40px 20px; font-size: 14px; line-height: 1.5; }
 
   .success { text-align: center; padding: 40px 20px; }
-  .success .icon { font-size: 64px; margin-bottom: 16px; }
-  .success h2 { font-size: 20px; margin: 0 0 8px; }
-  .success p { color: #888; font-size: 14px; margin: 0 0 20px; }
+  .success .icon { font-size: 72px; margin-bottom: 20px; }
+  .success h2 { font-size: 22px; margin: 0 0 10px; }
+  .success p { color: #888; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
   .success .as { display: inline-block; background: #f0fbf4; color: #07C160;
-    padding: 6px 14px; border-radius: 20px; font-weight: 600;
-    font-size: 14px; margin-bottom: 20px; }
+    padding: 8px 18px; border-radius: 20px; font-weight: 700;
+    font-size: 15px; margin-bottom: 24px; }
 
-  .spinner { width: 30px; height: 30px; border: 3px solid #e0e0e0;
+  .spinner { width: 32px; height: 32px; border: 3px solid #e0e0e0;
     border-top-color: #07C160; border-radius: 50%;
-    animation: spin 0.7s linear infinite; margin: 30px auto; }
+    animation: spin 0.7s linear infinite; margin: 60px auto; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .counter { font-size: 12px; color: #888; text-align: right; margin-top: 4px; }
 </style>
 </head>
 <body>
-
-<div id="root">
+<div class="wrap" id="root">
   <div class="spinner"></div>
 </div>
 
 <script>
 // ===== SDK =====
+// Используем только методы, которые реально есть в bridgeCall()
 const QRChat = {
   _id: 0, _pending: {},
   call(method, params) {
@@ -82,13 +92,18 @@ const QRChat = {
       parent.postMessage({ __qrc: 1, id, method, params: params || {} }, '*');
     });
   },
-  getUser()          { return this.call('getUser'); },
-  getChat()          { return this.call('getChat'); },
-  getMyChats()       { return this.call('getMyChats'); },
-  sendAnonymous(topic, text) { return this.call('sendAnonymous', { topic, text }); },
-  showToast(text)    { return this.call('showToast', { text }); },
-  setTitle(text)     { return this.call('setTitle', { text }); },
-  close()            { return this.call('close'); }
+  // Профиль
+  getUser:        () => QRChat.call('getUser'),
+  // Чаты
+  getChats:       () => QRChat.call('getChats'),
+  getChat:        (topic) => QRChat.call('getChat', { topic }),
+  // Анонимная отправка
+  sendAnonymous:  (topic, text) => QRChat.call('sendAnonymous', { topic, text }),
+  // UI
+  showToast:      (text) => QRChat.call('showToast', { text }),
+  setTitle:       (text) => QRChat.call('setTitle', { text }),
+  haptic:         (ms) => QRChat.call('haptic', { pattern: ms || 15 }),
+  close:          () => QRChat.call('close')
 };
 window.addEventListener('message', e => {
   const d = e.data;
@@ -99,60 +114,84 @@ window.addEventListener('message', e => {
   d.error ? p.rej(new Error(d.error)) : p.res(d.result);
 });
 
-// ===== Логика =====
+// ===== Состояние =====
 let chats = [];
 let selectedTopic = null;
+let messageDraft = '';
 
+// ===== Утилиты =====
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+
+// ===== Старт =====
 async function init() {
   try {
     const user = await QRChat.getUser();
     QRChat.setTitle('🎭 Анонимка');
 
-    chats = await QRChat.getMyChats();
-    if (!chats || !chats.length) {
+    // getChats() — правильный метод (не getMyChats)
+    const result = await QRChat.getChats();
+    chats = Array.isArray(result) ? result : [];
+
+    if (!chats.length) {
       renderEmpty();
       return;
     }
-    // По умолчанию выбран текущий чат
+
+    // По умолчанию — текущий чат
     const current = chats.find(c => c.isCurrent);
     if (current) selectedTopic = current.key;
+
     render();
   } catch (e) {
-    document.getElementById('root').innerHTML =
-      '<div class="empty">Ошибка: ' + escapeHtml(e.message) + '</div>';
+    document.getElementById('root').innerHTML = `
+      <div class="empty">
+        <div style="font-size: 48px; margin-bottom: 16px;">😔</div>
+        <div>Ошибка: ${escapeHtml(e.message)}</div>
+        <button class="btn secondary" style="margin-top: 20px;"
+          onclick="location.reload()">↻ Попробовать снова</button>
+      </div>
+    `;
   }
 }
 
 function renderEmpty() {
   document.getElementById('root').innerHTML = `
     <h1>🎭 Анонимка</h1>
-    <div class="empty">У тебя пока нет чатов.<br>Сначала создай или присоединись к чату.</div>
+    <div class="sub">Отправь сообщение от одноразового аккаунта</div>
+    <div class="empty">
+      <div style="font-size: 56px; margin-bottom: 16px;">📭</div>
+      <div>У тебя пока нет чатов.</div>
+      <div style="margin-top: 8px;">Сначала создай или присоединись к чату в мессенджере.</div>
+    </div>
   `;
 }
 
 function render() {
   document.getElementById('root').innerHTML = `
     <h1>🎭 Анонимка</h1>
-    <div class="sub">Отправь сообщение от одноразового аккаунта</div>
+    <div class="sub">Сообщение от одноразового аккаунта</div>
 
     <div class="warning">
       Сообщение придёт от <b>случайного пользователя</b> типа «Аноним-742».
-      После отправки он исчезнет из чата. Никто не узнает, что это ты.
+      После отправки он <b>исчезнет из чата</b>. Никто не узнает, что это ты.
     </div>
 
-    <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-      КУДА ОТПРАВИТЬ
-    </div>
+    <div class="label">Куда отправить</div>
     <div class="chat-list" id="chatList"></div>
 
-    <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 8px;">
-      СООБЩЕНИЕ
-    </div>
+    <div class="label">Сообщение</div>
     <textarea id="msg" placeholder="Напиши что-нибудь…" maxlength="1000"></textarea>
+    <div class="counter" id="counter">0 / 1000</div>
 
     <button class="btn" id="sendBtn" disabled>📤 Отправить анонимно</button>
+    <button class="btn secondary" onclick="QRChat.close()">✕ Отмена</button>
   `;
 
+  // Список чатов
   const listEl = document.getElementById('chatList');
   for (const c of chats) {
     const div = document.createElement('div');
@@ -160,37 +199,38 @@ function render() {
     div.innerHTML = `
       <div class="avatar">${escapeHtml((c.name || '?').slice(0,1).toUpperCase())}</div>
       <div class="info">
-        <div class="name">${escapeHtml(c.name)}</div>
-        <div class="meta">${c.messages} сообщений${c.isCurrent ? ' · текущий' : ''}</div>
+        <div class="name">${escapeHtml(c.name || 'Чат')}</div>
+        <div class="meta">${c.messages || 0} сообщений${c.isCurrent ? ' · текущий' : ''}</div>
       </div>
       <div class="check">✓</div>
     `;
     div.addEventListener('click', () => {
       selectedTopic = c.key;
+      QRChat.haptic(10);
       render();
     });
     listEl.appendChild(div);
   }
 
+  // Поле ввода
   const msgEl = document.getElementById('msg');
   const sendBtn = document.getElementById('sendBtn');
+  const counter = document.getElementById('counter');
 
-  // Восстанавливаем текст если перерендерили
-  if (window.__savedMsg) {
-    msgEl.value = window.__savedMsg;
-  }
-  msgEl.addEventListener('input', () => {
-    window.__savedMsg = msgEl.value;
-    sendBtn.disabled = !(msgEl.value.trim() && selectedTopic);
-  });
-  msgEl.addEventListener('input', () => {}); // noop
-  msgEl.dispatchEvent(new Event('input'));
+  msgEl.value = messageDraft;
+  const update = () => {
+    messageDraft = msgEl.value;
+    counter.textContent = `${messageDraft.length} / 1000`;
+    sendBtn.disabled = !(messageDraft.trim() && selectedTopic);
+  };
+  update();
+  msgEl.addEventListener('input', update);
 
   sendBtn.addEventListener('click', doSend);
 }
 
 async function doSend() {
-  const text = document.getElementById('msg').value.trim();
+  const text = messageDraft.trim();
   if (!text || !selectedTopic) return;
 
   const sendBtn = document.getElementById('sendBtn');
@@ -199,18 +239,8 @@ async function doSend() {
 
   try {
     const res = await QRChat.sendAnonymous(selectedTopic, text);
-    // Успех
-    document.getElementById('root').innerHTML = `
-      <div class="success">
-        <div class="icon">✅</div>
-        <h2>Отправлено</h2>
-        <p>Сообщение ушло в чат «${escapeHtml(chats.find(c => c.key === selectedTopic)?.name || '?')}»</p>
-        <div class="as">от ${escapeHtml(res.nick)}</div>
-        <p style="font-size:12px;color:#aaa;">Этот аккаунт больше никогда не появится</p>
-      </div>
-      <button class="btn secondary" onclick="location.reload()">↻ Отправить ещё</button>
-      <button class="btn" onclick="QRChat.close()">✕ Закрыть</button>
-    `;
+    QRChat.haptic(30);
+    showSuccess(res.nick, chats.find(c => c.key === selectedTopic));
   } catch (e) {
     sendBtn.disabled = false;
     sendBtn.textContent = '📤 Отправить анонимно';
@@ -218,10 +248,21 @@ async function doSend() {
   }
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
+function showSuccess(anonNick, chat) {
+  document.getElementById('root').innerHTML = `
+    <div class="success">
+      <div class="icon">✅</div>
+      <h2>Отправлено</h2>
+      <p>Сообщение улетело в чат «${escapeHtml(chat?.name || '?')}»</p>
+      <div class="as">от ${escapeHtml(anonNick)}</div>
+      <p style="font-size: 12px; color: #aaa;">
+        Этот аккаунт больше никогда не появится.<br>
+        Твой настоящий ник нигде не засветился.
+      </p>
+    </div>
+    <button class="btn secondary" onclick="location.reload()">↻ Отправить ещё</button>
+    <button class="btn" onclick="QRChat.close()">✕ Закрыть</button>
+  `;
 }
 
 init();
