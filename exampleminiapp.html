@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Голосование</title>
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 16px; margin: 0;
+    background: #fafafa; color: #111; }
+  h1 { font-size: 20px; margin: 0 0 16px; }
+  input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;
+    font-size: 15px; margin-bottom: 8px; box-sizing: border-box; background: #fff; }
+  input:focus { border-color: #07C160; outline: none; }
+  .opt-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .opt-row input { margin: 0; flex: 1; }
+  .opt-row button { padding: 12px 14px; border-radius: 10px; border: none;
+    background: #ffebee; color: #d93025; cursor: pointer; font-size: 16px; }
+  .btn { width: 100%; padding: 14px; border-radius: 12px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .btn.primary { background: #07C160; color: #fff; }
+  .btn.secondary { background: #F1F3F4; color: #111; }
+  .poll { background: #fff; padding: 16px; border-radius: 14px; margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .poll .q { font-weight: 600; font-size: 15px; margin-bottom: 10px; }
+  .poll .opt { padding: 10px 12px; background: #f5f5f5; border-radius: 10px;
+    margin-bottom: 6px; font-size: 14px; display: flex;
+    justify-content: space-between; cursor: pointer; }
+  .poll .opt:active { background: #e8e8e8; }
+  .poll .opt .c { font-weight: 700; color: #07C160; }
+  .poll .meta { font-size: 11px; color: #888; margin-top: 8px; }
+  .poll .bar { height: 4px; background: #07C160; border-radius: 2px;
+    margin-top: 4px; transition: width 0.3s; }
+</style>
+</head>
+<body>
+  <h1>📊 Голосовалка</h1>
+
+  <div id="new-poll">
+    <input id="q" placeholder="Вопрос">
+    <div id="opts"></div>
+    <button class="btn secondary" onclick="addOpt()">+ Добавить вариант</button>
+    <button class="btn primary" onclick="create()">🚀 Опубликовать</button>
+  </div>
+
+  <h1 style="margin-top:24px;">Активные</h1>
+  <div id="polls"></div>
+
+<script>
+// ===== SDK =====
+const QRChat = {
+  _id: 0, _pending: {},
+  call(method, params) {
+    return new Promise((res, rej) => {
+      const id = ++this._id;
+      this._pending[id] = { res, rej };
+      parent.postMessage({ __qrc: 1, id, method, params: params || {} }, '*');
+    });
+  },
+  getUser()          { return this.call('getUser'); },
+  getChat()          { return this.call('getChat'); },
+  getHistory(l)      { return this.call('getHistory', { limit: l || 30 }); },
+  sendMessage(text)  { return this.call('sendMessage', { text }); },
+  showToast(text)    { return this.call('showToast', { text }); },
+  setTitle(text)     { return this.call('setTitle', { text }); },
+  getStorage(key)    { return this.call('getStorage', { key }); },
+  setStorage(key, v) { return this.call('setStorage', { key, value: v }); }
+};
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || !d.__qrc) return;
+  const p = QRChat._pending[d.id];
+  if (!p) return;
+  delete QRChat._pending[d.id];
+  d.error ? p.rej(new Error(d.error)) : p.res(d.result);
+});
+
+// ===== Логика =====
+let polls = [];   // [{id, q, opts:[], votes:{sid:idx}}]
+
+async function load() {
+  try {
+    const raw = await QRChat.getStorage('polls');
+    polls = raw ? JSON.parse(raw) : [];
+  } catch { polls = []; }
+  render();
+}
+async function save() {
+  await QRChat.setStorage('polls', JSON.stringify(polls));
+}
+
+function addOpt() {
+  const box = document.getElementById('opts');
+  if (box.children.length >= 6) { QRChat.showToast('Максимум 6 вариантов'); return; }
+  const div = document.createElement('div');
+  div.className = 'opt-row';
+  div.innerHTML = `
+    <input placeholder="Вариант ${box.children.length + 1}">
+    <button onclick="this.parentNode.remove()">✕</button>
+  `;
+  box.appendChild(div);
+}
+
+async function create() {
+  const q = document.getElementById('q').value.trim();
+  const optInputs = document.querySelectorAll('#opts .opt-row input');
+  const opts = [...optInputs].map(i => i.value.trim()).filter(Boolean);
+  if (!q || opts.length < 2) {
+    QRChat.showToast('Заполни вопрос и минимум 2 варианта');
+    return;
+  }
+  const poll = {
+    id: Date.now().toString(36),
+    q, opts,
+    votes: {},
+    created: Date.now()
+  };
+  polls.unshift(poll);
+  await save();
+
+  // Отправляем в чат
+  const text = `📊 ОПРОС: ${q}\n` + opts.map((o, i) => `${i+1}. ${o}`).join('\n') + `\n\nПроголосовать: открой мини-апп «Голосовалка»`;
+  await QRChat.sendMessage(text);
+  QRChat.showToast('Опубликовано');
+
+  // Очищаем форму
+  document.getElementById('q').value = '';
+  document.getElementById('opts').innerHTML = '';
+  addOpt(); addOpt();
+  render();
+}
+
+async function vote(pollId, idx) {
+  const poll = polls.find(p => p.id === pollId);
+  if (!poll) return;
+  const user = await QRChat.getUser();
+  poll.votes[user.sid] = idx;
+  await save();
+  render();
+
+  // Отправляем в чат анонимный голос
+  await QRChat.sendMessage(`🗳 ${user.nick} проголосовал в опросе «${poll.q}»`);
+  QRChat.showToast('Голос учтён');
+}
+
+async function del(pollId) {
+  if (!confirm('Удалить опрос?')) return;
+  polls = polls.filter(p => p.id !== pollId);
+  await save();
+  render();
+}
+
+async function render() {
+  const box = document.getElementById('polls');
+  box.innerHTML = '';
+  if (!polls.length) {
+    box.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Нет опросов</div>';
+    return;
+  }
+  const me = await QRChat.getUser();
+  for (const p of polls) {
+    const total = Object.keys(p.votes).length;
+    const counts = p.opts.map((_, i) => Object.values(p.votes).filter(v => v === i).length);
+    const maxCount = Math.max(1, ...counts);
+    const myVote = p.votes[me.sid];
+
+    let optsHtml = '';
+    p.opts.forEach((o, i) => {
+      const c = counts[i];
+      const pct = total ? Math.round(c / total * 100) : 0;
+      const isMine = myVote === i;
+      optsHtml += `
+        <div class="opt" onclick="vote('${p.id}', ${i})" style="${isMine ? 'background:#d7f5e2;' : ''}">
+          <div>
+            <div>${isMine ? '✓ ' : ''}${escapeHtml(o)}</div>
+            <div class="bar" style="width:${pct}%;"></div>
+          </div>
+          <div class="c">${c}</div>
+        </div>
+      `;
+    });
+
+    const div = document.createElement('div');
+    div.className = 'poll';
+    div.innerHTML = `
+      <div class="q">${escapeHtml(p.q)}</div>
+      ${optsHtml}
+      <div class="meta">Всего голосов: ${total} · <span style="color:#d93025;cursor:pointer;" onclick="del('${p.id}')">удалить</span></div>
+    `;
+    box.appendChild(div);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ===== Старт =====
+(async () => {
+  const u = await QRChat.getUser();
+  QRChat.setTitle('📊 ' + u.nick);
+  addOpt(); addOpt();
+  load();
+})();
+</script>
+</body>
+</html>
