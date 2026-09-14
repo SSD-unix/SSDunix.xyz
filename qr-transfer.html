@@ -1,2153 +1,670 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#07C160" />
-<title>QR Chat</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Крестики-нолики</title>
 <style>
-  :root {
-    --green: #07C160; --green-dark: #06AD56;
-    --bg: #EDEDED; --bubble-me: #95EC69; --bubble-them: #FFFFFF;
-    --header: #F5F5F5; --card: #FFFFFF; --border: rgba(0,0,0,0.08);
-    --muted: #888; --text: #111; --input-bg: #FFFFFF;
-    --overlay-bg: linear-gradient(160deg, #f8f9fa 0%, #eaeef1 100%);
-    --sys-bg: rgba(0,0,0,0.05); --danger: #d93025;
-  }
-  [data-theme="dark"] {
-    --bg: #0E1621; --bubble-me: #2B5278; --bubble-them: #182533;
-    --header: #17212B; --card: #17212B; --border: rgba(255,255,255,0.08);
-    --muted: #7D8B99; --text: #ECF0F3; --input-bg: #242F3D;
-    --overlay-bg: linear-gradient(160deg, #0E1621 0%, #17212B 100%);
-    --sys-bg: rgba(255,255,255,0.08);
-  }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg); color: var(--text); font-size: 16px; overscroll-behavior: none; }
-  .app { display: flex; flex-direction: column; height: 100dvh; height: 100vh;
-    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-  .topbar { height: 54px; flex-shrink: 0; background: var(--header);
-    border-bottom: 1px solid var(--border); display: flex; align-items: center;
-    gap: 2px; padding: 0 6px; }
-  .topbar .title-block { flex: 1; text-align: center; min-width: 0; cursor: pointer; }
-  .topbar .title { font-size: 15px; font-weight: 600; line-height: 1.1;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .topbar .subtitle { font-size: 11px; color: var(--muted); margin-top: 2px;
-    display: flex; align-items: center; justify-content: center; gap: 5px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
-  .dot.on { background: var(--green); box-shadow: 0 0 6px rgba(7,193,96,0.6); }
-  .icon-btn { width: 42px; height: 42px; border-radius: 50%; border: none;
-    background: transparent; font-size: 20px; color: var(--text);
+    background: linear-gradient(160deg, #1e293b, #0f172a); color: #fff; }
+  #root { height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto; }
+  .header { text-align: center; margin-bottom: 24px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .subtitle { font-size: 13px; color: #94a3b8; }
+  .score { display: flex; gap: 24px; margin-bottom: 20px;
+    background: rgba(255,255,255,0.05); padding: 12px 24px; border-radius: 14px; }
+  .score .item { text-align: center; }
+  .score .who { font-size: 11px; color: #94a3b8; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 4px; }
+  .score .val { font-size: 24px; font-weight: 700; }
+  .score .item.me .val { color: #22d3ee; }
+  .score .item.opp .val { color: #f472b6; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; width: min(90vw, 340px); aspect-ratio: 1;
+    background: rgba(255,255,255,0.03); padding: 8px; border-radius: 20px;
+    margin-bottom: 20px; }
+  .cell { background: rgba(255,255,255,0.06); border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; padding: 0; flex-shrink: 0; position: relative; }
-  .icon-btn:active { background: rgba(128,128,128,0.15); }
-  .icon-btn .badge { position: absolute; top: 3px; right: 3px; background: var(--danger);
-    color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 8px; font-weight: 700; min-width: 16px; text-align: center; }
+    font-size: 56px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    user-select: none; }
+  .cell:active:not(.taken):not(.disabled) { transform: scale(0.95); }
+  .cell.taken { cursor: default; }
+  .cell.X { color: #22d3ee; }
+  .cell.O { color: #f472b6; }
+  .cell.disabled { cursor: not-allowed; opacity: 0.9; }
+  .cell.win { background: rgba(34,211,238,0.25); animation: pulse 0.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { background: rgba(34,211,238,0.25); } 50% { background: rgba(34,211,238,0.45); } }
+  .status { font-size: 16px; font-weight: 600; text-align: center;
+    padding: 12px 20px; border-radius: 12px;
+    background: rgba(255,255,255,0.05); margin-bottom: 16px; min-width: 200px; }
+  .status.your-turn { background: rgba(34,211,238,0.2); color: #67e8f9; }
+  .status.waiting { background: rgba(148,163,184,0.15); color: #94a3b8; }
+  .status.win { background: rgba(34,197,94,0.25); color: #4ade80; }
+  .status.lose { background: rgba(239,68,68,0.25); color: #f87171; }
+  .status.draw { background: rgba(251,191,36,0.25); color: #fbbf24; }
+  .btn { padding: 14px 28px; border-radius: 12px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+    background: #22d3ee; color: #0f172a; margin: 4px; }
+  .btn:active { transform: scale(0.97); }
+  .btn.secondary { background: rgba(255,255,255,0.1); color: #fff; }
+  .btns { display: flex; gap: 8px; justify-content: center; }
+  .lobby { text-align: center; max-width: 400px; width: 100%; }
+  #qrBox { margin: 20px auto; display: flex; justify-content: center;
+    align-items: center; background: #fff; padding: 12px; border-radius: 14px;
+    width: fit-content; min-width: 220px; min-height: 220px; }
+  #qrBox canvas, #qrBox img { display: block; }
+  #qrBox .placeholder { color: #333; font-size: 13px; padding: 30px 20px;
+    text-align: center; word-break: break-all; }
+  .code { font-family: ui-monospace, monospace; background: rgba(255,255,255,0.08);
+    padding: 8px 14px; border-radius: 8px; font-size: 14px;
+    word-break: break-all; margin: 12px 0; user-select: all; color: #67e8f9; }
+  .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: #22d3ee; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 20px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 100; display: none; align-items: center; justify-content: center; }
+  .overlay.show { display: flex; }
+  .overlay .box { background: linear-gradient(160deg, #1e293b, #0f172a);
+    padding: 30px; border-radius: 20px; text-align: center;
+    max-width: 340px; width: 90%; }
+  .overlay .box h2 { font-size: 22px; margin: 0 0 10px; }
+  .overlay .box p { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
+  .err { color: #f87171; font-size: 12px; margin-top: 12px; word-break: break-word; }
 
-  .chat { flex: 1; overflow-y: auto; padding: 12px 12px 4px;
-    -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 2px; }
-  .chat:empty::before { content: 'Чат пуст. Напиши первое сообщение.';
-    display: block; text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
-  .day { text-align: center; font-size: 11px; color: var(--muted); margin: 12px 0 6px; }
-  .day span { background: var(--sys-bg); padding: 3px 10px; border-radius: 10px; }
-  .sys { text-align: center; font-size: 12px; color: var(--muted); margin: 6px 24px;
-    background: var(--sys-bg); padding: 6px 12px; border-radius: 10px; }
-  .sys .em { font-weight: 600; color: var(--text); }
-  .msg-wrap { display: flex; flex-direction: column; margin-top: 6px; }
-  .msg-wrap.same-sender { margin-top: 2px; }
-  .msg-nick { font-size: 11px; margin: 0 10px 3px 10px; font-weight: 600; }
-  .msg-wrap.me .msg-nick { text-align: right; }
-  .msg-nick .admin-tag { display: inline-block; background: var(--green); color: #fff;
-    font-size: 9px; padding: 1px 5px; border-radius: 6px; margin-left: 4px;
-    vertical-align: 1px; font-weight: 700; }
-  .msg-row { display: flex; width: 100%; animation: pop 0.18s ease-out; }
-  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
-  .msg-wrap.me .msg-row { justify-content: flex-end; }
-  .msg-wrap.them .msg-row { justify-content: flex-start; }
-  .bubble { max-width: 78%; padding: 9px 12px; border-radius: 18px; font-size: 15px;
-    line-height: 1.35; word-wrap: break-word; overflow-wrap: anywhere;
-    white-space: pre-wrap; box-shadow: 0 1px 1px rgba(0,0,0,0.04); position: relative; }
-  .msg-wrap.me .bubble { background: var(--bubble-me); color: var(--text); border-bottom-right-radius: 6px; }
-  .msg-wrap.them .bubble { background: var(--bubble-them); color: var(--text); border-bottom-left-radius: 6px; }
-  .msg-wrap.me.same-sender .bubble { border-bottom-right-radius: 18px; border-top-right-radius: 6px; }
-  .msg-wrap.them.same-sender .bubble { border-bottom-left-radius: 18px; border-top-left-radius: 6px; }
-  .bubble.img { padding: 4px; background: var(--card); border-radius: 14px; max-width: 72%; }
-  .bubble.img img { display: block; width: 100%; max-width: 260px; border-radius: 10px; cursor: pointer; }
-  .bubble.file { display: flex; align-items: center; gap: 10px; min-width: 200px; }
-  .bubble.file .ficon { font-size: 28px; }
-  .bubble.file .fmeta { flex: 1; min-width: 0; }
-  .bubble.file .fname { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bubble.file .fsize { font-size: 11px; opacity: 0.6; margin-top: 2px; }
-  .bubble.loc { padding: 4px; background: var(--card); border-radius: 14px; max-width: 72%; }
-  .bubble.loc img { display: block; width: 100%; max-width: 260px; border-radius: 10px; }
-  .bubble.loc .loc-label { padding: 6px 8px 4px; font-size: 13px; font-weight: 500; }
-  .bubble.poll { min-width: 220px; }
-  .bubble.poll .poll-q { font-weight: 600; margin-bottom: 8px; }
-  .bubble.poll .poll-opt { padding: 8px 10px; border-radius: 8px; background: rgba(0,0,0,0.04); margin-bottom: 4px; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; }
-  [data-theme="dark"] .bubble.poll .poll-opt { background: rgba(255,255,255,0.06); }
-  .bubble.poll .poll-opt .poll-c { font-weight: 700; color: var(--green); }
-  .bubble .quote { border-left: 3px solid var(--green); padding: 3px 8px; margin-bottom: 4px;
-    font-size: 12px; color: var(--muted); background: rgba(0,0,0,0.04); border-radius: 4px;
-    max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  [data-theme="dark"] .bubble .quote { background: rgba(255,255,255,0.06); }
-  .bubble.broken { background: #ffecec; color: #b00; font-size: 12px; font-style: italic; }
-  .bubble.pinned { border: 2px solid var(--green); box-shadow: 0 0 0 2px rgba(7,193,96,0.2); }
-  .reactions { display: flex; gap: 3px; margin: 4px 0 0 4px; flex-wrap: wrap; }
-  .react-pill { background: var(--card); border: 1px solid var(--border); padding: 2px 8px;
-    border-radius: 10px; font-size: 12px; cursor: pointer; user-select: none; }
-  .react-pill.mine { border-color: var(--green); background: rgba(7,193,96,0.12); }
-
-  .composer { flex-shrink: 0; background: var(--header); border-top: 1px solid var(--border);
-    padding: 8px; display: flex; align-items: flex-end; gap: 6px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom)); position: relative; }
-  .composer textarea { flex: 1; min-height: 40px; max-height: 120px; padding: 10px 14px;
-    font-size: 16px; font-family: inherit; border: none; border-radius: 20px;
-    background: var(--input-bg); color: var(--text); resize: none; outline: none;
-    line-height: 20px; box-shadow: 0 0 0 1px rgba(0,0,0,0.04); }
-  .send-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--green);
-    color: #fff; border: none; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; transition: transform 0.1s;
-    box-shadow: 0 2px 6px rgba(7,193,96,0.35); }
-  .send-btn:active { transform: scale(0.92); }
-  .send-btn:disabled { background: #C8C8C8; box-shadow: none; }
-  .send-btn svg { width: 20px; height: 20px; }
-  .reply-bar { position: absolute; top: -48px; left: 8px; right: 8px; background: var(--card);
-    border-radius: 10px; padding: 8px 12px; display: none; align-items: center; gap: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 13px; }
-  .reply-bar.show { display: flex; }
-  .reply-bar .rb-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
-  .reply-bar button { background: transparent; border: none; font-size: 18px; color: var(--muted); cursor: pointer; }
-  .pinned-bar { background: var(--card); border-radius: 10px; padding: 8px 12px;
-    margin-bottom: 8px; display: none; align-items: center; gap: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-size: 13px; }
-  .pinned-bar.show { display: flex; }
-  .pinned-bar .pb-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pinned-bar button { background: transparent; border: none; font-size: 16px; color: var(--muted); cursor: pointer; }
-
-  .overlay { position: fixed; inset: 0; background: var(--overlay-bg);
-    display: flex; align-items: stretch; z-index: 50; overflow-y: auto;
-    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-  .overlay.hidden { display: none; }
-  .screen { width: 100%; max-width: 480px; margin: auto; padding: 24px 20px; }
-  .card { background: var(--card); border-radius: 20px; padding: 22px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.12); }
-  .card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 700;
-    background: linear-gradient(135deg, var(--green), var(--green-dark));
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .card .hint { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
-  .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 15px;
-    font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 8px;
-    transition: transform 0.1s; background: #F1F3F4; color: var(--text); }
-  [data-theme="dark"] .btn { background: #232E3C; }
-  .btn:active { transform: scale(0.98); }
-  .btn.primary { background: var(--green); color: #fff; box-shadow: 0 4px 12px rgba(7,193,96,0.3); }
-  .btn.danger { background: #ffebee; color: var(--danger); }
-  [data-theme="dark"] .btn.danger { background: #3b1f22; }
-  .divider { color: var(--muted); font-size: 12px; margin: 14px 0 10px; position: relative; text-align: center; }
-  .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 38%; height: 1px; background: var(--border); }
-  .divider::before { left: 0; } .divider::after { right: 0; }
-  .field { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
-    font-size: 15px; font-family: inherit; background: var(--input-bg); color: var(--text);
-    outline: none; margin-bottom: 10px; }
-  .field:focus { border-color: var(--green); }
-
-  .chat-item { display: flex; gap: 12px; align-items: center; padding: 14px 12px;
-    border-radius: 12px; cursor: pointer; margin-bottom: 4px; }
-  .chat-item:active { background: var(--sys-bg); }
-  .chat-item.active { background: rgba(7,193,96,0.12); }
-  .chat-avatar { width: 46px; height: 46px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--green), var(--green-dark));
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; flex-shrink: 0; }
-  .chat-meta { flex: 1; min-width: 0; }
-  .chat-meta .name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chat-meta .last { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
-
-  .user-item { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 12px; }
-  .user-avatar { width: 40px; height: 40px; border-radius: 50%; color: #fff;
-    display: flex; align-items: center; justify-content: center; font-size: 15px;
-    font-weight: 700; position: relative; flex-shrink: 0; }
-  .user-avatar .presence-dot { position: absolute; bottom: -1px; right: -1px;
-    width: 12px; height: 12px; border-radius: 50%; background: #ccc;
-    border: 2px solid var(--card); }
-  .user-avatar .presence-dot.on { background: var(--green); }
-  .user-info { flex: 1; min-width: 0; }
-  .user-info .nick { font-weight: 600; font-size: 14px; }
-  .user-info .sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
-  .user-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-  .user-actions button { background: transparent; border: 1px solid var(--border); border-radius: 8px;
-    padding: 6px 10px; font-size: 12px; color: var(--text); cursor: pointer; font-family: inherit; }
-  .user-actions button.danger { border-color: var(--danger); color: var(--danger); }
-  .user-actions button.ok { border-color: var(--green); color: var(--green); }
-
-  .scanner { position: fixed; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; }
-  .scanner.show { display: flex; }
-  .scanner video { flex: 1; width: 100%; height: 100%; object-fit: cover; }
-  .scanner .frame { position: absolute; top: 50%; left: 50%;
-    width: min(70vw, 280px); height: min(70vw, 280px);
-    transform: translate(-50%, -50%); border: 3px solid rgba(255,255,255,0.9);
-    border-radius: 22px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); pointer-events: none; }
-  .scanner .close { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
-    width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff;
-    border: none; font-size: 22px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; z-index: 2; }
-  .scanner .tip { position: absolute; bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px));
-    left: 0; right: 0; text-align: center; color: #fff; font-size: 14px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.7); padding: 0 20px; z-index: 2; }
-  .scanner .tip b { color: var(--green); }
-
-  .viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.94); z-index: 200;
-    display: none; align-items: center; justify-content: center; }
-  .viewer.show { display: flex; animation: fadeIn 0.2s; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .viewer img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-  .ctx { position: fixed; background: var(--card); border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.25); z-index: 150; display: none; min-width: 190px;
-    overflow: hidden; border: 1px solid var(--border); }
-  .ctx.show { display: block; animation: fadeIn 0.15s; }
-  .ctx button { display: block; width: 100%; text-align: left; padding: 12px 16px;
-    background: transparent; border: none; font-size: 15px; color: var(--text);
-    cursor: pointer; font-family: inherit; }
-  .ctx button:active { background: var(--sys-bg); }
-  .ctx button.danger { color: var(--danger); }
-  .ctx .emoji-row { display: flex; gap: 2px; padding: 8px; border-bottom: 1px solid var(--border); }
-  .ctx .emoji-row button { padding: 6px 10px; font-size: 22px; width: auto; border-radius: 8px; }
-
-  .miniapp-overlay {
-    position: fixed; inset: 0; background: var(--bg); z-index: 300;
+  /* ============ ВСТРОЕННЫЙ СКАНЕР ============ */
+  .scanner-modal {
+    position: fixed; inset: 0; background: #000; z-index: 200;
     display: none; flex-direction: column;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .miniapp-overlay.show { display: flex; }
-  .miniapp-bar {
-    height: 52px; display: flex; align-items: center; gap: 4px;
-    padding: 0 6px; background: var(--header); border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+  .scanner-modal.show { display: flex; }
+  .scanner-modal video {
+    flex: 1; width: 100%; height: 100%; object-fit: cover;
   }
-  .miniapp-bar .title {
-    flex: 1; text-align: center; font-weight: 600; font-size: 14px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    color: var(--text); padding: 0 4px;
+  .scanner-modal .frame {
+    position: absolute; top: 50%; left: 50%;
+    width: min(70vw, 260px); height: min(70vw, 260px);
+    transform: translate(-50%, -50%);
+    border: 3px solid rgba(255,255,255,0.9);
+    border-radius: 22px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+    pointer-events: none;
   }
-  .miniapp-frame-wrap { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
-  .miniapp-frame { position: absolute; inset: 0; border: none; width: 100%; height: 100%;
-    background: #fff; display: block; }
-  [data-theme="dark"] .miniapp-frame { background: #0E1621; }
-  .miniapp-loading {
-    position: absolute; inset: 0; display: flex; align-items: center;
-    justify-content: center; background: var(--bg); z-index: 1;
-    flex-direction: column; gap: 12px; color: var(--muted); font-size: 14px;
+  .scanner-modal .close {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); color: #fff; border: none;
+    font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
   }
-  .miniapp-loading.hidden { display: none; }
-  .spinner { width: 32px; height: 32px; border: 3px solid var(--border);
-    border-top-color: var(--green); border-radius: 50%;
-    animation: spin 0.7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .dialog-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    z-index: 500; display: none; align-items: center; justify-content: center;
-    padding: 20px;
+  .scanner-modal .tip {
+    position: absolute; bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px));
+    left: 0; right: 0; text-align: center;
+    color: #fff; font-size: 14px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+    padding: 0 20px;
   }
-  .dialog-overlay.show { display: flex; animation: fadeIn 0.15s; }
-  .dialog { background: var(--card); border-radius: 18px; padding: 22px;
-    max-width: 340px; width: 100%; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .dialog h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
-  .dialog p { margin: 0 0 18px; font-size: 14px; color: var(--muted); line-height: 1.4; }
-  .dialog input { width: 100%; padding: 12px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
-    font-size: 15px; font-family: inherit; outline: none; margin-bottom: 16px; }
-  .dialog input:focus { border-color: var(--green); }
-  .dialog .actions { display: flex; gap: 8px; }
-  .dialog .actions button { flex: 1; padding: 12px; border-radius: 10px; border: none;
-    font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
-  .dialog .actions .cancel { background: var(--sys-bg); color: var(--text); }
-  .dialog .actions .ok { background: var(--green); color: #fff; }
-
-  .toast {
-    position: fixed; bottom: max(30px, calc(env(safe-area-inset-bottom) + 20px));
-    left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.85); color: #fff; padding: 10px 18px;
-    border-radius: 20px; font-size: 14px; z-index: 400;
-    animation: toastIn 0.2s ease-out; max-width: 80%;
-    text-align: center; pointer-events: none;
+  .scanner-modal .tip b { color: #22d3ee; }
+  .scanner-modal .manual {
+    position: absolute; bottom: max(90px, calc(env(safe-area-inset-bottom) + 74px));
+    left: 20px; right: 20px;
+    background: rgba(0,0,0,0.7); border-radius: 12px; padding: 10px;
+    display: flex; gap: 8px;
   }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translate(-50%, 10px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
+  .scanner-modal .manual input {
+    flex: 1; padding: 10px; border-radius: 8px; border: none;
+    background: #fff; color: #111; font-size: 14px;
+    font-family: ui-monospace, monospace; outline: none;
+  }
+  .scanner-modal .manual button {
+    padding: 10px 16px; border-radius: 8px; border: none;
+    background: #22d3ee; color: #0f172a; font-weight: 700;
+    font-size: 14px; cursor: pointer;
   }
 </style>
 </head>
 <body>
+<div id="root"></div>
 
-<div class="app" id="app" style="display:none;">
-  <header class="topbar">
-    <button class="icon-btn" id="menuBtn">☰</button>
-    <div class="title-block" id="titleBlock">
-      <div class="title" id="chatTitle">QR Chat</div>
-      <div class="subtitle">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText">Подключение…</span>
-      </div>
+<div class="overlay" id="resultOverlay">
+  <div class="box">
+    <h2 id="resultTitle">Победа!</h2>
+    <p id="resultSub"></p>
+    <div class="btns">
+      <button class="btn" onclick="doRematch()">🔄 Ещё раз</button>
+      <button class="btn secondary" onclick="safeClose()">✕ Выйти</button>
     </div>
-    <button class="icon-btn" id="scanBtnTop" title="Сканировать QR">📷</button>
-    <button class="icon-btn" id="usersBtn">👥<span class="badge" id="usersBadge" style="display:none;">0</span></button>
-  </header>
-
-  <main class="chat" id="chat">
-    <div class="pinned-bar" id="pinnedBar">
-      <span>📌</span>
-      <div class="pb-text" id="pinnedText"></div>
-      <button id="unpinBtn">✕</button>
-    </div>
-  </main>
-
-  <footer class="composer">
-    <div class="reply-bar" id="replyBar">
-      <div class="rb-text" id="replyText"></div>
-      <button id="replyCancel">✕</button>
-    </div>
-    <button class="icon-btn" id="photoBtn" title="Фото">📎</button>
-    <button class="icon-btn" id="micBtn" title="Голосовое">🎤</button>
-    <input type="file" id="fileInput" accept="image/*" hidden>
-    <textarea id="msgInput" placeholder="Сообщение…" rows="1"></textarea>
-    <button class="send-btn" id="sendBtn">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12L20 4l-3 16-6-5-2 4-1-5 12-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </footer>
+  </div>
 </div>
 
-<div class="overlay" id="overlay"></div>
-
-<div class="scanner" id="scannerOverlay">
-  <video id="video" autoplay playsinline muted></video>
+<!-- Встроенный сканер -->
+<div class="scanner-modal" id="scannerModal">
+  <video id="scanVideo" autoplay playsinline muted></video>
   <div class="frame"></div>
-  <button class="close" id="stopScanBtn">✕</button>
-  <div class="tip">Наведи на <b>QR-код</b> — чат или мини-апп</div>
-</div>
-
-<div class="viewer" id="viewer"><img id="viewerImg" alt=""></div>
-<div class="ctx" id="ctx"></div>
-
-<div class="miniapp-overlay" id="miniappOverlay">
-  <div class="miniapp-bar">
-    <button class="icon-btn" id="miniappClose">✕</button>
-    <div class="title" id="miniappTitle">Mini App</div>
-    <button class="icon-btn" id="miniappMenu">⋯</button>
-  </div>
-  <div class="miniapp-frame-wrap">
-    <div class="miniapp-loading" id="miniappLoading">
-      <div class="spinner"></div>
-      <div>Загрузка…</div>
-    </div>
-    <iframe id="miniappFrame" class="miniapp-frame"
-      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin allow-downloads allow-clipboard-write"></iframe>
+  <button class="close" onclick="stopScanner()">✕</button>
+  <div class="tip">Наведи на <b>QR-код игры</b></div>
+  <div class="manual">
+    <input id="manualCode" placeholder="или код: game-xxxxx" autocomplete="off">
+    <button onclick="manualJoin()">OK</button>
   </div>
 </div>
-
-<div class="dialog-overlay" id="dialogOverlay"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 
 // ================================================================
-//  UTILS
+//  SDK
 // ================================================================
-const $ = id => document.getElementById(id);
+const QRChat = {
+  _id: 0, _pending: {}, _timeout: 15000,
+  call(m, p) {
+    return new Promise((res, rej) => {
+      const id = ++this._id;
+      const timer = setTimeout(() => {
+        delete this._pending[id];
+        rej(new Error('timeout: ' + m));
+      }, this._timeout);
+      this._pending[id] = {
+        res: v => { clearTimeout(timer); res(v); },
+        rej: e => { clearTimeout(timer); rej(e); }
+      };
+      parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
+    });
+  },
+  getUser:      () => QRChat.call('getUser'),
+  showToast:    (t) => QRChat.call('showToast', { text: t }).catch(() => {}),
+  setTitle:     (t) => QRChat.call('setTitle', { text: t }).catch(() => {}),
+  haptic:       (ms) => QRChat.call('haptic', { pattern: ms || 15 }).catch(() => {}),
+  close:        () => QRChat.call('close'),
+  setClipboard: (t) => QRChat.call('setClipboard', { text: t }).catch(() => {}),
+  share:        (o) => QRChat.call('share', o).catch(() => {})
+};
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || !d.__qrc) return;
+  const p = QRChat._pending[d.id];
+  if (!p) return;
+  delete QRChat._pending[d.id];
+  d.error ? p.rej(new Error(d.error)) : p.res(d.result);
+});
+
+// ================================================================
+//  STATE
+// ================================================================
+const NTFY = 'https://ntfy.sh';
+let me = null;
+let gameId = null;
+let mySymbol = null;
+let myRole = null;
+let board = Array(9).fill('');
+let turn = 'X';
+let gameOver = false;
+let winner = null;
+let winLine = null;
+let scores = { me: 0, opp: 0 };
+let es = null;
+let gameStarted = false;
+let lastHelloSent = 0;
+let mediaStream = null;
+let scanInterval = null;
+
 function rhex(n) {
   const a = new Uint8Array(n);
   crypto.getRandomValues(a);
   return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
 }
-function fmtDay(ts) { return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}); }
-function esc(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function shortSid(s) { return s ? s.slice(0,4) : '????'; }
-function fmtBytes(n) {
-  if (!n) return '0 B';
-  if (n < 1024) return n + ' B';
-  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
-  return (n/1024/1024).toFixed(1) + ' MB';
+function topicFor(id) { return 'game-' + id; }
+function $(id) { return document.getElementById(id); }
+
+// ================================================================
+//  LOBBY
+// ================================================================
+function renderLobby() {
+  $('root').innerHTML = `
+    <div class="lobby">
+      <div class="header">
+        <h1>❌⭕ Крестики-нолики</h1>
+        <div class="subtitle">Играй с другом через QR</div>
+      </div>
+      <button class="btn" style="width:100%;padding:16px;font-size:16px;" onclick="createGame()">
+        🎮 Создать игру
+      </button>
+      <div style="height:12px;"></div>
+      <button class="btn secondary" style="width:100%;padding:16px;font-size:16px;" onclick="joinGame()">
+        📷 Присоединиться по QR
+      </button>
+      <div class="err" id="lobbyErr"></div>
+    </div>
+  `;
 }
-function nickColor(sid) {
-  const c = ['#e57373','#ba68c8','#64b5f6','#4db6ac','#81c784','#ffb74d','#f06292','#7986cb','#4fc3f7','#a1887f'];
-  let h = 0; for (const ch of String(sid||'')) h = (h*31 + ch.charCodeAt(0)) >>> 0;
-  return c[h % c.length];
+
+// ================================================================
+//  CREATE
+// ================================================================
+function createGame() {
+  try {
+    gameId = rhex(5);
+    myRole = 'host';
+    mySymbol = 'X';
+    gameStarted = false;
+    board = Array(9).fill('');
+    turn = 'X';
+    gameOver = false;
+    winner = null;
+    winLine = null;
+    showInviteQR();
+  } catch (e) {
+    $('lobbyErr').textContent = 'Ошибка: ' + e.message;
+  }
 }
-// ntfy принимает в заголовках только ISO-8859-1
-function sanitizeHeaders(headers) {
-  const safe = {};
-  if (!headers) return safe;
-  for (const [k, v] of Object.entries(headers)) {
-    if (typeof v === 'string' && /^[\x00-\xFF]*$/.test(v)) {
-      safe[k] = v;
+
+// ================================================================
+//  JOIN (со своим сканером)
+// ================================================================
+function joinGame() {
+  openScanner();
+}
+
+// ================================================================
+//  СВОЙ СКАНЕР QR
+// ================================================================
+async function openScanner() {
+  const modal = $('scannerModal');
+  modal.classList.add('show');
+
+  if (!window.isSecureContext) {
+    alert('Нужен HTTPS');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Камера недоступна');
+    return;
+  }
+  if (!('BarcodeDetector' in window)) {
+    // Если BarcodeDetector нет — оставляем только ручной ввод
+    alert('Автосканирование не поддерживается. Введи код вручную.');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+    });
+    mediaStream = stream;
+    const video = $('scanVideo');
+    video.srcObject = stream;
+    await new Promise(r => {
+      if (video.readyState >= 1) return r();
+      video.onloadedmetadata = () => r();
+    });
+    try { await video.play(); } catch {}
+    await new Promise(r => setTimeout(r, 300));
+
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+    scanInterval = setInterval(async () => {
+      if (video.readyState < 2 || video.videoWidth === 0) return;
+      try {
+        const codes = await detector.detect(video);
+        if (codes && codes.length) {
+          const v = codes[0].rawValue.trim();
+          stopScanner();
+          handleScannedCode(v);
+        }
+      } catch {}
+    }, 250);
+  } catch (e) {
+    alert('Камера: ' + e.message);
+  }
+}
+
+function stopScanner() {
+  const modal = $('scannerModal');
+  modal.classList.remove('show');
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  const v = $('scanVideo');
+  if (v) v.srcObject = null;
+}
+
+function handleScannedCode(v) {
+  v = v.trim();
+  if (!v) return;
+  let id = null;
+  if (v.startsWith('game-')) id = v.slice(5);
+  else if (v.startsWith('nfc-')) id = v.slice(4);
+  else id = v;
+  if (!id) { QRChat.showToast('Пустой QR'); return; }
+
+  gameId = id;
+  myRole = 'guest';
+  mySymbol = 'O';
+  gameStarted = false;
+  board = Array(9).fill('');
+  turn = 'X';
+  gameOver = false;
+  winner = null;
+  winLine = null;
+  connectToGame();
+  startGame();
+}
+
+function manualJoin() {
+  const v = $('manualCode').value.trim();
+  if (!v) return;
+  stopScanner();
+  handleScannedCode(v);
+}
+
+// ================================================================
+//  INVITE QR (для хоста)
+// ================================================================
+function showInviteQR() {
+  const topic = topicFor(gameId);
+  $('root').innerHTML = `
+    <div class="lobby">
+      <div class="header">
+        <h1>🎮 Игра создана</h1>
+        <div class="subtitle">Покажи QR сопернику</div>
+      </div>
+      <div id="qrBox"></div>
+      <div class="code">${topic}</div>
+      <button class="btn secondary" style="width:100%;" onclick="copyCode()">📋 Копировать код</button>
+      <div style="height:8px;"></div>
+      <button class="btn secondary" style="width:100%;" onclick="shareCode()">📤 Поделиться</button>
+      <div style="margin-top:20px; color:#94a3b8; font-size:13px;">
+        <div class="spinner"></div>
+        Ждём соперника…
+      </div>
+      <div class="err" id="qrErr"></div>
+    </div>
+  `;
+
+  const box = $('qrBox');
+  if (typeof QRCode === 'undefined') {
+    box.innerHTML = `<div class="placeholder">QR-библиотека не загрузилась.<br><br>
+      Скажи сопернику код:<br><b>${topic}</b></div>`;
+  } else {
+    try {
+      box.innerHTML = '';
+      new QRCode(box, {
+        text: topic,
+        width: 220, height: 220,
+        colorDark: '#000', colorLight: '#fff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch (e) {
+      box.innerHTML = `<div class="placeholder">Ошибка QR.<br>Код: <b>${topic}</b></div>`;
     }
   }
-  return safe;
+
+  connectToGame();
 }
 
-// ================================================================
-//  NTFY SERVERS
-// ================================================================
-const NTFY_SERVERS = [
-  'https://ntfy.sh',
-  'https://ntfy.tedomum.net',
-  'https://ntfy.jae.fi',
-  'https://ntfy.adminforge.de',
-  'https://ntfy.envs.net',
-  'https://ntfy.mzte.de',
-  'https://ntfy.hostux.net',
-  'https://ntfy.fossmann.dev'
-];
-let currentServerIdx = 0;
-let currentServer = NTFY_SERVERS[0];
-
-function getServerUrl(topic, since) {
-  const url = new URL(`${currentServer}/${encodeURIComponent(topic)}/sse`);
-  if (since) url.searchParams.set('since', since);
-  return url.toString();
-}
-function rotateServer() {
-  currentServerIdx = (currentServerIdx + 1) % NTFY_SERVERS.length;
-  currentServer = NTFY_SERVERS[currentServerIdx];
-  console.warn('Rotating ntfy server →', currentServer);
-  $('statusText').textContent = 'Смена сервера…';
+async function copyCode() {
+  await QRChat.setClipboard(topicFor(gameId));
+  QRChat.showToast('Скопировано');
 }
 
-// ================================================================
-//  STORAGE
-// ================================================================
-const LS_KEY = 'qrchat_data';
-const LS_LEGACY = ['qrchat_v9','qrchat_v8','qrchat_v7','qrchat_v6','qrchat_v5','qrchat_v4','qrchat_v3','qrchat'];
-
-let state = {
-  me: { sid: null, nick: null },
-  currentChat: null,
-  chats: {},
-  seenIds: {},
-  theme: 'auto',
-  notifications: false,
-  lastExport: 0
-};
-let savePending = null;
-
-function loadState() {
-  let raw = localStorage.getItem(LS_KEY);
-  if (!raw) {
-    for (const k of LS_LEGACY) {
-      const legacy = localStorage.getItem(k);
-      if (legacy) {
-        raw = legacy;
-        console.log('Migrated from', k, '→', LS_KEY);
-        try { localStorage.setItem(LS_KEY, legacy); } catch {}
-        break;
-      }
-    }
-  }
-  if (raw) {
-    try { Object.assign(state, JSON.parse(raw)); } catch(e) { console.warn('parse fail', e); }
-  }
-  state.me = state.me || {};
-  state.chats = state.chats || {};
-  state.seenIds = state.seenIds || {};
-  if (!state.me.sid) state.me.sid = rhex(6);
-}
-function saveState() {
-  if (savePending) return;
-  savePending = setTimeout(() => {
-    savePending = null;
-    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-    catch(e) { console.warn('save fail', e); }
-  }, 150);
-}
-function saveNow() {
-  if (savePending) { clearTimeout(savePending); savePending = null; }
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-  catch(e) { console.warn('save fail', e); }
-}
-
-function ensureChat(t) {
-  if (!state.chats[t]) {
-    state.chats[t] = {
-      name: 'Чат ' + t.slice(-4),
-      createdBy: null, admins: [], bans: [], deleted: [],
-      pinned: null, messages: [], lastTs: 0
-    };
-  }
-  if (!state.seenIds[t]) state.seenIds[t] = [];
-  const c = state.chats[t];
-  c.admins = c.admins || [];
-  c.bans = c.bans || [];
-  c.deleted = c.deleted || [];
-  c.messages = c.messages || [];
-  return c;
-}
-function cur() { return state.currentChat ? ensureChat(state.currentChat) : null; }
-function hasSeen(t, id) { return (state.seenIds[t] || []).includes(id); }
-function markSeen(t, id) {
-  const arr = state.seenIds[t];
-  if (!arr || arr.includes(id)) return;
-  arr.push(id);
-  if (arr.length > 3000) arr.splice(0, arr.length - 3000);
-}
-
-// ================================================================
-//  PRESENCE
-// ================================================================
-let presence = {};
-let presenceTimer = null;
-let presenceCleanTimer = null;
-function updatePresence(sid, nick, ts) {
-  presence[sid] = { nick: nick || ('User ' + shortSid(sid)), ts: ts || Date.now() };
-}
-function isOnline(sid) { return presence[sid] && (Date.now() - presence[sid].ts) < 70000; }
-function presenceClean() {
-  const cut = Date.now() - 70000;
-  let changed = false;
-  for (const k in presence) if (presence[k].ts < cut) { delete presence[k]; changed = true; }
-  return changed;
+async function shareCode() {
+  await QRChat.share({
+    title: 'Крестики-нолики',
+    text: 'Играй со мной: ' + topicFor(gameId)
+  });
 }
 
 // ================================================================
 //  NETWORK
 // ================================================================
-let es = null;
-let netOnline = false;
-let reconnectTimer = null;
-let failCount = 0;
-
-function netStatus() {
-  $('statusDot').classList.toggle('on', netOnline);
-  if (!state.currentChat) { $('statusText').textContent = 'Нет чата'; return; }
-  const online = Object.values(presence).filter(p => Date.now() - p.ts < 70000).length;
-  if (netOnline) $('statusText').textContent = `В сети · ${online}`;
-  else $('statusText').textContent = 'Переподключение…';
-}
-
-function connect() {
-  disconnect();
-  if (!state.currentChat) return;
-  const t = state.currentChat;
-  const c = ensureChat(t);
-  const since = c.lastTs ? Math.max(0, Math.floor(c.lastTs/1000) - 60) : 'all';
-  const url = getServerUrl(t, since);
-
-  es = new EventSource(url);
-  es.onopen = () => { netOnline = true; failCount = 0; netStatus(); };
-  es.onerror = () => {
-    netOnline = false;
-    netStatus();
-    failCount++;
-    if (failCount >= 2) { rotateServer(); failCount = 0; }
-    if (reconnectTimer) clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(() => {
-      if (state.currentChat === t) connect();
-    }, 4000);
-  };
+function connectToGame() {
+  if (es) { try { es.close(); } catch {} es = null; }
+  const topic = topicFor(gameId);
+  const url = `${NTFY}/${encodeURIComponent(topic)}/sse?since=all`;
+  try {
+    es = new EventSource(url);
+  } catch (e) { return; }
+  es.onopen = () => sendHello();
+  es.onerror = () => {};
   es.onmessage = (ev) => {
-    if (state.currentChat !== t) return;
-    handleMessage(ev);
+    let d;
+    try { d = JSON.parse(ev.data); } catch { return; }
+    if (d.event !== 'message') return;
+    let msg;
+    try { msg = JSON.parse(d.message || '{}'); } catch { return; }
+    handleGameEvent(msg);
   };
 }
 
-function disconnect() {
-  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-  if (es) { try { es.close(); } catch{} es = null; }
+async function sendHello() {
+  const now = Date.now();
+  if (now - lastHelloSent < 3000) return;
+  lastHelloSent = now;
+  await post({ type: 'hello', role: myRole, nick: me ? me.nick : 'unknown', from: me ? me.sid : 'noid' });
 }
 
-function handleMessage(ev) {
-  let d;
-  try { d = JSON.parse(ev.data); } catch { return; }
-  if (d.event !== 'message') return;
-
-  if (typeof d.message === 'string' && d.message.startsWith('\u0001P|')) {
-    const [, sid, nick] = d.message.split('|');
-    if (sid) updatePresence(sid, nick);
-    netStatus(); updateUsersBadge();
-    return;
-  }
-
-  let m;
-  try { m = JSON.parse(d.message || '{}'); } catch { return; }
-  if (!m.id || !m.sid) return;
-  if (d.attachment && d.attachment.url) m.url = d.attachment.url;
-  if (!m.ts) m.ts = (d.time || Math.floor(Date.now()/1000)) * 1000;
-  ingestMessage(m, false);
-}
-
-async function postJSON(topic, obj, headers) {
-  const url = `${currentServer}/${encodeURIComponent(topic)}`;
-  const r = await fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(obj),
-    headers: sanitizeHeaders(headers)
-  });
-  if (r.status === 429) { rotateServer(); throw new Error('429 rate limit'); }
-  if (!r.ok) throw new Error('ntfy ' + r.status);
-}
-
-async function postAttachment(topic, blob, metaObj, headers) {
-  const url = `${currentServer}/${encodeURIComponent(topic)}`;
-  const safeFilename = String(metaObj.filename || 'file.bin').replace(/[^\x20-\x7E]/g, '_').slice(0, 100);
-  const r = await fetch(url, {
-    method: 'PUT',
-    body: blob,
-    headers: Object.assign({
-      'Filename': safeFilename,
-      'Message': JSON.stringify(metaObj)
-    }, sanitizeHeaders(headers))
-  });
-  if (r.status === 429) { rotateServer(); throw new Error('429 rate limit'); }
-  if (!r.ok) throw new Error('ntfy ' + r.status);
-}
-
-// ================================================================
-//  INGEST
-// ================================================================
-function applyIngestOnly(m) {
-  const t = state.currentChat;
-  if (!t) return;
-  const c = ensureChat(t);
-  if (hasSeen(t, m.id)) return;
-
-  if (m.type === 'sys') applySys(c, m);
-  markSeen(t, m.id);
-  c.messages.push(m);
-  c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
-  if (m.ts > c.lastTs) c.lastTs = m.ts;
-  if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
-  saveState();
-}
-
-function ingestMessage(m, mine) {
-  const t = state.currentChat;
-  if (!t) return;
-  const c = ensureChat(t);
-  if (hasSeen(t, m.id)) return;
-
-  if (m.type === 'sys') {
-    applySys(c, m);
-    markSeen(t, m.id);
-    c.messages.push(m);
-    c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
-    if (m.ts > c.lastTs) c.lastTs = m.ts;
-    if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
-    saveState();
-
-    if (m.action === 'react' || m.action === 'delete' || m.action === 'pin' || m.action === 'unpin' || m.action === 'pollvote') {
-      scheduleReactRender();
-    } else {
-      if (m.ts < lastRenderedTs) renderAll();
-      else appendSys(m);
-    }
-    updateUsersBadge(); netStatus();
-    return;
-  }
-
-  markSeen(t, m.id);
-  c.messages.push(m);
-  c.messages.sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
-  if (m.ts > c.lastTs) c.lastTs = m.ts;
-  if (m.sid && m.nick) updatePresence(m.sid, m.nick, Date.now());
-  saveState();
-
-  if (!isVisible(m, c)) return;
-
-  if (m.ts < lastRenderedTs) {
-    renderAll();
-  } else {
-    const day = fmtDay(m.ts);
-    if (day !== lastDayStr) {
-      lastDayStr = day;
-      const el = document.createElement('div');
-      el.className = 'day';
-      el.innerHTML = `<span>${day}</span>`;
-      chatEl.appendChild(el);
-      lastSenderId = null;
-    }
-    appendBubble(m, true);
-    chatEl.scrollTop = chatEl.scrollHeight;
-  }
-  updateUsersBadge(); netStatus();
-
-  if (state.notifications && document.hidden && !isMeSid(m.sid)) {
-    try {
-      new Notification('QR Chat', {
-        body: (m.nick || '') + ': ' + (m.type === 'image' ? '📷 Фото' : (m.text || '').slice(0, 100)),
-        tag: t
-      });
-    } catch {}
-  }
-}
-
-function applySys(c, m) {
-  switch (m.action) {
-    case 'create':
-      if (!c.createdBy) { c.createdBy = m.sid; c.admins = [m.sid]; }
-      else if (!c.admins.includes(m.sid) && c.createdBy === m.sid) c.admins.push(m.sid);
-      break;
-    case 'rename':
-      if (m.text && (c.admins.includes(m.sid) || !c.createdBy)) c.name = m.text.slice(0,40);
-      break;
-    case 'admin+':
-      if (m.target && !c.admins.includes(m.target) && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
-        c.admins.push(m.target); c.bans = c.bans.filter(b => b !== m.target);
-      }
-      break;
-    case 'admin-':
-      if (m.target && m.target !== c.createdBy && (c.admins.includes(m.sid) || c.createdBy === m.sid))
-        c.admins = c.admins.filter(a => a !== m.target);
-      break;
-    case 'ban':
-      if (m.target && m.target !== c.createdBy && !c.bans.includes(m.target)
-          && (c.admins.includes(m.sid) || c.createdBy === m.sid)) {
-        c.bans.push(m.target); c.admins = c.admins.filter(a => a !== m.target);
-      }
-      break;
-    case 'unban':
-      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid))
-        c.bans = c.bans.filter(b => b !== m.target);
-      break;
-    case 'delete':
-      if (m.target && !c.deleted.includes(m.target)) {
-        const orig = c.messages.find(x => x.id === m.target);
-        if (orig && (orig.sid === m.sid || c.admins.includes(m.sid) || c.createdBy === m.sid))
-          c.deleted.push(m.target);
-      }
-      break;
-    case 'pin':
-      if (m.target && (c.admins.includes(m.sid) || c.createdBy === m.sid)) c.pinned = m.target;
-      break;
-    case 'unpin':
-      if (c.admins.includes(m.sid) || c.createdBy === m.sid) c.pinned = null;
-      break;
-    case 'pollvote':
-      if (m.target && m.text !== undefined) {
-        const pollMsg = c.messages.find(x => x.id === m.target);
-        if (pollMsg && pollMsg.type === 'poll') {
-          pollMsg.votes = pollMsg.votes || {};
-          pollMsg.votes[m.sid] = parseInt(m.text, 10);
-        }
-      }
-      break;
-  }
-}
-
-function isMeSid(sid) { return state.me.sid === sid; }
-function isVisible(m, c) {
-  if (!c) c = cur();
-  if (!c) return false;
-  if (m.type === 'sys') return false;
-  if (c.bans.includes(m.sid)) return false;
-  if (c.deleted.includes(m.id)) return false;
-  return true;
-}
-function getVisibleMessages(c) { return c.messages.filter(m => isVisible(m, c)); }
-
-// ================================================================
-//  SEND
-// ================================================================
-async function send(partial) {
-  const t = state.currentChat;
-  if (!t) return;
-  const c = ensureChat(t);
-  const m = Object.assign({
-    id: rhex(8), sid: state.me.sid, nick: state.me.nick,
-    ts: Date.now(), type: 'text',
-  }, partial);
-
-  if (m.replyTo) {
-    const o = c.messages.find(x => x.id === m.replyTo);
-    if (o) m.replyText = (o.text || '[медиа]').slice(0, 60);
-  }
-
-  applyIngestOnly(m);
-
-  if (m.type === 'sys') {
-    if (!['react','delete','pin','unpin','pollvote'].includes(m.action)) {
-      appendSys(m); chatEl.scrollTop = chatEl.scrollHeight;
-    } else {
-      scheduleReactRender();
-    }
-  } else {
-    const day = fmtDay(m.ts);
-    if (day !== lastDayStr) {
-      lastDayStr = day;
-      const el = document.createElement('div');
-      el.className = 'day';
-      el.innerHTML = `<span>${day}</span>`;
-      chatEl.appendChild(el);
-      lastSenderId = null;
-    }
-    appendBubble(m, true);
-    chatEl.scrollTop = chatEl.scrollHeight;
-    updateUsersBadge();
-  }
-
-  const headers = { 'Title': 'QRChat' };
+async function post(obj) {
+  const topic = topicFor(gameId);
   try {
-    if (m._blob) {
-      const meta = Object.assign({}, m);
-      delete meta._blob;
-      await postAttachment(t, m._blob, meta, headers);
-    } else {
-      await postJSON(t, m, headers);
-    }
-  } catch (e) {
-    console.warn('send error', e);
-    $('statusText').textContent = 'Ошибка отправки';
-  }
-}
-
-async function sendExternal(topic, partial) {
-  if (!topic) throw new Error('Нет чата');
-  const ch = ensureChat(topic);
-  const m = Object.assign({
-    id: rhex(8), sid: state.me.sid, nick: state.me.nick,
-    ts: Date.now(), type: 'text',
-  }, partial);
-
-  if (topic === state.currentChat) {
-    applyIngestOnly(m);
-    if (m.type === 'sys') {
-      if (!['react','delete','pin','unpin','pollvote'].includes(m.action)) appendSys(m);
-      else scheduleReactRender();
-    } else {
-      appendBubble(m, true);
-      chatEl.scrollTop = chatEl.scrollHeight;
-    }
-  } else {
-    if (!hasSeen(topic, m.id)) {
-      markSeen(topic, m.id);
-      if (m.type === 'sys') applySys(ch, m);
-      ch.messages.push(m);
-      ch.messages.sort((a,b) => a.ts - b.ts);
-      if (m.ts > ch.lastTs) ch.lastTs = m.ts;
-      saveState();
-    }
-  }
-
-  const headers = { 'Title': 'QRChat' };
-  if (m._blob) {
-    const meta = Object.assign({}, m);
-    delete meta._blob;
-    await postAttachment(topic, m._blob, meta, headers);
-  } else {
-    await postJSON(topic, m, headers);
-  }
-}
-
-async function sendPresence() {
-  const t = state.currentChat;
-  if (!t || !state.me.nick) return;
-  try {
-    await fetch(`${currentServer}/${encodeURIComponent(t)}`, {
+    await fetch(`${NTFY}/${encodeURIComponent(topic)}`, {
       method: 'POST',
-      body: '\u0001P|' + state.me.sid + '|' + state.me.nick
+      body: JSON.stringify(obj)
     });
-    updatePresence(state.me.sid, state.me.nick, Date.now());
-    netStatus(); updateUsersBadge();
-  } catch {}
-}
-function startPresence() {
-  stopPresence();
-  sendPresence();
-  presenceTimer = setInterval(sendPresence, 25000);
-  presenceCleanTimer = setInterval(() => {
-    if (presenceClean()) { netStatus(); updateUsersBadge(); renderUsersIfOpen(); }
-  }, 15000);
-}
-function stopPresence() {
-  if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
-  if (presenceCleanTimer) { clearInterval(presenceCleanTimer); presenceCleanTimer = null; }
+  } catch (e) {}
 }
 
 // ================================================================
-//  RENDER
+//  GAME EVENTS
 // ================================================================
-const chatEl = $('chat');
-let lastSenderId = null;
-let lastDayStr = '';
-let lastRenderedTs = 0;
-let reactRenderTimer = null;
+function handleGameEvent(msg) {
+  if (!msg || !msg.type) return;
+  if (me && msg.from === me.sid) return;
 
-function scheduleReactRender() {
-  if (reactRenderTimer) clearTimeout(reactRenderTimer);
-  reactRenderTimer = setTimeout(() => { reactRenderTimer = null; renderAll(); }, 120);
-}
-
-function renderAll() {
-  const pinnedBar = $('pinnedBar');
-  chatEl.innerHTML = '';
-  chatEl.appendChild(pinnedBar);
-  lastSenderId = null; lastDayStr = ''; lastRenderedTs = 0;
-  const c = cur();
-  if (!c) { updatePinnedBar(); return; }
-
-  const all = c.messages.slice().sort((a,b) => a.ts - b.ts || String(a.id).localeCompare(String(b.id)));
-
-  for (const m of all) {
-    if (m.type === 'sys') {
-      if (['react','delete','pin','unpin','pollvote'].includes(m.action)) continue;
-      appendSys(m); continue;
+  if (msg.type === 'hello') {
+    if (!gameStarted) {
+      gameStarted = true;
+      QRChat.haptic([50, 50, 50]);
+      QRChat.showToast('Соперник присоединился!');
+      renderBoard();
     }
-    if (!isVisible(m, c)) continue;
-    const day = fmtDay(m.ts);
-    if (day !== lastDayStr) {
-      lastDayStr = day;
-      const el = document.createElement('div');
-      el.className = 'day';
-      el.innerHTML = `<span>${day}</span>`;
-      chatEl.appendChild(el);
-      lastSenderId = null;
+    return;
+  }
+
+  if (msg.type === 'move') {
+    if (board[msg.cell] === '' && turn === msg.symbol) {
+      board[msg.cell] = msg.symbol;
+      checkWin();
+      turn = turn === 'X' ? 'O' : 'X';
+      QRChat.haptic(20);
+      renderBoard();
     }
-    appendBubble(m, false);
-    if (m.ts > lastRenderedTs) lastRenderedTs = m.ts;
-  }
-  chatEl.scrollTop = chatEl.scrollHeight;
-  updateUsersBadge();
-  updatePinnedBar();
-}
-
-function appendSys(m) {
-  const el = document.createElement('div');
-  el.className = 'sys';
-  const nick = `<span class="em">${esc(m.nick || 'User ' + shortSid(m.sid))}</span>`;
-  const tgt = m.targetNick ? esc(m.targetNick) : shortSid(m.target);
-  let html = '';
-  switch (m.action) {
-    case 'create': html = `${nick} создал чат`; break;
-    case 'rename': html = `${nick} переименовал в «${esc(m.text||'')}»`; break;
-    case 'admin+': html = `${nick} назначил админом ${tgt}`; break;
-    case 'admin-': html = `${nick} снял админа ${tgt}`; break;
-    case 'ban':    html = `${nick} забанил ${tgt}`; break;
-    case 'unban':  html = `${nick} разбанил ${tgt}`; break;
-    default: return;
-  }
-  el.innerHTML = html;
-  chatEl.appendChild(el);
-  lastSenderId = null;
-}
-
-function findMsg(id) { const c = cur(); return c ? c.messages.find(x => x.id === id) : null; }
-
-function appendBubble(m, animate) {
-  const c = cur();
-  const wrap = document.createElement('div');
-  wrap.className = 'msg-wrap ' + (isMeSid(m.sid) ? 'me' : 'them');
-  if (m.sid === lastSenderId) wrap.classList.add('same-sender');
-  wrap.dataset.msgId = m.id;
-
-  if (!isMeSid(m.sid) && m.sid !== lastSenderId) {
-    const nick = document.createElement('div');
-    nick.className = 'msg-nick';
-    nick.style.color = nickColor(m.sid);
-    nick.innerHTML = esc(m.nick || 'User ' + shortSid(m.sid))
-      + (c.admins.includes(m.sid) ? ' <span class="admin-tag">ADMIN</span>' : '');
-    wrap.appendChild(nick);
+    return;
   }
 
-  const row = document.createElement('div');
-  row.className = 'msg-row';
-  const b = document.createElement('div');
-  b.className = 'bubble';
-  if (c.pinned === m.id) b.classList.add('pinned');
-
-  if (m.replyTo) {
-    const orig = findMsg(m.replyTo);
-    const q = document.createElement('div');
-    q.className = 'quote';
-    q.textContent = orig ? `${orig.nick || ''}: ${(orig.text || '[медиа]').slice(0,60)}` : (m.replyText || 'сообщение');
-    b.appendChild(q);
+  if (msg.type === 'rematch') {
+    resetBoard();
+    turn = 'X';
+    winner = null; winLine = null; gameOver = false;
+    QRChat.showToast('Соперник начал новую игру');
+    renderBoard();
+    return;
   }
-
-  if (m.type === 'image' && m.url) {
-    b.classList.add('img');
-    const img = document.createElement('img');
-    img.src = m.url; img.loading = 'lazy';
-    img.addEventListener('click', () => { $('viewerImg').src = m.url; $('viewer').classList.add('show'); });
-    img.addEventListener('error', () => { b.classList.remove('img'); b.classList.add('broken'); b.textContent = '[фото недоступно]'; });
-    b.appendChild(img);
-  } else if (m.type === 'file' && m.url) {
-    b.classList.add('file');
-    b.innerHTML = `<div class="ficon">📎</div><div class="fmeta">
-      <div class="fname">${esc(m.filename || 'файл')}</div>
-      <div class="fsize">${fmtBytes(m.filesize || 0)}</div></div>`;
-    b.addEventListener('click', () => window.open(m.url, '_blank'));
-  } else if (m.type === 'voice' && m.url) {
-    const audio = document.createElement('audio');
-    audio.controls = true; audio.src = m.url; audio.style.maxWidth = '100%';
-    b.appendChild(audio);
-  } else if (m.type === 'location' && m.lat !== undefined) {
-    b.classList.add('loc');
-    const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${m.lat},${m.lon}&zoom=15&size=400x240&markers=${m.lat},${m.lon},red-pushpin`;
-    b.innerHTML = `<img src="${mapUrl}" loading="lazy" onerror="this.style.display='none'">
-      <div class="loc-label">📍 ${esc(m.locLabel || 'Локация')}</div>`;
-    b.addEventListener('click', () => window.open(`https://www.openstreetmap.org/?mlat=${m.lat}&mlon=${m.lon}#map=16/${m.lat}/${m.lon}`, '_blank'));
-  } else if (m.type === 'poll') {
-    b.classList.add('poll');
-    const votes = m.votes || {};
-    const myVote = votes[state.me.sid];
-    let optsHtml = '';
-    (m.opts || []).forEach((o, i) => {
-      const cnt = Object.values(votes).filter(v => v === i).length;
-      const isMine = myVote === i;
-      optsHtml += `<div class="poll-opt" data-poll="${m.id}" data-idx="${i}" style="${isMine?'border:1px solid var(--green);':''}">
-        <span>${isMine ? '✓ ' : ''}${esc(o)}</span><span class="poll-c">${cnt}</span></div>`;
-    });
-    b.innerHTML = `<div class="poll-q">📊 ${esc(m.text || '')}</div>${optsHtml}`;
-    b.addEventListener('click', (e) => {
-      const opt = e.target.closest('.poll-opt');
-      if (!opt) return;
-      send({ type: 'sys', action: 'pollvote', target: opt.dataset.poll, text: opt.dataset.idx });
-    });
-  } else if (m.text) {
-    b.appendChild(document.createTextNode(m.text));
-  }
-
-  const reacts = collectReactions(m.id, c);
-  if (Object.keys(reacts).length) {
-    const rdiv = document.createElement('div');
-    rdiv.className = 'reactions';
-    for (const [emoji, sids] of Object.entries(reacts)) {
-      const pill = document.createElement('span');
-      pill.className = 'react-pill' + (sids.includes(state.me.sid) ? ' mine' : '');
-      pill.textContent = emoji + ' ' + sids.length;
-      pill.addEventListener('click', (e) => { e.stopPropagation(); toggleReaction(m.id, emoji); });
-      rdiv.appendChild(pill);
-    }
-    b.appendChild(rdiv);
-  }
-
-  let lpTimer = null;
-  const startLp = (e) => { lpTimer = setTimeout(() => { showCtx(e.touches?.[0] || e, m); }, 450); };
-  const cancelLp = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } };
-  b.addEventListener('touchstart', startLp, { passive: true });
-  b.addEventListener('touchend', cancelLp);
-  b.addEventListener('touchmove', cancelLp, { passive: true });
-  b.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtx(e, m); });
-
-  let lastTap = 0;
-  b.addEventListener('click', (e) => {
-    if (e.target.closest('.poll-opt') || e.target.closest('.react-pill')) return;
-    const now = Date.now();
-    if (now - lastTap < 350) { toggleReaction(m.id, '❤️'); lastTap = 0; }
-    else lastTap = now;
-  });
-
-  let touchStartX = 0, touchStartY = 0, isSwiping = false;
-  b.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; isSwiping = false;
-  }, { passive: true });
-  b.addEventListener('touchmove', (e) => {
-    const dx = e.touches[0].clientX - touchStartX;
-    const dy = e.touches[0].clientY - touchStartY;
-    if (!isSwiping && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      isSwiping = true;
-      if (dx < 0) { setReply(m); if (navigator.vibrate) navigator.vibrate(15); }
-    }
-  }, { passive: true });
-
-  row.appendChild(b);
-  wrap.appendChild(row);
-  if (animate) wrap.style.animation = 'pop 0.18s ease-out';
-  chatEl.appendChild(wrap);
-  lastSenderId = m.sid;
-  if (m.ts > lastRenderedTs) lastRenderedTs = m.ts;
-}
-
-function collectReactions(msgId, c) {
-  const counts = {};
-  for (const m of c.messages) {
-    if (m.type !== 'sys' || m.action !== 'react' || m.target !== msgId) continue;
-    if (c.bans.includes(m.sid)) continue;
-    const k = m.sid + '|' + m.text;
-    counts[k] = (counts[k] || 0) + 1;
-  }
-  const out = {};
-  for (const [k, n] of Object.entries(counts)) {
-    if (n % 2 === 0) continue;
-    const [sid, emoji] = k.split('|');
-    (out[emoji] = out[emoji] || []).push(sid);
-  }
-  return out;
-}
-function toggleReaction(msgId, emoji) { send({ type: 'sys', action: 'react', target: msgId, text: emoji }); }
-
-function updatePinnedBar() {
-  const c = cur();
-  const bar = $('pinnedBar');
-  if (!c || !c.pinned) { bar.classList.remove('show'); return; }
-  const msg = c.messages.find(m => m.id === c.pinned);
-  if (!msg) { bar.classList.remove('show'); return; }
-  $('pinnedText').textContent = (msg.nick || '') + ': ' + (msg.text || '[медиа]').slice(0, 50);
-  bar.classList.add('show');
-}
-$('unpinBtn').addEventListener('click', () => { send({ type: 'sys', action: 'unpin' }); });
-
-// ================================================================
-//  CONTEXT MENU
-// ================================================================
-const ctxEl = $('ctx');
-const REACT_EMOJIS = ['❤️','👍','😂','😮','😢','🔥'];
-function showCtx(evt, m) {
-  const p = evt.touches?.[0] || evt;
-  ctxEl.innerHTML = '';
-  const emojis = document.createElement('div');
-  emojis.className = 'emoji-row';
-  for (const e of REACT_EMOJIS) {
-    const b = document.createElement('button');
-    b.textContent = e;
-    b.addEventListener('click', () => { toggleReaction(m.id, e); ctxEl.classList.remove('show'); });
-    emojis.appendChild(b);
-  }
-  ctxEl.appendChild(emojis);
-
-  const bReply = document.createElement('button');
-  bReply.textContent = '↩️ Ответить';
-  bReply.addEventListener('click', () => { setReply(m); ctxEl.classList.remove('show'); });
-  ctxEl.appendChild(bReply);
-
-  const bCopy = document.createElement('button');
-  bCopy.textContent = '📋 Копировать';
-  bCopy.addEventListener('click', () => { try { navigator.clipboard.writeText(m.text || m.url || ''); } catch {} ctxEl.classList.remove('show'); });
-  ctxEl.appendChild(bCopy);
-
-  const c = cur();
-  const canDel = c && (c.admins.includes(state.me.sid) || m.sid === state.me.sid || c.createdBy === state.me.sid);
-  if (canDel) {
-    const bDel = document.createElement('button');
-    bDel.className = 'danger'; bDel.textContent = '🗑 Удалить';
-    bDel.addEventListener('click', () => { send({ type: 'sys', action: 'delete', target: m.id }); ctxEl.classList.remove('show'); });
-    ctxEl.appendChild(bDel);
-  }
-  if (c && (c.admins.includes(state.me.sid) || c.createdBy === state.me.sid)) {
-    const bPin = document.createElement('button');
-    bPin.textContent = c.pinned === m.id ? '📌 Открепить' : '📌 Закрепить';
-    bPin.addEventListener('click', () => { send({ type: 'sys', action: c.pinned === m.id ? 'unpin' : 'pin', target: m.id }); ctxEl.classList.remove('show'); });
-    ctxEl.appendChild(bPin);
-  }
-
-  ctxEl.classList.add('show');
-  const w = 210, h = ctxEl.offsetHeight;
-  let x = Math.min(p.clientX, window.innerWidth - w - 8);
-  let y = Math.min(p.clientY, window.innerHeight - h - 8);
-  x = Math.max(8, x); y = Math.max(8, y);
-  ctxEl.style.left = x + 'px'; ctxEl.style.top = y + 'px';
-}
-document.addEventListener('click', (e) => { if (!ctxEl.contains(e.target)) ctxEl.classList.remove('show'); });
-
-// ================================================================
-//  REPLY
-// ================================================================
-let replyTo = null;
-function setReply(m) {
-  replyTo = m;
-  $('replyText').textContent = (m.nick || '') + ': ' + (m.text || '[медиа]').slice(0,50);
-  $('replyBar').classList.add('show');
-}
-function clearReply() { replyTo = null; $('replyBar').classList.remove('show'); }
-$('replyCancel').addEventListener('click', clearReply);
-
-// ================================================================
-//  BADGES
-// ================================================================
-function updateUsersBadge() {
-  const c = cur();
-  if (!c) return;
-  const sids = new Set();
-  for (const m of c.messages) if (m.type !== 'sys') sids.add(m.sid);
-  for (const s in presence) if (isOnline(s)) sids.add(s);
-  const badge = $('usersBadge');
-  badge.textContent = sids.size;
-  badge.style.display = sids.size ? '' : 'none';
 }
 
 // ================================================================
-//  OVERLAYS
+//  GAME LOGIC
 // ================================================================
-const overlay = $('overlay');
-function showOverlay(html) { overlay.innerHTML = `<div class="screen">${html}</div>`; overlay.classList.remove('hidden'); }
-function hideOverlay() { overlay.classList.add('hidden'); }
+async function cellClick(i) {
+  if (gameOver) return;
+  if (!gameStarted) { QRChat.showToast('Ждём соперника'); return; }
+  if (turn !== mySymbol) { QRChat.showToast('Не твой ход'); return; }
+  if (board[i] !== '') return;
 
-function screenWelcome() {
-  showOverlay(`
-    <div class="card">
-      <h2>QR Chat</h2>
-      <p class="hint">Мульти-юзерный чат. Данные через ntfy, история локально.</p>
-      <input class="field" id="nickInput" placeholder="Твой ник" maxlength="24" autocomplete="off">
-      <button class="btn primary" id="saveNickBtn">Продолжить</button>
-    </div>
-  `);
-  setTimeout(() => $('nickInput').focus(), 100);
-  $('saveNickBtn').addEventListener('click', () => {
-    const v = $('nickInput').value.trim();
-    if (!v) return;
-    state.me.nick = v.slice(0,24);
-    saveNow(); screenChatList();
-  });
+  board[i] = mySymbol;
+  checkWin();
+  turn = turn === 'X' ? 'O' : 'X';
+  QRChat.haptic(20);
+  renderBoard();
+
+  await post({ type: 'move', cell: i, symbol: mySymbol, from: me.sid });
 }
 
-function screenChatList() {
-  const chats = Object.entries(state.chats);
-  let listHtml = '';
-  if (!chats.length) listHtml = '<p style="color:var(--muted);text-align:center;padding:20px 0;">Пока пусто</p>';
-  else {
-    for (const [topic, c] of chats) {
-      const vis = getVisibleMessages(c);
-      const last = vis[vis.length-1];
-      listHtml += `
-        <div class="chat-item ${topic === state.currentChat ? 'active' : ''}" data-topic="${esc(topic)}">
-          <div class="chat-avatar">${esc((c.name||'?').slice(0,1).toUpperCase())}</div>
-          <div class="chat-meta">
-            <div class="name">${esc(c.name)}</div>
-            <div class="last">${last ? esc((last.nick||'')+': '+(last.text || '[медиа]').slice(0,40)) : '—'}</div>
-          </div>
-        </div>`;
-    }
-  }
-  showOverlay(`
-    <div class="card">
-      <h2>Мои чаты</h2>
-      <p class="hint">Ты — <b>${esc(state.me.nick)}</b> · ${shortSid(state.me.sid)}</p>
-      <div id="chatListBox">${listHtml}</div>
-      <button class="btn primary" id="createChatBtn" style="margin-top:12px;">✨ Создать новый чат</button>
-      <button class="btn" id="scanBtnList">📷 Сканировать QR</button>
-      <button class="btn" id="settingsBtn">⚙️ Настройки</button>
-    </div>
-  `);
-  overlay.querySelectorAll('.chat-item').forEach(el => {
-    el.addEventListener('click', () => enterChat(el.dataset.topic, false));
-  });
-  $('createChatBtn').addEventListener('click', () => { const t = 'nfc-' + rhex(8); enterChat(t, true); });
-  $('scanBtnList').addEventListener('click', startScan);
-  $('settingsBtn').addEventListener('click', screenSettings);
-}
-
-function screenSettings() {
-  const themeLabel = { auto: 'Авто', light: 'Светлая', dark: 'Тёмная' };
-  showOverlay(`
-    <div class="card">
-      <h2>Настройки</h2>
-      <p class="hint">Ник: <b>${esc(state.me.nick)}</b> · ${shortSid(state.me.sid)}</p>
-      <button class="btn" id="changeNickBtn">✎ Сменить ник</button>
-      <button class="btn" id="themeBtn">🎨 Тема: ${themeLabel[state.theme]||'Авто'}</button>
-      <button class="btn" id="notifBtn">🔔 Уведомления: ${state.notifications?'вкл':'выкл'}</button>
-      <div class="divider">сервер</div>
-      <button class="btn" id="serverBtn">🌐 ${esc(currentServer.replace('https://',''))}</button>
-      <button class="btn" id="serverNextBtn">🔄 Сменить сервер</button>
-      <div class="divider">бэкап</div>
-      <button class="btn" id="exportBtn">⬇ Экспорт (JSON)</button>
-      <button class="btn" id="importBtn">⬆ Импорт</button>
-      <input type="file" id="importFile" accept=".json,application/json" hidden>
-      <div class="divider">опасно</div>
-      <button class="btn danger" id="wipeBtn">🗑 Удалить все данные</button>
-      <button class="btn" id="backBtn" style="margin-top:8px;">← Назад</button>
-    </div>
-  `);
-  $('changeNickBtn').addEventListener('click', () => {
-    const v = prompt('Новый ник:', state.me.nick);
-    if (v && v.trim()) { state.me.nick = v.trim().slice(0,24); saveNow(); screenSettings(); }
-  });
-  $('themeBtn').addEventListener('click', () => {
-    const o = ['auto','light','dark'];
-    state.theme = o[(o.indexOf(state.theme)+1) % 3];
-    applyTheme(); saveNow(); screenSettings();
-  });
-  $('notifBtn').addEventListener('click', async () => {
-    if (!('Notification' in window)) { alert('Нет поддержки'); return; }
-    const p = await Notification.requestPermission();
-    state.notifications = (p === 'granted'); saveNow(); screenSettings();
-  });
-  $('serverBtn').addEventListener('click', () => {
-    alert('Текущий: ' + currentServer + '\n\nВсего: ' + NTFY_SERVERS.length + '\n\n' + NTFY_SERVERS.join('\n'));
-  });
-  $('serverNextBtn').addEventListener('click', () => {
-    rotateServer(); saveNow(); alert('Сервер: ' + currentServer); screenSettings();
-  });
-  $('exportBtn').addEventListener('click', exportData);
-  $('importBtn').addEventListener('click', () => $('importFile').click());
-  $('importFile').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await importData(f); });
-  $('wipeBtn').addEventListener('click', () => {
-    if (!confirm('Удалить ВСЁ?')) return;
-    localStorage.removeItem(LS_KEY);
-    LS_LEGACY.forEach(k => localStorage.removeItem(k));
-    location.reload();
-  });
-  $('backBtn').addEventListener('click', screenChatList);
-}
-
-function screenUsers() {
-  const c = cur();
-  if (!c) return;
-  const sids = new Set();
-  for (const m of c.messages) if (m.type !== 'sys') sids.add(m.sid);
-  for (const s in presence) sids.add(s);
-  for (const a of c.admins) sids.add(a);
-  for (const b of c.bans) sids.add(b);
-  const nickById = {};
-  for (const m of c.messages) if (m.nick && !nickById[m.sid]) nickById[m.sid] = m.nick;
-  for (const [s, p] of Object.entries(presence)) nickById[s] = p.nick;
-  nickById[state.me.sid] = state.me.nick;
-  const list = [...sids].map(sid => ({
-    sid, nick: nickById[sid] || ('User ' + shortSid(sid)),
-    online: isOnline(sid), admin: c.admins.includes(sid), banned: c.bans.includes(sid),
-    creator: c.createdBy === sid, me: isMeSid(sid)
-  })).sort((a,b) => (b.admin - a.admin) || (b.online - a.online) || a.nick.localeCompare(b.nick));
-  const iAmAdmin = c.admins.includes(state.me.sid) || c.createdBy === state.me.sid;
-  let items = '';
-  for (const u of list) {
-    const actions = [];
-    if (iAmAdmin && !u.me) {
-      if (!u.creator && !u.admin && !u.banned) actions.push(`<button data-act="admin+" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}" class="ok">Админ</button>`);
-      if (u.admin && !u.creator) actions.push(`<button data-act="admin-" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}">Снять</button>`);
-      if (!u.banned && !u.creator) actions.push(`<button data-act="ban" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}" class="danger">Бан</button>`);
-      if (u.banned) actions.push(`<button data-act="unban" data-sid="${esc(u.sid)}" data-nick="${esc(u.nick)}">Разбан</button>`);
-    }
-    items += `
-      <div class="user-item">
-        <div class="user-avatar" style="background:${nickColor(u.sid)}">
-          ${esc(u.nick.slice(0,1).toUpperCase())}
-          <span class="presence-dot ${u.online?'on':''}"></span>
-        </div>
-        <div class="user-info">
-          <div class="nick">${esc(u.nick)}
-            ${u.admin ? ' <span style="color:var(--green);font-size:11px;">ADMIN</span>' : ''}
-            ${u.creator ? ' <span style="color:var(--green);font-size:11px;">СОЗДАТЕЛЬ</span>' : ''}
-            ${u.me ? ' <span style="color:var(--muted);font-size:11px;">(ты)</span>' : ''}
-            ${u.banned ? ' <span style="color:var(--danger);font-size:11px;">BAN</span>' : ''}
-          </div>
-          <div class="sub">${u.online?'в сети':'офлайн'} · ${shortSid(u.sid)}</div>
-        </div>
-        <div class="user-actions">${actions.join('')}</div>
-      </div>`;
-  }
-  showOverlay(`
-    <div class="card" style="padding:14px;">
-      <h2 style="margin-bottom:10px;">Участники · ${list.length}</h2>
-      <div id="userList">${items}</div>
-      <button class="btn" id="backBtn" style="margin-top:12px;">← Назад</button>
-    </div>
-  `);
-  $('backBtn').addEventListener('click', screenChatMenu);
-  overlay.querySelectorAll('.user-actions button').forEach(b => {
-    b.addEventListener('click', () => {
-      const act = b.dataset.act; const sid = b.dataset.sid; const nick = b.dataset.nick;
-      if (act === 'ban' && !confirm('Забанить ' + nick + '?')) return;
-      send({ type: 'sys', action: act, target: sid, targetNick: nick });
-      setTimeout(screenUsers, 250);
-    });
-  });
-}
-function renderUsersIfOpen() { if (overlay.classList.contains('hidden')) return; if (overlay.querySelector('#userList')) screenUsers(); }
-
-function screenChatMenu() {
-  const c = cur();
-  if (!c) return;
-  const iAmAdmin = c.admins.includes(state.me.sid) || c.createdBy === state.me.sid;
-  showOverlay(`
-    <div class="card">
-      <h2>${esc(c.name)}</h2>
-      <p class="hint">${getVisibleMessages(c).length} сообщений · ключ <span style="font-family:monospace">…${state.currentChat.slice(-8)}</span></p>
-      <button class="btn primary" id="qrBtn">⊞ Показать QR</button>
-      <button class="btn" id="usersBtn2">👥 Участники</button>
-      ${iAmAdmin ? '<button class="btn" id="renameBtn">✎ Переименовать</button>' : ''}
-      <button class="btn" id="chatListBtn">📂 Все чаты</button>
-      <button class="btn" id="exportChatBtn">⬇ Экспорт чата</button>
-      <button class="btn" id="settingsBtn2">⚙️ Настройки</button>
-      <div class="divider">опасно</div>
-      <button class="btn danger" id="leaveBtn">🚪 Выйти из чата</button>
-      <button class="btn" id="backBtn" style="margin-top:8px;">← К чату</button>
-    </div>
-  `);
-  $('qrBtn').addEventListener('click', () => {
-    showOverlay(`
-      <div class="card">
-        <h2>Приглашение</h2>
-        <p class="hint">Пусть друг отсканирует</p>
-        <div id="qrBox" style="display:flex;justify-content:center;padding:12px;background:#fff;border-radius:14px;"></div>
-        <div style="font-size:12px;text-align:center;color:var(--muted);word-break:break-all;margin-top:10px;">
-          Ключ:<br><span style="font-family:monospace;background:var(--sys-bg);padding:3px 8px;border-radius:6px;display:inline-block;margin-top:4px;">${state.currentChat}</span>
-        </div>
-        <button class="btn" id="backBtn2" style="margin-top:12px;">← Назад</button>
-      </div>
-    `);
-    new QRCode($('qrBox'), { text: state.currentChat, width: 220, height: 220,
-      colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
-    $('backBtn2').addEventListener('click', screenChatMenu);
-  });
-  $('usersBtn2').addEventListener('click', screenUsers);
-  const rn = $('renameBtn');
-  if (rn) rn.addEventListener('click', () => {
-    const v = prompt('Новое название:', c.name);
-    if (v && v.trim()) send({ type: 'sys', action: 'rename', text: v.trim().slice(0,40) });
-    setTimeout(screenChatMenu, 300);
-  });
-  $('chatListBtn').addEventListener('click', screenChatList);
-  $('exportChatBtn').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'chat-' + state.currentChat + '.json';
-    a.click();
-  });
-  $('settingsBtn2').addEventListener('click', screenSettings);
-  $('leaveBtn').addEventListener('click', () => {
-    if (!confirm('Выйти и удалить локально?')) return;
-    const t = state.currentChat;
-    delete state.chats[t]; delete state.seenIds[t];
-    state.currentChat = null; saveNow();
-    disconnect(); stopPresence();
-    $('app').style.display = 'none';
-    screenChatList();
-  });
-  $('backBtn').addEventListener('click', hideOverlay);
-}
-
-// ================================================================
-//  ENTER CHAT
-// ================================================================
-function enterChat(topic, isNew) {
-  topic = String(topic).trim();
-  if (!topic) return;
-  state.currentChat = topic;
-  const c = ensureChat(topic);
-  saveState();
-  $('app').style.display = 'flex';
-  hideOverlay();
-  $('chatTitle').textContent = c.name;
-  renderAll();
-  netStatus();
-  if (isNew && !c.createdBy) {
-    c.createdBy = state.me.sid; c.admins = [state.me.sid]; saveState();
-    send({ type: 'sys', action: 'create' });
-  }
-  connect();
-  startPresence();
-}
-
-// ================================================================
-//  QR SCANNER
-// ================================================================
-let mediaStream = null, scanInterval = null;
-let scanResolver = null;
-
-async function startScan() {
-  if (!window.isSecureContext) { alert('Нужен HTTPS'); return; }
-  if (!navigator.mediaDevices?.getUserMedia) { alert('Камера недоступна'); return; }
-  if (!('BarcodeDetector' in window)) { alert('BarcodeDetector не поддерживается'); return; }
-  const tries = [
-    { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } } },
-    { video: { facingMode: 'environment' } },
-    { video: true }
+function checkWin() {
+  const lines = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
   ];
-  let stream = null, lastErr = null;
-  for (const cst of tries) {
-    try { stream = await navigator.mediaDevices.getUserMedia(cst); break; } catch (e) { lastErr = e; }
+  for (const l of lines) {
+    if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[0]] === board[l[2]]) {
+      gameOver = true;
+      winner = board[l[0]];
+      winLine = l;
+      if (winner === mySymbol) { scores.me++; showResult('win'); }
+      else { scores.opp++; showResult('lose'); }
+      return;
+    }
   }
-  if (!stream) { alert('Камера: ' + (lastErr ? lastErr.name : 'error')); return; }
-  mediaStream = stream;
-  const video = $('video');
-  video.srcObject = stream;
-  $('scannerOverlay').classList.add('show');
-  await new Promise(res => { if (video.readyState >= 1) res(); else video.onloadedmetadata = () => res(); });
-  try { await video.play(); } catch {}
-  await new Promise(r => setTimeout(r, 300));
-  const det = new BarcodeDetector({ formats: ['qr_code'] });
-  scanInterval = setInterval(async () => {
-    if (video.readyState < 2 || video.videoWidth === 0) return;
-    try {
-      const codes = await det.detect(video);
-      if (codes?.length) {
-        const v = codes[0].rawValue.trim();
-        stopScan();
-        handleScannedValue(v);
-      }
-    } catch {}
-  }, 250);
-}
-
-async function stopScan() {
-  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
-  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
-  $('video').srcObject = null;
-  $('scannerOverlay').classList.remove('show');
-  if (scanResolver) {
-    const r = scanResolver; scanResolver = null;
-    r(null);
-  }
-}
-$('stopScanBtn').addEventListener('click', stopScan);
-
-function handleScannedValue(v) {
-  if (!v) return;
-  if (scanResolver) {
-    const r = scanResolver; scanResolver = null;
-    r(v);
-    return;
-  }
-  if (v.startsWith('app-') && v.includes('|')) {
-    const [id, url] = v.split('|', 2);
-    openMiniApp({ id, name: 'App ' + id.slice(-4), url });
-    return;
-  }
-  if (v.startsWith('miniapp|')) {
-    const url = v.slice(8);
-    let name = 'Mini App';
-    try { name = new URL(url).hostname; } catch {}
-    openMiniApp({ id: 'app-' + rhex(3), name, url });
-    return;
-  }
-  if (/^https?:\/\//.test(v)) {
-    if (confirm('Открыть как мини-приложение?\n\n' + v.slice(0, 100))) {
-      let name = 'Mini App';
-      try { name = new URL(v).hostname; } catch {}
-      openMiniApp({ id: 'app-' + rhex(3), name, url: v });
-    }
-    return;
-  }
-  enterChat(v, false);
-}
-
-// ================================================================
-//  MINI APP
-// ================================================================
-let currentMiniApp = null;
-
-function openMiniApp(app) {
-  currentMiniApp = app;
-  const frame = $('miniappFrame');
-  const loading = $('miniappLoading');
-  const ov = $('miniappOverlay');
-
-  $('miniappTitle').textContent = app.name || 'Mini App';
-  loading.classList.remove('hidden');
-  ov.classList.add('show');
-
-  frame.removeAttribute('srcdoc');
-  frame.src = 'about:blank';
-  setTimeout(() => { frame.src = app.url; }, 50);
-
-  frame.onload = () => loading.classList.add('hidden');
-  setTimeout(() => loading.classList.add('hidden'), 6000);
-}
-
-function closeMiniApp() {
-  $('miniappOverlay').classList.remove('show');
-  $('miniappFrame').src = 'about:blank';
-  currentMiniApp = null;
-}
-
-$('miniappClose').addEventListener('click', closeMiniApp);
-$('miniappMenu').addEventListener('click', () => {
-  if (!currentMiniApp) return;
-  const choice = prompt('1. Поделиться QR\n2. Скопировать ссылку\n3. Закрыть', '1');
-  if (choice === '1') {
-    const qr = `app-${rhex(2)}|${currentMiniApp.url}`;
-    showOverlay(`
-      <div class="card">
-        <h2>Поделиться</h2>
-        <div id="qrBox" style="display:flex;justify-content:center;padding:12px;background:#fff;border-radius:14px;"></div>
-        <div style="font-size:11px;text-align:center;color:var(--muted);word-break:break-all;margin-top:10px;">
-          <span style="font-family:monospace;background:var(--sys-bg);padding:3px 6px;border-radius:6px;">${esc(qr.slice(0, 80))}</span>
-        </div>
-        <button class="btn" id="backBtn3" style="margin-top:12px;">← Назад</button>
-      </div>
-    `);
-    new QRCode($('qrBox'), { text: qr, width: 220, height: 220,
-      colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
-    $('backBtn3').addEventListener('click', hideOverlay);
-  } else if (choice === '2') {
-    try { navigator.clipboard.writeText(currentMiniApp.url); alert('Скопировано'); } catch {}
-  } else if (choice === '3') {
-    closeMiniApp();
-  }
-});
-
-// ================================================================
-//  DIALOGS
-// ================================================================
-function dialogAlert({ title, text }) {
-  return new Promise(resolve => {
-    const ov = $('dialogOverlay');
-    ov.innerHTML = `<div class="dialog"><h3>${esc(title||'')}</h3><p>${esc(text||'')}</p>
-      <div class="actions"><button class="ok" id="dlgOk">OK</button></div></div>`;
-    ov.classList.add('show');
-    const close = () => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(); };
-    $('dlgOk').addEventListener('click', close);
-    ov.addEventListener('click', e => { if (e.target === ov) close(); });
-  });
-}
-function dialogConfirm({ title, text }) {
-  return new Promise(resolve => {
-    const ov = $('dialogOverlay');
-    ov.innerHTML = `<div class="dialog"><h3>${esc(title||'Подтвердить')}</h3><p>${esc(text||'')}</p>
-      <div class="actions"><button class="cancel" id="dlgCancel">Отмена</button><button class="ok" id="dlgOk">OK</button></div></div>`;
-    ov.classList.add('show');
-    const close = v => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(v); };
-    $('dlgOk').addEventListener('click', () => close(true));
-    $('dlgCancel').addEventListener('click', () => close(false));
-    ov.addEventListener('click', e => { if (e.target === ov) close(false); });
-  });
-}
-function dialogPrompt({ title, text, value }) {
-  return new Promise(resolve => {
-    const ov = $('dialogOverlay');
-    ov.innerHTML = `<div class="dialog"><h3>${esc(title||'Введите')}</h3>
-      ${text ? `<p>${esc(text)}</p>` : ''}
-      <input id="dlgInput" value="${esc(value||'')}" autocomplete="off">
-      <div class="actions"><button class="cancel" id="dlgCancel">Отмена</button><button class="ok" id="dlgOk">OK</button></div></div>`;
-    ov.classList.add('show');
-    const input = $('dlgInput');
-    setTimeout(() => input.focus(), 100);
-    const close = v => { ov.classList.remove('show'); ov.innerHTML = ''; resolve(v); };
-    $('dlgOk').addEventListener('click', () => close(input.value));
-    $('dlgCancel').addEventListener('click', () => close(null));
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') close(input.value); });
-    ov.addEventListener('click', e => { if (e.target === ov) close(null); });
-  });
-}
-
-// ================================================================
-//  HELPERS
-// ================================================================
-function pickFileHelper({ accept = '*/*', multiple = false } = {}) {
-  return new Promise(resolve => {
-    const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = accept; inp.multiple = multiple;
-    inp.style.display = 'none';
-    document.body.appendChild(inp);
-    inp.addEventListener('change', async () => {
-      const files = [...inp.files];
-      document.body.removeChild(inp);
-      if (!files.length) return resolve([]);
-      const out = [];
-      for (const f of files) {
-        const dataUrl = await new Promise(r => {
-          const fr = new FileReader();
-          fr.onload = () => r(fr.result);
-          fr.readAsDataURL(f);
-        });
-        out.push({ name: f.name, type: f.type, size: f.size, dataUrl });
-      }
-      resolve(out);
-    });
-    inp.addEventListener('cancel', () => { document.body.removeChild(inp); resolve([]); });
-    inp.click();
-  });
-}
-function takePhotoHelper() {
-  return new Promise(resolve => {
-    const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
-    inp.style.display = 'none';
-    document.body.appendChild(inp);
-    inp.addEventListener('change', async () => {
-      const f = inp.files[0];
-      document.body.removeChild(inp);
-      if (!f) return resolve(null);
-      const dataUrl = await new Promise(r => {
-        const fr = new FileReader();
-        fr.onload = () => r(fr.result);
-        fr.readAsDataURL(f);
-      });
-      resolve({ name: f.name, type: f.type, size: f.size, dataUrl });
-    });
-    inp.addEventListener('cancel', () => { document.body.removeChild(inp); resolve(null); });
-    inp.click();
-  });
-}
-function getLocationHelper() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) return reject(new Error('Геолокация недоступна'));
-    navigator.geolocation.getCurrentPosition(
-      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy }),
-      e => reject(new Error(e.message || 'Ошибка геолокации')),
-      { timeout: 15000, enableHighAccuracy: true }
-    );
-  });
-}
-function scanQRHelper() {
-  return new Promise((resolve, reject) => {
-    scanResolver = { resolve };
-    startScan().catch(e => {
-      scanResolver = null;
-      reject(e);
-    });
-  });
-}
-function shareHelper({ title, text, url }) {
-  if (navigator.share) return navigator.share({ title, text, url }).catch(() => {});
-  const s = url || text || title || '';
-  try { navigator.clipboard.writeText(s); } catch {}
-  QRChat_toast('Скопировано');
-}
-
-// ================================================================
-//  BRIDGE
-// ================================================================
-async function bridgeCall(method, params) {
-  const t = params.topic || state.currentChat;
-  switch (method) {
-    case 'getUser': return { sid: state.me.sid, nick: state.me.nick };
-    case 'setNick': {
-      const nick = String(params.nick || '').trim().slice(0, 24);
-      if (!nick) throw new Error('Пустой ник');
-      state.me.nick = nick; saveNow();
-      return { ok: true, nick };
-    }
-    case 'getChats':
-      return Object.entries(state.chats).map(([key, ch]) => ({
-        key, name: ch.name,
-        messages: getVisibleMessages(ch).length,
-        isCurrent: key === state.currentChat
-      }));
-    case 'getChat': {
-      const ch = t ? ensureChat(t) : null;
-      if (!ch) throw new Error('Нет чата');
-      return {
-        key: t, name: ch.name,
-        members: [...new Set(ch.messages.filter(m=>m.type!=='sys').map(m=>m.nick))],
-        admin: ch.admins.includes(state.me.sid) || ch.createdBy === state.me.sid,
-        messageCount: getVisibleMessages(ch).length
-      };
-    }
-    case 'getMembers': {
-      const ch = t ? ensureChat(t) : null;
-      if (!ch) throw new Error('Нет чата');
-      const sids = new Set();
-      for (const m of ch.messages) if (m.type !== 'sys') sids.add(m.sid);
-      for (const a of ch.admins) sids.add(a);
-      const nickById = {};
-      for (const m of ch.messages) if (m.nick && !nickById[m.sid]) nickById[m.sid] = m.nick;
-      for (const [sid, p] of Object.entries(presence)) nickById[sid] = p.nick;
-      return [...sids].map(sid => ({
-        sid, nick: nickById[sid] || ('User ' + shortSid(sid)),
-        online: isOnline(sid), admin: ch.admins.includes(sid),
-        banned: ch.bans.includes(sid), me: sid === state.me.sid
-      }));
-    }
-    case 'isAdmin': {
-      const ch = t ? ensureChat(t) : null;
-      if (!ch) return false;
-      return ch.admins.includes(state.me.sid) || ch.createdBy === state.me.sid;
-    }
-    case 'createChat': {
-      const name = String(params.name || '').trim().slice(0, 40);
-      const newT = 'nfc-' + rhex(8);
-      const ch = ensureChat(newT);
-      ch.createdBy = state.me.sid;
-      ch.admins = [state.me.sid];
-      if (name) ch.name = name;
-      saveState();
-      await sendExternal(newT, { type: 'sys', action: 'create' });
-      return { key: newT, name: ch.name };
-    }
-    case 'joinChat': {
-      const topic = String(params.topic || '').trim();
-      if (!topic) throw new Error('Нужен topic');
-      enterChat(topic, false);
-      return { ok: true, key: topic };
-    }
-    case 'leaveChat': {
-      const topic = params.topic || state.currentChat;
-      if (!topic) throw new Error('Нет чата');
-      try { await sendExternal(topic, { type: 'sys', action: 'leave' }); } catch {}
-      delete state.chats[topic];
-      delete state.seenIds[topic];
-      if (state.currentChat === topic) {
-        state.currentChat = null;
-        disconnect(); stopPresence();
-        $('app').style.display = 'none';
-        screenChatList();
-      }
-      saveNow();
-      return { ok: true };
-    }
-    case 'renameChat': {
-      const name = String(params.name || '').trim().slice(0, 40);
-      if (!name) throw new Error('Пустое имя');
-      if (t === state.currentChat) await send({ type: 'sys', action: 'rename', text: name });
-      else await sendExternal(t, { type: 'sys', action: 'rename', text: name });
-      return { ok: true };
-    }
-    case 'getHistory': {
-      const ch = t ? ensureChat(t) : null;
-      if (!ch) throw new Error('Нет чата');
-      const limit = Math.min(params.limit || 30, 200);
-      return getVisibleMessages(ch).slice(-limit).map(m => ({
-        id: m.id, nick: m.nick, text: m.text, type: m.type, ts: m.ts, url: m.url,
-        lat: m.lat, lon: m.lon, opts: m.opts
-      }));
-    }
-    case 'sendMessage': {
-      const text = String(params.text || '').slice(0, 4000);
-      if (!text) throw new Error('Пустой текст');
-      if (t === state.currentChat) await send({ type: 'text', text });
-      else await sendExternal(t, { type: 'text', text });
-      return { ok: true };
-    }
-    case 'sendReply': {
-      const text = String(params.text || '').slice(0, 4000);
-      const replyId = params.replyTo;
-      if (!text || !replyId) throw new Error('Нужны replyTo и text');
-      if (t === state.currentChat) await send({ type: 'text', text, replyTo: replyId });
-      else await sendExternal(t, { type: 'text', text, replyTo: replyId });
-      return { ok: true };
-    }
-    case 'sendFile': {
-      const dataUrl = params.dataUrl;
-      const filename = params.filename || 'file';
-      if (!dataUrl) throw new Error('Нет dataUrl');
-      const resp = await fetch(dataUrl);
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      const isImg = /^image\//.test(blob.type);
-      const meta = {
-        type: isImg ? 'image' : 'file', url, _blob: blob,
-        filename, filesize: blob.size
-      };
-      if (t === state.currentChat) await send(meta);
-      else await sendExternal(t, meta);
-      return { ok: true };
-    }
-    case 'sendLocation': {
-      const lat = parseFloat(params.lat);
-      const lon = parseFloat(params.lon);
-      if (isNaN(lat) || isNaN(lon)) throw new Error('Плохие координаты');
-      const meta = { type: 'location', lat, lon, locLabel: params.label || '' };
-      if (t === state.currentChat) await send(meta);
-      else await sendExternal(t, meta);
-      return { ok: true };
-    }
-    case 'sendPoll': {
-      const question = String(params.question || '').slice(0, 200);
-      const opts = (params.options || []).slice(0, 6).map(o => String(o).slice(0, 80));
-      if (!question || opts.length < 2) throw new Error('Нужны вопрос и 2+ варианта');
-      const meta = { type: 'poll', text: question, opts, votes: {} };
-      if (t === state.currentChat) await send(meta);
-      else await sendExternal(t, meta);
-      return { ok: true };
-    }
-    case 'deleteMessage': {
-      const id = params.id;
-      if (!id) throw new Error('Нет id');
-      if (t === state.currentChat) await send({ type: 'sys', action: 'delete', target: id });
-      else await sendExternal(t, { type: 'sys', action: 'delete', target: id });
-      return { ok: true };
-    }
-    case 'sendAnonymous': {
-      const targetTopic = params.topic;
-      const text = String(params.text || '').slice(0, 1000);
-      if (!targetTopic || !text) throw new Error('Нужны topic и text');
-      if (!state.chats[targetTopic]) throw new Error('Чат не найден');
-      const anonSid = 'anon-' + rhex(6);
-      const anonNick = 'Аноним-' + Math.floor(Math.random() * 900 + 100);
-      const meta = {
-        id: rhex(8), sid: anonSid, nick: anonNick,
-        ts: Date.now(), type: 'text', text
-      };
-      await postJSON(targetTopic, meta, { 'Title': 'QRChat' });
-      return { ok: true, nick: anonNick };
-    }
-    case 'showToast': QRChat_toast(String(params.text || '')); return { ok: true };
-    case 'showAlert': await dialogAlert({ title: params.title, text: params.text }); return { ok: true };
-    case 'showConfirm': {
-      const r = await dialogConfirm({ title: params.title, text: params.text });
-      return { ok: r };
-    }
-    case 'showPrompt': {
-      const r = await dialogPrompt({ title: params.title, text: params.text, value: params.value });
-      return { ok: r !== null, value: r };
-    }
-    case 'setTitle':
-      $('miniappTitle').textContent = String(params.text || 'Mini App').slice(0, 40);
-      return { ok: true };
-    case 'setTheme':
-      if (['auto','light','dark'].includes(params.theme)) {
-        state.theme = params.theme;
-        applyTheme(); saveNow();
-      }
-      return { ok: true };
-    case 'haptic':
-      try { navigator.vibrate && navigator.vibrate(params.pattern || 15); } catch {}
-      return { ok: true };
-    case 'getLocation': return await getLocationHelper();
-    case 'scanQR': return { value: await scanQRHelper() };
-    case 'pickFile': return await pickFileHelper({ accept: params.accept || '*/*', multiple: !!params.multiple });
-    case 'takePhoto': return await takePhotoHelper();
-    case 'getClipboard': {
-      try { const txt = await navigator.clipboard.readText(); return { text: txt }; }
-      catch (e) { throw new Error('Нет доступа к буферу'); }
-    }
-    case 'setClipboard': {
-      try { await navigator.clipboard.writeText(String(params.text || '')); return { ok: true }; }
-      catch (e) { throw new Error('Нет доступа к буферу'); }
-    }
-    case 'getDeviceInfo':
-      return {
-        platform: navigator.platform, userAgent: navigator.userAgent,
-        language: navigator.language,
-        screen: { w: screen.width, h: screen.height },
-        dpr: devicePixelRatio,
-        theme: state.theme,
-        dark: document.documentElement.getAttribute('data-theme') === 'dark'
-      };
-    case 'openLink':
-      if (params.url) window.open(params.url, '_blank', 'noopener');
-      return { ok: true };
-    case 'share':
-      await shareHelper({ title: params.title, text: params.text, url: params.url });
-      return { ok: true };
-    case 'notify': {
-      if (!('Notification' in window)) throw new Error('Нет поддержки');
-      if (Notification.permission !== 'granted') {
-        const p = await Notification.requestPermission();
-        if (p !== 'granted') throw new Error('Отклонено');
-      }
-      new Notification(String(params.title || 'QR Chat'), {
-        body: String(params.body || '').slice(0, 200),
-        tag: 'miniapp-' + (currentMiniApp?.id || '')
-      });
-      return { ok: true };
-    }
-    case 'getStorage': {
-      const key = 'miniapp:' + (currentMiniApp?.id || '') + ':' + params.key;
-      return localStorage.getItem(key);
-    }
-    case 'setStorage': {
-      const k2 = 'miniapp:' + (currentMiniApp?.id || '') + ':' + params.key;
-      localStorage.setItem(k2, params.value);
-      return { ok: true };
-    }
-    case 'listStorage': {
-      const prefix = 'miniapp:' + (currentMiniApp?.id || '') + ':';
-      const out = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith(prefix)) out.push(k.slice(prefix.length));
-      }
-      return out;
-    }
-    case 'clearStorage': {
-      const prefix = 'miniapp:' + (currentMiniApp?.id || '') + ':';
-      const toDel = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith(prefix)) toDel.push(k);
-      }
-      toDel.forEach(k => localStorage.removeItem(k));
-      return { ok: true, count: toDel.length };
-    }
-    case 'getGlobalStorage': {
-      return localStorage.getItem('miniapp-global:' + params.key);
-    }
-    case 'setGlobalStorage': {
-      localStorage.setItem('miniapp-global:' + params.key, params.value);
-      return { ok: true };
-    }
-    case 'close':
-      closeMiniApp();
-      return { ok: true };
-    default:
-      throw new Error('Unknown method: ' + method);
+  if (board.every(c => c)) {
+    gameOver = true;
+    winner = 'draw';
+    showResult('draw');
   }
 }
 
-window.addEventListener('message', async (e) => {
-  const d = e.data;
-  if (!d || !d.__qrc) return;
-  const reply = (result, error) => {
-    if (e.source) e.source.postMessage({ __qrc: 1, id: d.id, result, error }, '*');
-  };
-  try {
-    const result = await bridgeCall(d.method, d.params || {});
-    reply(result);
-  } catch (err) {
-    reply(null, err.message);
-  }
-});
-
-// ================================================================
-//  TOAST
-// ================================================================
-function QRChat_toast(text) {
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = text;
-  document.body.appendChild(el);
+function showResult(kind) {
+  QRChat.haptic(kind === 'win' ? [100,50,100,50,100] : 200);
   setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transition = 'opacity 0.3s';
-    setTimeout(() => el.remove(), 300);
-  }, 2000);
+    const ov = $('resultOverlay');
+    const t = $('resultTitle');
+    const s = $('resultSub');
+    if (kind === 'win') { t.textContent = '🎉 Победа!'; s.textContent = 'Ты обыграл соперника'; }
+    else if (kind === 'lose') { t.textContent = '😔 Проигрыш'; s.textContent = 'Соперник оказался сильнее'; }
+    else { t.textContent = '🤝 Ничья'; s.textContent = 'Отличная игра!'; }
+    ov.classList.add('show');
+  }, 400);
 }
 
 // ================================================================
-//  EXPORT / IMPORT
+//  RENDER BOARD
 // ================================================================
-function exportData() {
-  const data = {
-    version: 10, exportedAt: new Date().toISOString(),
-    me: { sid: state.me.sid, nick: state.me.nick },
-    chats: state.chats, seenIds: state.seenIds
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'qrchat-' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
-  state.lastExport = Date.now(); saveNow();
-}
-async function importData(file) {
-  try {
-    const txt = await file.text();
-    const d = JSON.parse(txt);
-    if (!d.chats) throw new Error('Неверный формат');
-    for (const [t, c] of Object.entries(d.chats)) {
-      if (!state.chats[t]) state.chats[t] = c;
-      else {
-        const seen = new Set(state.chats[t].messages.map(m => m.id));
-        for (const m of (c.messages||[])) if (!seen.has(m.id)) state.chats[t].messages.push(m);
-        state.chats[t].messages.sort((a,b) => a.ts - b.ts);
-        state.chats[t].lastTs = Math.max(state.chats[t].lastTs||0, c.lastTs||0);
-      }
+function renderBoard() {
+  $('root').innerHTML = `
+    <div class="header">
+      <h1>❌⭕ Крестики-нолики</h1>
+      <div class="subtitle">Ты играешь за <b>${mySymbol}</b></div>
+    </div>
+    <div class="score">
+      <div class="item me"><div class="who">Ты</div><div class="val">${scores.me}</div></div>
+      <div class="item opp"><div class="who">Соперник</div><div class="val">${scores.opp}</div></div>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="status" id="status">…</div>
+    <div class="btns">
+      <button class="btn secondary" onclick="leaveGame()">🚪 Выйти</button>
+    </div>
+  `;
+
+  const boardEl = $('board');
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    if (board[i]) {
+      cell.textContent = board[i];
+      cell.classList.add('taken', board[i]);
     }
-    saveNow(); alert('Импортировано!'); screenChatList();
-  } catch (e) { alert('Ошибка: ' + e.message); }
-}
-
-setInterval(() => {
-  if (Date.now() - state.lastExport > 7*24*3600*1000 && Object.keys(state.chats).length) {
-    exportData();
+    if (winLine && winLine.includes(i)) cell.classList.add('win');
+    if (gameOver || turn !== mySymbol || !gameStarted) cell.classList.add('disabled');
+    cell.addEventListener('click', () => cellClick(i));
+    boardEl.appendChild(cell);
   }
-}, 3600*1000);
 
-// ================================================================
-//  THEME
-// ================================================================
-function applyTheme() {
-  let t = state.theme;
-  if (t === 'auto') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', t);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = t==='dark' ? '#17212B' : '#07C160';
-}
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (state.theme === 'auto') applyTheme(); });
-
-// ================================================================
-//  TOPBAR
-// ================================================================
-$('menuBtn').addEventListener('click', screenChatMenu);
-$('usersBtn').addEventListener('click', screenUsers);
-$('titleBlock').addEventListener('click', screenUsers);
-$('scanBtnTop').addEventListener('click', startScan);
-$('viewer').addEventListener('click', () => { $('viewer').classList.remove('show'); $('viewerImg').src = ''; });
-
-// ================================================================
-//  SEND UI
-// ================================================================
-const msgInput = $('msgInput');
-const sendBtn = $('sendBtn');
-const photoBtn = $('photoBtn');
-const micBtn = $('micBtn');
-const fileInput = $('fileInput');
-
-function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
-
-async function sendText() {
-  const t = msgInput.value.trim();
-  if (!t) return;
-  msgInput.value = ''; autoGrow(msgInput);
-  const extra = replyTo ? { replyTo: replyTo.id } : {};
-  clearReply();
-  await send(Object.assign({ type: 'text', text: t }, extra));
-}
-sendBtn.addEventListener('click', sendText);
-msgInput.addEventListener('input', () => autoGrow(msgInput));
-msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); } });
-
-photoBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', async () => {
-  const f = fileInput.files[0]; fileInput.value = '';
-  if (!f) return;
-  try {
-    const blob = await compressImage(f, 1600, 0.82);
-    const url = URL.createObjectURL(blob);
-    const extra = replyTo ? { replyTo: replyTo.id } : {};
-    clearReply();
-    await send(Object.assign({ type: 'image', url, _blob: blob }, extra));
-  } catch (e) { alert('Ошибка фото: ' + e.message); }
-});
-
-let mediaRecorder = null, audioChunks = [];
-micBtn.addEventListener('click', async () => {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    micBtn.style.background = ''; micBtn.style.color = '';
-    return;
+  const st = $('status');
+  if (gameOver) {
+    if (winner === mySymbol) { st.textContent = '🎉 Ты победил!'; st.className = 'status win'; }
+    else if (winner === 'draw') { st.textContent = '🤝 Ничья'; st.className = 'status draw'; }
+    else { st.textContent = '😔 Ты проиграл'; st.className = 'status lose'; }
+  } else if (!gameStarted) {
+    st.textContent = '⏳ Ждём соперника…'; st.className = 'status waiting';
+  } else if (turn === mySymbol) {
+    st.textContent = '👆 Твой ход'; st.className = 'status your-turn';
+  } else {
+    st.textContent = '⏳ Ход соперника'; st.className = 'status waiting';
   }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => { if (e.data.size) audioChunks.push(e.data); };
-    mediaRecorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      micBtn.style.background = ''; micBtn.style.color = '';
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      if (blob.size < 100) return;
-      const url = URL.createObjectURL(blob);
-      const extra = replyTo ? { replyTo: replyTo.id } : {};
-      clearReply();
-      await send(Object.assign({ type: 'voice', url, _blob: blob }, extra));
-    };
-    mediaRecorder.start();
-    micBtn.style.background = '#ffebee';
-    micBtn.style.color = '#d93025';
-    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 60000);
-  } catch (e) { alert('Микрофон: ' + e.message); }
-});
+}
 
-function compressImage(file, maxDim, q) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-        else { width = Math.round(width * maxDim / height); height = maxDim; }
-      }
-      const c = document.createElement('canvas');
-      c.width = width; c.height = height;
-      c.getContext('2d').drawImage(img, 0, 0, width, height);
-      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob')), 'image/jpeg', q);
-    };
-    img.onerror = () => reject(new Error('load'));
-    img.src = URL.createObjectURL(file);
-  });
+async function doRematch() {
+  $('resultOverlay').classList.remove('show');
+  resetBoard();
+  turn = 'X';
+  winner = null; winLine = null; gameOver = false;
+  renderBoard();
+  await post({ type: 'rematch', from: me.sid });
+}
+
+function resetBoard() { board = Array(9).fill(''); }
+
+async function leaveGame() {
+  stopScanner();
+  if (es) { try { es.close(); } catch {} es = null; }
+  await post({ type: 'leave', from: me.sid });
+  QRChat.close();
+}
+
+async function safeClose() {
+  try { await QRChat.close(); } catch {}
+}
+
+function startGame() {
+  gameStarted = false;
+  renderBoard();
+  QRChat.setTitle('❌⭕ Игра');
 }
 
 // ================================================================
 //  BOOT
 // ================================================================
-(function boot() {
-  loadState();
-  applyTheme();
-  if (!state.me.nick) { screenWelcome(); return; }
-  if (state.currentChat && state.chats[state.currentChat]) enterChat(state.currentChat, false);
-  else screenChatList();
+(async function boot() {
+  try {
+    me = await QRChat.getUser();
+    if (!me || !me.sid) throw new Error('SDK не отвечает');
+    QRChat.setTitle('❌⭕ Крестики-нолики');
+    renderLobby();
+  } catch (e) {
+    $('root').innerHTML = `
+      <div class="lobby">
+        <div class="header">
+          <h1>⚠️ Ошибка</h1>
+          <div class="subtitle" style="color:#f87171;">${e.message}</div>
+        </div>
+        <button class="btn secondary" onclick="location.reload()">↻ Попробовать снова</button>
+      </div>
+    `;
+  }
 })();
 
-window.addEventListener('beforeunload', () => {
-  saveNow(); disconnect(); stopPresence(); stopScan();
-});
-
-window.__qrchat = { state, enterChat, send, sendExternal, renderAll, NTFY_SERVERS, rotateServer, openMiniApp };
+// Экспорт в window
+window.createGame = createGame;
+window.joinGame = joinGame;
+window.copyCode = copyCode;
+window.shareCode = shareCode;
+window.cellClick = cellClick;
+window.doRematch = doRematch;
+window.leaveGame = leaveGame;
+window.safeClose = safeClose;
+window.stopScanner = stopScanner;
+window.manualJoin = manualJoin;
 </script>
 </body>
 </html>
