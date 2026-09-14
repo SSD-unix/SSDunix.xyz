@@ -13,11 +13,9 @@
     min-height: 100vh; padding: 20px;
     padding-top: calc(20px + env(safe-area-inset-top));
     padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
-
   .header { text-align: center; margin-bottom: 24px; }
   h1 { font-size: 22px; margin: 0 0 6px; }
   .subtitle { font-size: 13px; color: #94a3b8; }
-
   .score { display: flex; gap: 24px; margin-bottom: 20px;
     background: rgba(255,255,255,0.05); padding: 12px 24px; border-radius: 14px; }
   .score .item { text-align: center; }
@@ -26,7 +24,6 @@
   .score .val { font-size: 24px; font-weight: 700; }
   .score .item.me .val { color: #22d3ee; }
   .score .item.opp .val { color: #f472b6; }
-
   .board { display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 8px; width: min(90vw, 340px); aspect-ratio: 1;
     background: rgba(255,255,255,0.03); padding: 8px; border-radius: 20px;
@@ -43,7 +40,6 @@
   .cell.disabled { cursor: not-allowed; opacity: 0.9; }
   .cell.win { background: rgba(34,211,238,0.25); animation: pulse 0.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { background: rgba(34,211,238,0.25); } 50% { background: rgba(34,211,238,0.45); } }
-
   .status { font-size: 16px; font-weight: 600; text-align: center;
     padding: 12px 20px; border-radius: 12px;
     background: rgba(255,255,255,0.05); margin-bottom: 16px;
@@ -53,35 +49,25 @@
   .status.win { background: rgba(34,197,94,0.25); color: #4ade80; }
   .status.lose { background: rgba(239,68,68,0.25); color: #f87171; }
   .status.draw { background: rgba(251,191,36,0.25); color: #fbbf24; }
-
   .btn { padding: 14px 28px; border-radius: 12px; border: none;
     font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
     background: #22d3ee; color: #0f172a; margin: 4px; }
   .btn:active { transform: scale(0.97); }
   .btn.secondary { background: rgba(255,255,255,0.1); color: #fff; }
-  .btns { display: flex; gap: 8px; }
-
+  .btns { display: flex; gap: 8px; justify-content: center; }
   .lobby { text-align: center; max-width: 400px; width: 100%; }
-  .lobby input { width: 100%; padding: 14px; border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
-    color: #fff; font-size: 15px; font-family: inherit; outline: none;
-    margin-bottom: 12px; }
-  .lobby input:focus { border-color: #22d3ee; }
-
   #qrBox { margin: 20px auto; display: flex; justify-content: center;
-    background: #fff; padding: 12px; border-radius: 14px;
-    width: fit-content; }
+    align-items: center; background: #fff; padding: 12px; border-radius: 14px;
+    width: fit-content; min-width: 220px; min-height: 220px; }
   #qrBox canvas, #qrBox img { display: block; }
-
+  #qrBox .placeholder { color: #999; font-size: 13px; padding: 40px 20px; text-align: center; }
   .code { font-family: ui-monospace, monospace; background: rgba(255,255,255,0.08);
     padding: 8px 14px; border-radius: 8px; font-size: 14px;
-    word-break: break-all; margin: 12px 0; user-select: all; }
-
+    word-break: break-all; margin: 12px 0; user-select: all; color: #67e8f9; }
   .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1);
     border-top-color: #22d3ee; border-radius: 50%;
     animation: spin 0.8s linear infinite; margin: 20px auto; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7);
     z-index: 100; display: none; align-items: center; justify-content: center;
     backdrop-filter: blur(8px); }
@@ -92,39 +78,78 @@
     max-width: 340px; width: 90%; }
   .overlay .box h2 { font-size: 22px; margin: 0 0 10px; }
   .overlay .box p { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
+  .err { color: #f87171; font-size: 12px; margin-top: 12px; word-break: break-word; }
+  .log { font-family: ui-monospace, monospace; font-size: 10px;
+    color: #64748b; margin-top: 20px; max-height: 100px;
+    overflow-y: auto; text-align: left; padding: 8px;
+    background: rgba(0,0,0,0.2); border-radius: 8px; white-space: pre-wrap; }
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <div class="lobby">
+    <div class="header">
+      <h1>❌⭕ Крестики-нолики</h1>
+      <div class="subtitle">Загрузка…</div>
+    </div>
+    <div class="spinner"></div>
+  </div>
+</div>
 
 <div class="overlay" id="resultOverlay">
   <div class="box">
     <h2 id="resultTitle">Победа!</h2>
-    <p id="resultSub">Ты обыграл соперника</p>
-    <div class="btns" style="justify-content:center;">
-      <button class="btn" onclick="rematch()">🔄 Ещё раз</button>
-      <button class="btn secondary" onclick="QRChat.close()">✕ Выйти</button>
+    <p id="resultSub"></p>
+    <div class="btns">
+      <button class="btn" onclick="doRematch()">🔄 Ещё раз</button>
+      <button class="btn secondary" onclick="safeClose()">✕ Выйти</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
-// ===== SDK =====
+'use strict';
+
+// ================================================================
+//  LOG
+// ================================================================
+let logs = [];
+function plog(msg) {
+  logs.push(new Date().toISOString().slice(11,23) + ' ' + msg);
+  if (logs.length > 50) logs.shift();
+  const el = document.getElementById('debugLog');
+  if (el) el.textContent = logs.join('\n');
+  console.log('[TTT]', msg);
+}
+
+// ================================================================
+//  SDK
+// ================================================================
 const QRChat = {
-  _id: 0, _pending: {},
-  call(m, p) { return new Promise((res, rej) => {
-    const id = ++this._id; this._pending[id] = { res, rej };
-    parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
-  })},
+  _id: 0, _pending: {}, _timeout: 15000,
+  call(m, p) {
+    return new Promise((res, rej) => {
+      const id = ++this._id;
+      const timer = setTimeout(() => {
+        delete this._pending[id];
+        rej(new Error('timeout: ' + m));
+      }, this._timeout);
+      this._pending[id] = {
+        res: v => { clearTimeout(timer); res(v); },
+        rej: e => { clearTimeout(timer); rej(e); }
+      };
+      parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
+    });
+  },
   getUser:      () => QRChat.call('getUser'),
   showToast:    (t) => QRChat.call('showToast', { text: t }),
   setTitle:     (t) => QRChat.call('setTitle', { text: t }),
-  haptic:       (ms) => QRChat.call('haptic', { pattern: ms || 15 }),
+  haptic:       (ms) => QRChat.call('haptic', { pattern: ms || 15 }).catch(() => {}),
   scanQR:       () => QRChat.call('scanQR'),
   close:        () => QRChat.call('close'),
   setClipboard: (t) => QRChat.call('setClipboard', { text: t }),
-  share:        (o) => QRChat.call('share', o)
+  share:        (o) => QRChat.call('share', o).catch(() => {})
 };
 window.addEventListener('message', e => {
   const d = e.data;
@@ -135,11 +160,14 @@ window.addEventListener('message', e => {
   d.error ? p.rej(new Error(d.error)) : p.res(d.result);
 });
 
-// ===== Игровая логика =====
+// ================================================================
+//  STATE
+// ================================================================
+const NTFY = 'https://ntfy.sh';
 let me = null;
 let gameId = null;
-let mySymbol = null;   // 'X' или 'O'
-let myRole = null;     // 'host' или 'guest'
+let mySymbol = null;
+let myRole = null;
 let board = Array(9).fill('');
 let turn = 'X';
 let gameOver = false;
@@ -147,19 +175,22 @@ let winner = null;
 let winLine = null;
 let scores = { me: 0, opp: 0 };
 let es = null;
-
-const NTFY = 'https://ntfy.sh';
-const topicFor = id => 'game-' + id;
+let gameStarted = false;
+let lastHelloSent = 0;
 
 function rhex(n) {
   const a = new Uint8Array(n);
   crypto.getRandomValues(a);
   return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
 }
+function topicFor(id) { return 'game-' + id; }
+function $(id) { return document.getElementById(id); }
 
-// ===== Лобби =====
+// ================================================================
+//  LOBBY
+// ================================================================
 function renderLobby() {
-  document.getElementById('root').innerHTML = `
+  $('root').innerHTML = `
     <div class="lobby">
       <div class="header">
         <h1>❌⭕ Крестики-нолики</h1>
@@ -172,49 +203,89 @@ function renderLobby() {
       <button class="btn secondary" style="width:100%;padding:16px;font-size:16px;" onclick="joinGame()">
         📷 Присоединиться по QR
       </button>
+      <div class="err" id="lobbyErr"></div>
+      <div class="log" id="debugLog">${logs.join('\n')}</div>
     </div>
   `;
 }
 
-async function createGame() {
-  gameId = rhex(5);          // уникальный ID игры
-  myRole = 'host';
-  mySymbol = 'X';            // хост всегда X (ходит первым)
-  startGame();
-  showInviteQR();
+// ================================================================
+//  CREATE
+// ================================================================
+function createGame() {
+  plog('createGame start');
+  try {
+    gameId = rhex(5);
+    myRole = 'host';
+    mySymbol = 'X';
+    gameStarted = false;
+    board = Array(9).fill('');
+    turn = 'X';
+    gameOver = false;
+    winner = null;
+    winLine = null;
+    plog('gameId=' + gameId);
+    showInviteQR();
+  } catch (e) {
+    plog('createGame ERROR: ' + e.message);
+    const errEl = $('lobbyErr');
+    if (errEl) errEl.textContent = 'Ошибка: ' + e.message;
+  }
 }
 
+// ================================================================
+//  JOIN
+// ================================================================
 async function joinGame() {
+  plog('joinGame start');
   try {
+    $('lobbyErr').textContent = 'Открываю сканер…';
     const res = await QRChat.scanQR();
-    if (!res || !res.value) return;
-    const v = res.value.trim();
-    // формат: game-abc12
-    if (!v.startsWith('game-')) {
-      QRChat.showToast('Это не QR игры');
+    plog('scanQR result: ' + JSON.stringify(res));
+    if (!res || !res.value) {
+      $('lobbyErr').textContent = 'Сканирование отменено';
       return;
     }
-    gameId = v.slice(5);
+    const v = res.value.trim();
+    plog('scanned: ' + v);
+    let id = null;
+    if (v.startsWith('game-')) id = v.slice(5);
+    else if (v.startsWith('nfc-')) id = v.slice(4);
+    else id = v;
+    if (!id) { QRChat.showToast('Пустой QR'); return; }
+
+    gameId = id;
     myRole = 'guest';
     mySymbol = 'O';
-    // Присоединяемся
-    await connectToGame();
+    gameStarted = false;
+    board = Array(9).fill('');
+    turn = 'X';
+    gameOver = false;
+    winner = null;
+    winLine = null;
+    plog('joining game ' + gameId);
+    connectToGame();
     startGame();
-  } catch(e) {
+  } catch (e) {
+    plog('joinGame ERROR: ' + e.message);
+    $('lobbyErr').textContent = 'Ошибка: ' + e.message;
     QRChat.showToast('Ошибка: ' + e.message);
   }
 }
 
-// ===== Показ QR =====
+// ================================================================
+//  INVITE QR
+// ================================================================
 function showInviteQR() {
-  document.getElementById('root').innerHTML = `
+  const topic = topicFor(gameId);
+  $('root').innerHTML = `
     <div class="lobby">
       <div class="header">
         <h1>🎮 Игра создана</h1>
         <div class="subtitle">Покажи QR сопернику</div>
       </div>
       <div id="qrBox"></div>
-      <div class="code" id="gameCode">${topicFor(gameId)}</div>
+      <div class="code">${topic}</div>
       <button class="btn secondary" style="width:100%;" onclick="copyCode()">📋 Копировать код</button>
       <div style="height:8px;"></div>
       <button class="btn secondary" style="width:100%;" onclick="shareCode()">📤 Поделиться</button>
@@ -222,41 +293,75 @@ function showInviteQR() {
         <div class="spinner"></div>
         Ждём соперника…
       </div>
+      <div class="err" id="qrErr"></div>
+      <div class="log" id="debugLog">${logs.join('\n')}</div>
     </div>
   `;
-  new QRCode(document.getElementById('qrBox'), {
-    text: topicFor(gameId),
-    width: 220, height: 220,
-    colorDark: '#000', colorLight: '#fff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-  // Подключаемся к топику — ждём guest'а
+
+  // QR
+  const box = $('qrBox');
+  if (typeof QRCode === 'undefined') {
+    plog('QRCode lib not loaded — fallback');
+    // Fallback: рисованная заглушка + текст
+    box.innerHTML = `<div class="placeholder">QR-библиотека не загрузилась.<br><br>
+      Скажи сопернику код:<br><b style="color:#0f172a">${topic}</b></div>`;
+  } else {
+    try {
+      box.innerHTML = '';
+      new QRCode(box, {
+        text: topic,
+        width: 220, height: 220,
+        colorDark: '#000', colorLight: '#fff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      plog('QR rendered');
+    } catch (e) {
+      plog('QR render ERROR: ' + e.message);
+      box.innerHTML = `<div class="placeholder">Ошибка QR.<br>Код: <b>${topic}</b></div>`;
+    }
+  }
+
   connectToGame();
 }
 
 async function copyCode() {
-  await QRChat.setClipboard(topicFor(gameId));
-  QRChat.showToast('Скопировано');
+  try {
+    await QRChat.setClipboard(topicFor(gameId));
+    QRChat.showToast('Скопировано');
+  } catch (e) {
+    QRChat.showToast('Не удалось скопировать');
+  }
 }
 
 async function shareCode() {
-  await QRChat.share({
-    title: 'Крестики-нолики',
-    text: 'Играй со мной: ' + topicFor(gameId)
-  });
+  try {
+    await QRChat.share({
+      title: 'Крестики-нолики',
+      text: 'Играй со мной: ' + topicFor(gameId)
+    });
+  } catch (e) {}
 }
 
-// ===== Подключение к топику игры =====
+// ================================================================
+//  NETWORK
+// ================================================================
 function connectToGame() {
-  if (es) { es.close(); es = null; }
-  const url = `${NTFY}/${encodeURIComponent(topicFor(gameId))}/sse?since=all`;
-  es = new EventSource(url);
+  if (es) { try { es.close(); } catch {} es = null; }
+  const topic = topicFor(gameId);
+  const url = `${NTFY}/${encodeURIComponent(topic)}/sse?since=all`;
+  plog('SSE connect: ' + url);
+  try {
+    es = new EventSource(url);
+  } catch (e) {
+    plog('EventSource ERROR: ' + e.message);
+    return;
+  }
   es.onopen = () => {
-    // Отправляем hello чтобы соперник знал что мы тут
-    post({ type: 'hello', role: myRole, nick: me.nick });
+    plog('SSE open');
+    sendHello();
   };
   es.onerror = () => {
-    // ntfy сам переподключится
+    plog('SSE error (auto-reconnect)');
   };
   es.onmessage = (ev) => {
     let d;
@@ -268,30 +373,43 @@ function connectToGame() {
   };
 }
 
+async function sendHello() {
+  // Не спамим hello — не чаще чем раз в 3 сек
+  const now = Date.now();
+  if (now - lastHelloSent < 3000) return;
+  lastHelloSent = now;
+  await post({ type: 'hello', role: myRole, nick: me ? me.nick : 'unknown', from: me ? me.sid : 'noid' });
+}
+
 async function post(obj) {
+  const topic = topicFor(gameId);
   try {
-    await fetch(`${NTFY}/${encodeURIComponent(topicFor(gameId))}`, {
+    const r = await fetch(`${NTFY}/${encodeURIComponent(topic)}`, {
       method: 'POST',
       body: JSON.stringify(obj)
     });
-  } catch(e) { console.warn('post fail', e); }
+    if (!r.ok) plog('POST ' + r.status);
+    else plog('POST ok: ' + obj.type);
+  } catch (e) {
+    plog('POST fail: ' + e.message);
+  }
 }
 
-// ===== Обработка сообщений игры =====
+// ================================================================
+//  GAME EVENTS
+// ================================================================
 function handleGameEvent(msg) {
   if (!msg || !msg.type) return;
-  // Игнорируем свои сообщения
-  if (msg.from === me.sid) return;
+  if (me && msg.from === me.sid) return;  // свои игнорим
+
+  plog('recv: ' + msg.type);
 
   if (msg.type === 'hello') {
-    if (myRole === 'host' && !gameStarted) {
+    if (!gameStarted) {
       gameStarted = true;
+      plog('opponent joined — starting');
       QRChat.haptic([50, 50, 50]);
       QRChat.showToast('Соперник присоединился!');
-      renderBoard();
-    } else if (myRole === 'guest') {
-      // Хост нам ответил — можно начинать
-      gameStarted = true;
       renderBoard();
     }
     return;
@@ -310,7 +428,7 @@ function handleGameEvent(msg) {
 
   if (msg.type === 'rematch') {
     resetBoard();
-    turn = 'X'; // X всегда первый
+    turn = 'X';
     winner = null; winLine = null; gameOver = false;
     QRChat.showToast('Соперник начал новую игру');
     renderBoard();
@@ -318,7 +436,9 @@ function handleGameEvent(msg) {
   }
 }
 
-// ===== Логика хода =====
+// ================================================================
+//  GAME LOGIC
+// ================================================================
 async function cellClick(i) {
   if (gameOver) return;
   if (!gameStarted) { QRChat.showToast('Ждём соперника'); return; }
@@ -336,9 +456,9 @@ async function cellClick(i) {
 
 function checkWin() {
   const lines = [
-    [0,1,2],[3,4,5],[6,7,8], // горизонтали
-    [0,3,6],[1,4,7],[2,5,8], // вертикали
-    [0,4,8],[2,4,6]          // диагонали
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
   ];
   for (const l of lines) {
     if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[0]] === board[l[2]]) {
@@ -360,9 +480,9 @@ function checkWin() {
 function showResult(kind) {
   QRChat.haptic(kind === 'win' ? [100,50,100,50,100] : 200);
   setTimeout(() => {
-    const ov = document.getElementById('resultOverlay');
-    const t = document.getElementById('resultTitle');
-    const s = document.getElementById('resultSub');
+    const ov = $('resultOverlay');
+    const t = $('resultTitle');
+    const s = $('resultSub');
     if (kind === 'win') { t.textContent = '🎉 Победа!'; s.textContent = 'Ты обыграл соперника'; }
     else if (kind === 'lose') { t.textContent = '😔 Проигрыш'; s.textContent = 'Соперник оказался сильнее'; }
     else { t.textContent = '🤝 Ничья'; s.textContent = 'Отличная игра!'; }
@@ -370,35 +490,28 @@ function showResult(kind) {
   }, 400);
 }
 
-// ===== Рендер доски =====
+// ================================================================
+//  RENDER BOARD
+// ================================================================
 function renderBoard() {
-  document.getElementById('root').innerHTML = `
+  $('root').innerHTML = `
     <div class="header">
       <h1>❌⭕ Крестики-нолики</h1>
       <div class="subtitle">Ты играешь за <b>${mySymbol}</b></div>
     </div>
-
     <div class="score">
-      <div class="item me">
-        <div class="who">Ты</div>
-        <div class="val">${scores.me}</div>
-      </div>
-      <div class="item opp">
-        <div class="who">Соперник</div>
-        <div class="val">${scores.opp}</div>
-      </div>
+      <div class="item me"><div class="who">Ты</div><div class="val">${scores.me}</div></div>
+      <div class="item opp"><div class="who">Соперник</div><div class="val">${scores.opp}</div></div>
     </div>
-
     <div class="board" id="board"></div>
-
     <div class="status" id="status">…</div>
-
     <div class="btns">
       <button class="btn secondary" onclick="leaveGame()">🚪 Выйти</button>
     </div>
+    <div class="log" id="debugLog">${logs.join('\n')}</div>
   `;
 
-  const boardEl = document.getElementById('board');
+  const boardEl = $('board');
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
@@ -412,7 +525,7 @@ function renderBoard() {
     boardEl.appendChild(cell);
   }
 
-  const st = document.getElementById('status');
+  const st = $('status');
   if (gameOver) {
     if (winner === mySymbol) { st.textContent = '🎉 Ты победил!'; st.className = 'status win'; }
     else if (winner === 'draw') { st.textContent = '🤝 Ничья'; st.className = 'status draw'; }
@@ -426,8 +539,8 @@ function renderBoard() {
   }
 }
 
-async function rematch() {
-  document.getElementById('resultOverlay').classList.remove('show');
+async function doRematch() {
+  $('resultOverlay').classList.remove('show');
   resetBoard();
   turn = 'X';
   winner = null; winLine = null; gameOver = false;
@@ -435,27 +548,59 @@ async function rematch() {
   await post({ type: 'rematch', from: me.sid });
 }
 
-function resetBoard() {
-  board = Array(9).fill('');
-}
+function resetBoard() { board = Array(9).fill(''); }
 
 async function leaveGame() {
-  if (es) { es.close(); es = null; }
+  if (es) { try { es.close(); } catch {} es = null; }
   await post({ type: 'leave', from: me.sid });
   QRChat.close();
 }
 
-function startGame() {
-  renderBoard();
-  QRChat.setTitle('❌⭕ Игра');
+async function safeClose() {
+  try { await QRChat.close(); } catch {}
 }
 
-// ===== Старт =====
-(async () => {
-  me = await QRChat.getUser();
-  QRChat.setTitle('❌⭕ Крестики-нолики');
-  renderLobby();
+function startGame() {
+  gameStarted = false;
+  renderBoard();
+  QRChat.setTitle('❌⭕ Игра').catch(() => {});
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+(async function boot() {
+  plog('boot');
+  try {
+    me = await QRChat.getUser();
+    plog('user: ' + me.nick + ' / ' + me.sid);
+    if (!me || !me.sid) throw new Error('getUser вернул пустоту');
+    QRChat.setTitle('❌⭕ Крестики-нолики').catch(() => {});
+    renderLobby();
+  } catch (e) {
+    plog('boot ERROR: ' + e.message);
+    $('root').innerHTML = `
+      <div class="lobby">
+        <div class="header">
+          <h1>⚠️ Ошибка</h1>
+          <div class="subtitle" style="color:#f87171;">${e.message}</div>
+        </div>
+        <div class="log" id="debugLog">${logs.join('\n')}</div>
+        <button class="btn secondary" style="margin-top:12px;" onclick="location.reload()">↻ Попробовать снова</button>
+      </div>
+    `;
+  }
 })();
+
+// Экспорт в window чтобы onclick работал
+window.createGame = createGame;
+window.joinGame = joinGame;
+window.copyCode = copyCode;
+window.shareCode = shareCode;
+window.cellClick = cellClick;
+window.doRematch = doRematch;
+window.leaveGame = leaveGame;
+window.safeClose = safeClose;
 </script>
 </body>
 </html>
