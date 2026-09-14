@@ -6,13 +6,14 @@
 <title>Крестики-нолики</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; height: 100%; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(160deg, #1e293b, #0f172a); color: #fff;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 20px;
+    background: linear-gradient(160deg, #1e293b, #0f172a); color: #fff; }
+  #root { height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 20px;
     padding-top: calc(20px + env(safe-area-inset-top));
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto; }
   .header { text-align: center; margin-bottom: 24px; }
   h1 { font-size: 22px; margin: 0 0 6px; }
   .subtitle { font-size: 13px; color: #94a3b8; }
@@ -32,7 +33,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 56px; font-weight: 700; cursor: pointer;
     transition: background 0.15s, transform 0.1s;
-    user-select: none; position: relative; }
+    user-select: none; }
   .cell:active:not(.taken):not(.disabled) { transform: scale(0.95); }
   .cell.taken { cursor: default; }
   .cell.X { color: #22d3ee; }
@@ -42,8 +43,7 @@
   @keyframes pulse { 0%,100% { background: rgba(34,211,238,0.25); } 50% { background: rgba(34,211,238,0.45); } }
   .status { font-size: 16px; font-weight: 600; text-align: center;
     padding: 12px 20px; border-radius: 12px;
-    background: rgba(255,255,255,0.05); margin-bottom: 16px;
-    min-width: 200px; transition: background 0.3s; }
+    background: rgba(255,255,255,0.05); margin-bottom: 16px; min-width: 200px; }
   .status.your-turn { background: rgba(34,211,238,0.2); color: #67e8f9; }
   .status.waiting { background: rgba(148,163,184,0.15); color: #94a3b8; }
   .status.win { background: rgba(34,197,94,0.25); color: #4ade80; }
@@ -54,13 +54,14 @@
     background: #22d3ee; color: #0f172a; margin: 4px; }
   .btn:active { transform: scale(0.97); }
   .btn.secondary { background: rgba(255,255,255,0.1); color: #fff; }
-  .btns { display: flex; gap: 8px; justify-content: center; }
-  .lobby { text-align: center; max-width: 400px; width: 100%; }
+  .btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .lobby { text-align: center; max-width: 420px; width: 100%; }
   #qrBox { margin: 20px auto; display: flex; justify-content: center;
     align-items: center; background: #fff; padding: 12px; border-radius: 14px;
     width: fit-content; min-width: 220px; min-height: 220px; }
   #qrBox canvas, #qrBox img { display: block; }
-  #qrBox .placeholder { color: #999; font-size: 13px; padding: 40px 20px; text-align: center; }
+  #qrBox .placeholder { color: #333; font-size: 13px; padding: 30px 20px;
+    text-align: center; word-break: break-all; }
   .code { font-family: ui-monospace, monospace; background: rgba(255,255,255,0.08);
     padding: 8px 14px; border-radius: 8px; font-size: 14px;
     word-break: break-all; margin: 12px 0; user-select: all; color: #67e8f9; }
@@ -69,20 +70,62 @@
     animation: spin 0.8s linear infinite; margin: 20px auto; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    z-index: 100; display: none; align-items: center; justify-content: center;
-    backdrop-filter: blur(8px); }
-  .overlay.show { display: flex; animation: fadeIn 0.2s; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    z-index: 100; display: none; align-items: center; justify-content: center; }
+  .overlay.show { display: flex; }
   .overlay .box { background: linear-gradient(160deg, #1e293b, #0f172a);
     padding: 30px; border-radius: 20px; text-align: center;
     max-width: 340px; width: 90%; }
   .overlay .box h2 { font-size: 22px; margin: 0 0 10px; }
   .overlay .box p { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
   .err { color: #f87171; font-size: 12px; margin-top: 12px; word-break: break-word; }
-  .log { font-family: ui-monospace, monospace; font-size: 10px;
-    color: #64748b; margin-top: 20px; max-height: 100px;
-    overflow-y: auto; text-align: left; padding: 8px;
-    background: rgba(0,0,0,0.2); border-radius: 8px; white-space: pre-wrap; }
+  .info { color: #64748b; font-size: 11px; margin-top: 12px; line-height: 1.4; }
+
+  .scanner-modal {
+    position: fixed; inset: 0; background: #000; z-index: 200;
+    display: none; flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .scanner-modal.show { display: flex; }
+  .scanner-modal video { flex: 1; width: 100%; height: 100%; object-fit: cover; }
+  .scanner-modal .frame {
+    position: absolute; top: 50%; left: 50%;
+    width: min(70vw, 260px); height: min(70vw, 260px);
+    transform: translate(-50%, -50%);
+    border: 3px solid rgba(255,255,255,0.9); border-radius: 22px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  .scanner-modal .close {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); color: #fff; border: none;
+    font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .scanner-modal .tip {
+    position: absolute; bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px));
+    left: 0; right: 0; text-align: center;
+    color: #fff; font-size: 14px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7); padding: 0 20px;
+  }
+  .scanner-modal .tip b { color: #22d3ee; }
+  .scanner-modal .manual {
+    position: absolute; bottom: max(90px, calc(env(safe-area-inset-bottom) + 74px));
+    left: 20px; right: 20px;
+    background: rgba(0,0,0,0.7); border-radius: 12px; padding: 10px;
+    display: flex; gap: 8px;
+  }
+  .scanner-modal .manual input {
+    flex: 1; padding: 10px; border-radius: 8px; border: none;
+    background: #fff; color: #111; font-size: 14px;
+    font-family: ui-monospace, monospace; outline: none;
+  }
+  .scanner-modal .manual button {
+    padding: 10px 16px; border-radius: 8px; border: none;
+    background: #22d3ee; color: #0f172a; font-weight: 700;
+    font-size: 14px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -107,28 +150,33 @@
   </div>
 </div>
 
+<div class="scanner-modal" id="scannerModal">
+  <video id="scanVideo" autoplay playsinline muted></video>
+  <div class="frame"></div>
+  <button class="close" onclick="stopScanner()">✕</button>
+  <div class="tip">Наведи на <b>QR-код игры</b></div>
+  <div class="manual">
+    <input id="manualCode" placeholder="или код: game-xxxxx" autocomplete="off">
+    <button onclick="manualJoin()">OK</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 
 // ================================================================
-//  LOG
+//  ENV
 // ================================================================
-let logs = [];
-function plog(msg) {
-  logs.push(new Date().toISOString().slice(11,23) + ' ' + msg);
-  if (logs.length > 50) logs.shift();
-  const el = document.getElementById('debugLog');
-  if (el) el.textContent = logs.join('\n');
-  console.log('[TTT]', msg);
-}
+const IN_IFRAME = (window !== window.parent);
 
 // ================================================================
 //  SDK
 // ================================================================
 const QRChat = {
-  _id: 0, _pending: {}, _timeout: 15000,
+  _id: 0, _pending: {}, _timeout: 5000,
   call(m, p) {
+    if (!IN_IFRAME) return Promise.reject(new Error('not in iframe'));
     return new Promise((res, rej) => {
       const id = ++this._id;
       const timer = setTimeout(() => {
@@ -139,17 +187,35 @@ const QRChat = {
         res: v => { clearTimeout(timer); res(v); },
         rej: e => { clearTimeout(timer); rej(e); }
       };
-      parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
+      try {
+        parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
+      } catch (e) {
+        clearTimeout(timer);
+        delete this._pending[id];
+        rej(e);
+      }
     });
   },
   getUser:      () => QRChat.call('getUser'),
-  showToast:    (t) => QRChat.call('showToast', { text: t }),
-  setTitle:     (t) => QRChat.call('setTitle', { text: t }),
-  haptic:       (ms) => QRChat.call('haptic', { pattern: ms || 15 }).catch(() => {}),
-  scanQR:       () => QRChat.call('scanQR'),
-  close:        () => QRChat.call('close'),
-  setClipboard: (t) => QRChat.call('setClipboard', { text: t }),
-  share:        (o) => QRChat.call('share', o).catch(() => {})
+  showToast:    (t) => QRChat.call('showToast', { text: t }).catch(() => {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;z-index:9999';
+    el.textContent = t;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }),
+  setTitle:     (t) => QRChat.call('setTitle', { text: t }).catch(() => { document.title = t; }),
+  haptic:       (ms) => {
+    if (navigator.vibrate) try { navigator.vibrate(ms || 15); } catch {}
+    return QRChat.call('haptic', { pattern: ms || 15 }).catch(() => {});
+  },
+  close:        () => QRChat.call('close').catch(() => { window.close(); }),
+  setClipboard: (t) => QRChat.call('setClipboard', { text: t }).catch(() => {
+    try { navigator.clipboard.writeText(t); QRChat.showToast('Скопировано'); } catch {}
+  }),
+  share:        (o) => QRChat.call('share', o).catch(() => {
+    if (navigator.share) navigator.share(o).catch(() => {});
+  })
 };
 window.addEventListener('message', e => {
   const d = e.data;
@@ -177,6 +243,8 @@ let scores = { me: 0, opp: 0 };
 let es = null;
 let gameStarted = false;
 let lastHelloSent = 0;
+let mediaStream = null;
+let scanInterval = null;
 
 function rhex(n) {
   const a = new Uint8Array(n);
@@ -187,9 +255,40 @@ function topicFor(id) { return 'game-' + id; }
 function $(id) { return document.getElementById(id); }
 
 // ================================================================
+//  IDENTITY
+// ================================================================
+async function resolveIdentity() {
+  if (IN_IFRAME) {
+    try {
+      const u = await QRChat.getUser();
+      if (u && u.sid) {
+        return { sid: u.sid, nick: u.nick || 'Player', source: 'chat' };
+      }
+    } catch (e) {
+      console.warn('[TTT] getUser failed:', e.message);
+    }
+  }
+  let local = null;
+  try {
+    const saved = localStorage.getItem('ttt_local_id');
+    if (saved) local = JSON.parse(saved);
+  } catch {}
+  if (!local || !local.sid) {
+    local = {
+      sid: 'ttt-' + rhex(6),
+      nick: 'Player-' + rhex(2).toUpperCase()
+    };
+    try { localStorage.setItem('ttt_local_id', JSON.stringify(local)); } catch {}
+  }
+  return { sid: local.sid, nick: local.nick, source: 'local' };
+}
+
+// ================================================================
 //  LOBBY
 // ================================================================
 function renderLobby() {
+  const mode = IN_IFRAME ? 'чат' : 'standalone';
+  const src = me.source === 'chat' ? '🟢 чат' : '🟡 локальный';
   $('root').innerHTML = `
     <div class="lobby">
       <div class="header">
@@ -203,17 +302,19 @@ function renderLobby() {
       <button class="btn secondary" style="width:100%;padding:16px;font-size:16px;" onclick="joinGame()">
         📷 Присоединиться по QR
       </button>
+      <div class="info">
+        Ты: <b>${me.nick}</b> · sid ${me.sid.slice(0,8)}<br>
+        Режим: ${mode} · ID: ${src}
+      </div>
       <div class="err" id="lobbyErr"></div>
-      <div class="log" id="debugLog">${logs.join('\n')}</div>
     </div>
   `;
 }
 
 // ================================================================
-//  CREATE
+//  CREATE / JOIN
 // ================================================================
 function createGame() {
-  plog('createGame start');
   try {
     gameId = rhex(5);
     myRole = 'host';
@@ -224,57 +325,95 @@ function createGame() {
     gameOver = false;
     winner = null;
     winLine = null;
-    plog('gameId=' + gameId);
     showInviteQR();
   } catch (e) {
-    plog('createGame ERROR: ' + e.message);
-    const errEl = $('lobbyErr');
-    if (errEl) errEl.textContent = 'Ошибка: ' + e.message;
-  }
-}
-
-// ================================================================
-//  JOIN
-// ================================================================
-async function joinGame() {
-  plog('joinGame start');
-  try {
-    $('lobbyErr').textContent = 'Открываю сканер…';
-    const res = await QRChat.scanQR();
-    plog('scanQR result: ' + JSON.stringify(res));
-    if (!res || !res.value) {
-      $('lobbyErr').textContent = 'Сканирование отменено';
-      return;
-    }
-    const v = res.value.trim();
-    plog('scanned: ' + v);
-    let id = null;
-    if (v.startsWith('game-')) id = v.slice(5);
-    else if (v.startsWith('nfc-')) id = v.slice(4);
-    else id = v;
-    if (!id) { QRChat.showToast('Пустой QR'); return; }
-
-    gameId = id;
-    myRole = 'guest';
-    mySymbol = 'O';
-    gameStarted = false;
-    board = Array(9).fill('');
-    turn = 'X';
-    gameOver = false;
-    winner = null;
-    winLine = null;
-    plog('joining game ' + gameId);
-    connectToGame();
-    startGame();
-  } catch (e) {
-    plog('joinGame ERROR: ' + e.message);
     $('lobbyErr').textContent = 'Ошибка: ' + e.message;
-    QRChat.showToast('Ошибка: ' + e.message);
   }
+}
+function joinGame() { openScanner(); }
+
+// ================================================================
+//  SCANNER
+// ================================================================
+async function openScanner() {
+  const modal = $('scannerModal');
+  modal.classList.add('show');
+
+  if (!window.isSecureContext) { alert('Нужен HTTPS'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Камера недоступна. Введи код вручную.'); return;
+  }
+  if (!('BarcodeDetector' in window)) {
+    alert('Автосканирование не поддерживается. Введи код вручную.'); return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+    });
+    mediaStream = stream;
+    const video = $('scanVideo');
+    video.srcObject = stream;
+    await new Promise(r => {
+      if (video.readyState >= 1) return r();
+      video.onloadedmetadata = () => r();
+    });
+    try { await video.play(); } catch {}
+    await new Promise(r => setTimeout(r, 300));
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+    scanInterval = setInterval(async () => {
+      if (video.readyState < 2 || video.videoWidth === 0) return;
+      try {
+        const codes = await detector.detect(video);
+        if (codes && codes.length) {
+          const v = codes[0].rawValue.trim();
+          stopScanner();
+          handleScannedCode(v);
+        }
+      } catch {}
+    }, 250);
+  } catch (e) {
+    console.warn('[TTT] camera error:', e.message);
+  }
+}
+function stopScanner() {
+  $('scannerModal').classList.remove('show');
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  const v = $('scanVideo');
+  if (v) v.srcObject = null;
+}
+function handleScannedCode(v) {
+  v = v.trim();
+  if (!v) return;
+  let id = null;
+  if (v.startsWith('game-')) id = v.slice(5);
+  else if (v.startsWith('nfc-')) id = v.slice(4);
+  else id = v;
+  if (!id) { QRChat.showToast('Пустой QR'); return; }
+  gameId = id;
+  myRole = 'guest';
+  mySymbol = 'O';
+  gameStarted = false;
+  board = Array(9).fill('');
+  turn = 'X';
+  gameOver = false;
+  winner = null;
+  winLine = null;
+  connectToGame();
+  startGame();
+}
+function manualJoin() {
+  const v = $('manualCode').value.trim();
+  if (!v) return;
+  stopScanner();
+  handleScannedCode(v);
 }
 
 // ================================================================
-//  INVITE QR
+//  INVITE
 // ================================================================
 function showInviteQR() {
   const topic = topicFor(gameId);
@@ -294,52 +433,35 @@ function showInviteQR() {
         Ждём соперника…
       </div>
       <div class="err" id="qrErr"></div>
-      <div class="log" id="debugLog">${logs.join('\n')}</div>
     </div>
   `;
-
-  // QR
   const box = $('qrBox');
   if (typeof QRCode === 'undefined') {
-    plog('QRCode lib not loaded — fallback');
-    // Fallback: рисованная заглушка + текст
     box.innerHTML = `<div class="placeholder">QR-библиотека не загрузилась.<br><br>
-      Скажи сопернику код:<br><b style="color:#0f172a">${topic}</b></div>`;
+      Скажи сопернику код:<br><b>${topic}</b></div>`;
   } else {
     try {
       box.innerHTML = '';
       new QRCode(box, {
-        text: topic,
-        width: 220, height: 220,
+        text: topic, width: 220, height: 220,
         colorDark: '#000', colorLight: '#fff',
         correctLevel: QRCode.CorrectLevel.M
       });
-      plog('QR rendered');
     } catch (e) {
-      plog('QR render ERROR: ' + e.message);
       box.innerHTML = `<div class="placeholder">Ошибка QR.<br>Код: <b>${topic}</b></div>`;
     }
   }
-
   connectToGame();
 }
-
 async function copyCode() {
-  try {
-    await QRChat.setClipboard(topicFor(gameId));
-    QRChat.showToast('Скопировано');
-  } catch (e) {
-    QRChat.showToast('Не удалось скопировать');
-  }
+  await QRChat.setClipboard(topicFor(gameId));
+  QRChat.showToast('Скопировано');
 }
-
 async function shareCode() {
-  try {
-    await QRChat.share({
-      title: 'Крестики-нолики',
-      text: 'Играй со мной: ' + topicFor(gameId)
-    });
-  } catch (e) {}
+  await QRChat.share({
+    title: 'Крестики-нолики',
+    text: 'Играй со мной: ' + topicFor(gameId)
+  });
 }
 
 // ================================================================
@@ -349,20 +471,9 @@ function connectToGame() {
   if (es) { try { es.close(); } catch {} es = null; }
   const topic = topicFor(gameId);
   const url = `${NTFY}/${encodeURIComponent(topic)}/sse?since=all`;
-  plog('SSE connect: ' + url);
-  try {
-    es = new EventSource(url);
-  } catch (e) {
-    plog('EventSource ERROR: ' + e.message);
-    return;
-  }
-  es.onopen = () => {
-    plog('SSE open');
-    sendHello();
-  };
-  es.onerror = () => {
-    plog('SSE error (auto-reconnect)');
-  };
+  try { es = new EventSource(url); } catch (e) { return; }
+  es.onopen = () => sendHello();
+  es.onerror = () => {};
   es.onmessage = (ev) => {
     let d;
     try { d = JSON.parse(ev.data); } catch { return; }
@@ -372,49 +483,38 @@ function connectToGame() {
     handleGameEvent(msg);
   };
 }
-
 async function sendHello() {
-  // Не спамим hello — не чаще чем раз в 3 сек
   const now = Date.now();
   if (now - lastHelloSent < 3000) return;
   lastHelloSent = now;
-  await post({ type: 'hello', role: myRole, nick: me ? me.nick : 'unknown', from: me ? me.sid : 'noid' });
+  await post({ type: 'hello', role: myRole, nick: me.nick, from: me.sid });
 }
-
 async function post(obj) {
   const topic = topicFor(gameId);
   try {
-    const r = await fetch(`${NTFY}/${encodeURIComponent(topic)}`, {
+    await fetch(`${NTFY}/${encodeURIComponent(topic)}`, {
       method: 'POST',
       body: JSON.stringify(obj)
     });
-    if (!r.ok) plog('POST ' + r.status);
-    else plog('POST ok: ' + obj.type);
-  } catch (e) {
-    plog('POST fail: ' + e.message);
-  }
+  } catch (e) {}
 }
 
 // ================================================================
-//  GAME EVENTS
+//  EVENTS
 // ================================================================
 function handleGameEvent(msg) {
   if (!msg || !msg.type) return;
-  if (me && msg.from === me.sid) return;  // свои игнорим
-
-  plog('recv: ' + msg.type);
+  if (me && msg.from === me.sid) return;
 
   if (msg.type === 'hello') {
     if (!gameStarted) {
       gameStarted = true;
-      plog('opponent joined — starting');
       QRChat.haptic([50, 50, 50]);
       QRChat.showToast('Соперник присоединился!');
       renderBoard();
     }
     return;
   }
-
   if (msg.type === 'move') {
     if (board[msg.cell] === '' && turn === msg.symbol) {
       board[msg.cell] = msg.symbol;
@@ -425,7 +525,6 @@ function handleGameEvent(msg) {
     }
     return;
   }
-
   if (msg.type === 'rematch') {
     resetBoard();
     turn = 'X';
@@ -437,23 +536,20 @@ function handleGameEvent(msg) {
 }
 
 // ================================================================
-//  GAME LOGIC
+//  LOGIC
 // ================================================================
 async function cellClick(i) {
   if (gameOver) return;
   if (!gameStarted) { QRChat.showToast('Ждём соперника'); return; }
   if (turn !== mySymbol) { QRChat.showToast('Не твой ход'); return; }
   if (board[i] !== '') return;
-
   board[i] = mySymbol;
   checkWin();
   turn = turn === 'X' ? 'O' : 'X';
   QRChat.haptic(20);
   renderBoard();
-
   await post({ type: 'move', cell: i, symbol: mySymbol, from: me.sid });
 }
-
 function checkWin() {
   const lines = [
     [0,1,2],[3,4,5],[6,7,8],
@@ -462,27 +558,20 @@ function checkWin() {
   ];
   for (const l of lines) {
     if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[0]] === board[l[2]]) {
-      gameOver = true;
-      winner = board[l[0]];
-      winLine = l;
+      gameOver = true; winner = board[l[0]]; winLine = l;
       if (winner === mySymbol) { scores.me++; showResult('win'); }
       else { scores.opp++; showResult('lose'); }
       return;
     }
   }
   if (board.every(c => c)) {
-    gameOver = true;
-    winner = 'draw';
-    showResult('draw');
+    gameOver = true; winner = 'draw'; showResult('draw');
   }
 }
-
 function showResult(kind) {
   QRChat.haptic(kind === 'win' ? [100,50,100,50,100] : 200);
   setTimeout(() => {
-    const ov = $('resultOverlay');
-    const t = $('resultTitle');
-    const s = $('resultSub');
+    const ov = $('resultOverlay'), t = $('resultTitle'), s = $('resultSub');
     if (kind === 'win') { t.textContent = '🎉 Победа!'; s.textContent = 'Ты обыграл соперника'; }
     else if (kind === 'lose') { t.textContent = '😔 Проигрыш'; s.textContent = 'Соперник оказался сильнее'; }
     else { t.textContent = '🤝 Ничья'; s.textContent = 'Отличная игра!'; }
@@ -491,7 +580,7 @@ function showResult(kind) {
 }
 
 // ================================================================
-//  RENDER BOARD
+//  RENDER
 // ================================================================
 function renderBoard() {
   $('root').innerHTML = `
@@ -508,9 +597,7 @@ function renderBoard() {
     <div class="btns">
       <button class="btn secondary" onclick="leaveGame()">🚪 Выйти</button>
     </div>
-    <div class="log" id="debugLog">${logs.join('\n')}</div>
   `;
-
   const boardEl = $('board');
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement('div');
@@ -524,7 +611,6 @@ function renderBoard() {
     cell.addEventListener('click', () => cellClick(i));
     boardEl.appendChild(cell);
   }
-
   const st = $('status');
   if (gameOver) {
     if (winner === mySymbol) { st.textContent = '🎉 Ты победил!'; st.className = 'status win'; }
@@ -538,7 +624,6 @@ function renderBoard() {
     st.textContent = '⏳ Ход соперника'; st.className = 'status waiting';
   }
 }
-
 async function doRematch() {
   $('resultOverlay').classList.remove('show');
   resetBoard();
@@ -547,60 +632,47 @@ async function doRematch() {
   renderBoard();
   await post({ type: 'rematch', from: me.sid });
 }
-
 function resetBoard() { board = Array(9).fill(''); }
-
 async function leaveGame() {
+  stopScanner();
   if (es) { try { es.close(); } catch {} es = null; }
   await post({ type: 'leave', from: me.sid });
   QRChat.close();
 }
-
 async function safeClose() {
-  try { await QRChat.close(); } catch {}
+  try { await QRChat.close(); } catch { window.close(); }
 }
-
 function startGame() {
   gameStarted = false;
   renderBoard();
-  QRChat.setTitle('❌⭕ Игра').catch(() => {});
+  QRChat.setTitle('❌⭕ Игра');
 }
 
 // ================================================================
 //  BOOT
 // ================================================================
 (async function boot() {
-  plog('boot');
   try {
-    me = await QRChat.getUser();
-    plog('user: ' + me.nick + ' / ' + me.sid);
-    if (!me || !me.sid) throw new Error('getUser вернул пустоту');
-    QRChat.setTitle('❌⭕ Крестики-нолики').catch(() => {});
+    me = await resolveIdentity();
     renderLobby();
+    QRChat.setTitle('❌⭕ Крестики-нолики');
   } catch (e) {
-    plog('boot ERROR: ' + e.message);
     $('root').innerHTML = `
       <div class="lobby">
         <div class="header">
           <h1>⚠️ Ошибка</h1>
           <div class="subtitle" style="color:#f87171;">${e.message}</div>
         </div>
-        <div class="log" id="debugLog">${logs.join('\n')}</div>
-        <button class="btn secondary" style="margin-top:12px;" onclick="location.reload()">↻ Попробовать снова</button>
+        <button class="btn secondary" onclick="location.reload()">↻ Ещё раз</button>
       </div>
     `;
   }
 })();
 
-// Экспорт в window чтобы onclick работал
-window.createGame = createGame;
-window.joinGame = joinGame;
-window.copyCode = copyCode;
-window.shareCode = shareCode;
-window.cellClick = cellClick;
-window.doRematch = doRematch;
-window.leaveGame = leaveGame;
-window.safeClose = safeClose;
+Object.assign(window, {
+  createGame, joinGame, copyCode, shareCode, cellClick,
+  doRematch, leaveGame, safeClose, stopScanner, manualJoin
+});
 </script>
 </body>
 </html>
