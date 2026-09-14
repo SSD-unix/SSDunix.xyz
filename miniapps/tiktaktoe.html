@@ -32,7 +32,8 @@
   .cell { background: rgba(255,255,255,0.06); border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
     font-size: 56px; font-weight: 700; cursor: pointer;
-    transition: background 0.15s, transform 0.1s; user-select: none; }
+    transition: background 0.15s, transform 0.1s;
+    user-select: none; }
   .cell:active:not(.taken):not(.disabled) { transform: scale(0.95); }
   .cell.taken { cursor: default; }
   .cell.X { color: #22d3ee; }
@@ -50,13 +51,11 @@
   .status.draw { background: rgba(251,191,36,0.25); color: #fbbf24; }
   .btn { padding: 14px 28px; border-radius: 12px; border: none;
     font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
-    background: #22d3ee; color: #0f172a; margin: 4px;
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    background: #22d3ee; color: #0f172a; margin: 4px; }
   .btn:active { transform: scale(0.97); }
   .btn.secondary { background: rgba(255,255,255,0.1); color: #fff; }
-  .btn.full { width: 100%; margin: 6px 0; padding: 16px; font-size: 16px; }
-  .btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-  .lobby { text-align: center; max-width: 420px; width: 100%; }
+  .btns { display: flex; gap: 8px; justify-content: center; }
+  .lobby { text-align: center; max-width: 400px; width: 100%; }
   #qrBox { margin: 20px auto; display: flex; justify-content: center;
     align-items: center; background: #fff; padding: 12px; border-radius: 14px;
     width: fit-content; min-width: 220px; min-height: 220px; }
@@ -64,10 +63,8 @@
   #qrBox .placeholder { color: #333; font-size: 13px; padding: 30px 20px;
     text-align: center; word-break: break-all; }
   .code { font-family: ui-monospace, monospace; background: rgba(255,255,255,0.08);
-    padding: 10px 14px; border-radius: 8px; font-size: 15px;
-    word-break: break-all; margin: 12px 0; user-select: all; color: #67e8f9;
-    font-weight: 700; letter-spacing: 0.5px; }
-  .code.hidden { display: none; }
+    padding: 8px 14px; border-radius: 8px; font-size: 14px;
+    word-break: break-all; margin: 12px 0; user-select: all; color: #67e8f9; }
   .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1);
     border-top-color: #22d3ee; border-radius: 50%;
     animation: spin 0.8s linear infinite; margin: 20px auto; }
@@ -81,36 +78,57 @@
   .overlay .box h2 { font-size: 22px; margin: 0 0 10px; }
   .overlay .box p { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
   .err { color: #f87171; font-size: 12px; margin-top: 12px; word-break: break-word; }
-  .info { color: #64748b; font-size: 11px; margin-top: 14px; line-height: 1.5; }
 
-  /* Диалог ввода кода */
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-    z-index: 300; display: none; align-items: center; justify-content: center;
-    padding: 20px; }
-  .modal.show { display: flex; }
-  .modal .box { background: linear-gradient(160deg, #1e293b, #0f172a);
-    padding: 24px; border-radius: 20px; max-width: 400px; width: 100%; }
-  .modal h3 { margin: 0 0 8px; font-size: 18px; }
-  .modal p { color: #94a3b8; font-size: 13px; margin: 0 0 16px; }
-  .modal input { width: 100%; padding: 14px; border-radius: 12px; border: none;
-    background: rgba(255,255,255,0.08); color: #fff; font-size: 16px;
-    font-family: ui-monospace, monospace; outline: none; margin-bottom: 12px;
-    text-align: center; letter-spacing: 1px; }
-  .modal input:focus { background: rgba(255,255,255,0.12); }
-  .modal .btns { display: flex; gap: 8px; }
-  .modal .btns .btn { flex: 1; }
+  .scanner-modal {
+    position: fixed; inset: 0; background: #000; z-index: 200;
+    display: none; flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .scanner-modal.show { display: flex; }
+  .scanner-modal video { flex: 1; width: 100%; height: 100%; object-fit: cover; }
+  .scanner-modal .frame {
+    position: absolute; top: 50%; left: 50%;
+    width: min(70vw, 260px); height: min(70vw, 260px);
+    transform: translate(-50%, -50%);
+    border: 3px solid rgba(255,255,255,0.9); border-radius: 22px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  .scanner-modal .close {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); color: #fff; border: none;
+    font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .scanner-modal .tip {
+    position: absolute; bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px));
+    left: 0; right: 0; text-align: center;
+    color: #fff; font-size: 14px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7); padding: 0 20px;
+  }
+  .scanner-modal .tip b { color: #22d3ee; }
+  .scanner-modal .manual {
+    position: absolute; bottom: max(90px, calc(env(safe-area-inset-bottom) + 74px));
+    left: 20px; right: 20px;
+    background: rgba(0,0,0,0.7); border-radius: 12px; padding: 10px;
+    display: flex; gap: 8px;
+  }
+  .scanner-modal .manual input {
+    flex: 1; padding: 10px; border-radius: 8px; border: none;
+    background: #fff; color: #111; font-size: 14px;
+    font-family: ui-monospace, monospace; outline: none;
+  }
+  .scanner-modal .manual button {
+    padding: 10px 16px; border-radius: 8px; border: none;
+    background: #22d3ee; color: #0f172a; font-weight: 700;
+    font-size: 14px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
-<div id="root">
-  <div class="lobby">
-    <div class="header">
-      <h1>❌⭕ Крестики-нолики</h1>
-      <div class="subtitle">Загрузка…</div>
-    </div>
-    <div class="spinner"></div>
-  </div>
-</div>
+<div id="root"></div>
 
 <div class="overlay" id="resultOverlay">
   <div class="box">
@@ -123,15 +141,14 @@
   </div>
 </div>
 
-<div class="modal" id="codeModal">
-  <div class="box">
-    <h3>🔑 Введи код игры</h3>
-    <p>Спроси у соперника код под его QR-кодом. Например: <b>game-a3f9c</b> или просто <b>a3f9c</b></p>
-    <input id="codeInput" placeholder="game-xxxxx" autocomplete="off" autocapitalize="off" autocorrect="off">
-    <div class="btns">
-      <button class="btn secondary" onclick="closeCodeModal()">Отмена</button>
-      <button class="btn" onclick="submitCode()">OK</button>
-    </div>
+<div class="scanner-modal" id="scannerModal">
+  <video id="scanVideo" autoplay playsinline muted></video>
+  <div class="frame"></div>
+  <button class="close" onclick="stopScanner()">✕</button>
+  <div class="tip">Наведи на <b>QR-код игры</b></div>
+  <div class="manual">
+    <input id="manualCode" placeholder="или код: game-xxxxx" autocomplete="off">
+    <button onclick="manualJoin()">OK</button>
   </div>
 </div>
 
@@ -139,18 +156,9 @@
 <script>
 'use strict';
 
-// ================================================================
-//  ENV
-// ================================================================
-const IN_IFRAME = (window !== window.parent);
-
-// ================================================================
-//  SDK
-// ================================================================
 const QRChat = {
   _id: 0, _pending: {}, _timeout: 15000,
   call(m, p) {
-    if (!IN_IFRAME) return Promise.reject(new Error('not in iframe'));
     return new Promise((res, rej) => {
       const id = ++this._id;
       const timer = setTimeout(() => {
@@ -161,36 +169,16 @@ const QRChat = {
         res: v => { clearTimeout(timer); res(v); },
         rej: e => { clearTimeout(timer); rej(e); }
       };
-      try {
-        parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
-      } catch (e) {
-        clearTimeout(timer);
-        delete this._pending[id];
-        rej(e);
-      }
+      parent.postMessage({ __qrc: 1, id, method: m, params: p || {} }, '*');
     });
   },
   getUser:      () => QRChat.call('getUser'),
-  scanQR:       () => QRChat.call('scanQR'),
-  showToast:    (t) => QRChat.call('showToast', { text: t }).catch(() => {
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;z-index:9999;max-width:80%;text-align:center';
-    el.textContent = t;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 2000);
-  }),
-  setTitle:     (t) => QRChat.call('setTitle', { text: t }).catch(() => { document.title = t; }),
-  haptic:       (ms) => {
-    if (navigator.vibrate) try { navigator.vibrate(ms || 15); } catch {}
-    return QRChat.call('haptic', { pattern: ms || 15 }).catch(() => {});
-  },
-  close:        () => QRChat.call('close').catch(() => { try { window.close(); } catch {} }),
-  setClipboard: (t) => QRChat.call('setClipboard', { text: t }).catch(() => {
-    try { navigator.clipboard.writeText(t); QRChat.showToast('Скопировано'); } catch {}
-  }),
-  share:        (o) => QRChat.call('share', o).catch(() => {
-    if (navigator.share) navigator.share(o).catch(() => {});
-  })
+  showToast:    (t) => QRChat.call('showToast', { text: t }).catch(() => {}),
+  setTitle:     (t) => QRChat.call('setTitle', { text: t }).catch(() => {}),
+  haptic:       (ms) => QRChat.call('haptic', { pattern: ms || 15 }).catch(() => {}),
+  close:        () => QRChat.call('close'),
+  setClipboard: (t) => QRChat.call('setClipboard', { text: t }).catch(() => {}),
+  share:        (o) => QRChat.call('share', o).catch(() => {})
 };
 window.addEventListener('message', e => {
   const d = e.data;
@@ -201,9 +189,6 @@ window.addEventListener('message', e => {
   d.error ? p.rej(new Error(d.error)) : p.res(d.result);
 });
 
-// ================================================================
-//  STATE
-// ================================================================
 const NTFY = 'https://ntfy.sh';
 let me = null;
 let gameId = null;
@@ -218,6 +203,8 @@ let scores = { me: 0, opp: 0 };
 let es = null;
 let gameStarted = false;
 let lastHelloSent = 0;
+let mediaStream = null;
+let scanInterval = null;
 
 function rhex(n) {
   const a = new Uint8Array(n);
@@ -227,65 +214,25 @@ function rhex(n) {
 function topicFor(id) { return 'game-' + id; }
 function $(id) { return document.getElementById(id); }
 
-// ================================================================
-//  IDENTITY
-// ================================================================
-async function resolveIdentity() {
-  if (IN_IFRAME) {
-    try {
-      const u = await QRChat.getUser();
-      if (u && u.sid) return { sid: u.sid, nick: u.nick || 'Player', source: 'chat' };
-    } catch (e) { console.warn('[TTT] getUser fail:', e.message); }
-  }
-  let local = null;
-  try {
-    const saved = localStorage.getItem('ttt_local_id');
-    if (saved) local = JSON.parse(saved);
-  } catch {}
-  if (!local || !local.sid) {
-    local = { sid: 'ttt-' + rhex(6), nick: 'Player-' + rhex(2).toUpperCase() };
-    try { localStorage.setItem('ttt_local_id', JSON.stringify(local)); } catch {}
-  }
-  return { sid: local.sid, nick: local.nick, source: 'local' };
-}
-
-// ================================================================
-//  LOBBY
-// ================================================================
 function renderLobby() {
-  const mode = IN_IFRAME ? 'чат' : 'standalone';
-  const src = me.source === 'chat' ? '🟢 чат' : '🟡 локальный';
   $('root').innerHTML = `
     <div class="lobby">
       <div class="header">
         <h1>❌⭕ Крестики-нолики</h1>
-        <div class="subtitle">Играй с другом по коду или QR</div>
+        <div class="subtitle">Играй с другом через QR</div>
       </div>
-
-      <button class="btn full" onclick="createGame()">
+      <button class="btn" style="width:100%;padding:16px;font-size:16px;" onclick="createGame()">
         🎮 Создать игру
       </button>
-
-      <button class="btn secondary full" onclick="joinByQR()">
-        📷 Присоединиться — сканировать QR
+      <div style="height:12px;"></div>
+      <button class="btn secondary" style="width:100%;padding:16px;font-size:16px;" onclick="joinGame()">
+        📷 Присоединиться по QR
       </button>
-
-      <button class="btn secondary full" onclick="openCodeModal()">
-        ⌨ Ввести код вручную
-      </button>
-
-      <div class="info">
-        Ты: <b>${me.nick}</b> · sid ${me.sid.slice(0,8)}<br>
-        Режим: ${mode} · ID: ${src}
-      </div>
       <div class="err" id="lobbyErr"></div>
     </div>
   `;
 }
 
-// ================================================================
-//  CREATE
-// ================================================================
 function createGame() {
   try {
     gameId = rhex(5);
@@ -303,64 +250,72 @@ function createGame() {
   }
 }
 
-// ================================================================
-//  JOIN — через сканер основного сайта
-// ================================================================
-async function joinByQR() {
+function joinGame() { openScanner(); }
+
+async function openScanner() {
+  const modal = $('scannerModal');
+  modal.classList.add('show');
+
+  if (!window.isSecureContext) { alert('Нужен HTTPS'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Камера недоступна'); return;
+  }
+  if (!('BarcodeDetector' in window)) {
+    alert('Автосканирование не поддерживается. Введи код вручную.');
+    return;
+  }
+
   try {
-    if (!IN_IFRAME) {
-      QRChat.showToast('Сканер только в чате. Используй «Ввести код».');
-      openCodeModal();
-      return;
-    }
-    QRChat.showToast('Открываю сканер…');
-    const res = await QRChat.scanQR();
-    if (!res || !res.value) {
-      QRChat.showToast('Сканирование отменено');
-      return;
-    }
-    handleScannedCode(res.value.trim());
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+    });
+    mediaStream = stream;
+    const video = $('scanVideo');
+    video.srcObject = stream;
+    await new Promise(r => {
+      if (video.readyState >= 1) return r();
+      video.onloadedmetadata = () => r();
+    });
+    try { await video.play(); } catch {}
+    await new Promise(r => setTimeout(r, 300));
+
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+    scanInterval = setInterval(async () => {
+      if (video.readyState < 2 || video.videoWidth === 0) return;
+      try {
+        const codes = await detector.detect(video);
+        if (codes && codes.length) {
+          const v = codes[0].rawValue.trim();
+          stopScanner();
+          handleScannedCode(v);
+        }
+      } catch {}
+    }, 250);
   } catch (e) {
-    QRChat.showToast('Ошибка сканера: ' + e.message);
-    // Открываем ручной ввод как fallback
-    openCodeModal();
+    alert('Камера: ' + e.message);
   }
 }
 
-// ================================================================
-//  JOIN — через ручной ввод
-// ================================================================
-function openCodeModal() {
-  $('codeModal').classList.add('show');
-  setTimeout(() => {
-    const el = $('codeInput');
-    el.value = '';
-    el.focus();
-  }, 100);
-}
-function closeCodeModal() {
-  $('codeModal').classList.remove('show');
-}
-function submitCode() {
-  const v = $('codeInput').value.trim();
-  if (!v) { QRChat.showToast('Введи код'); return; }
-  closeCodeModal();
-  handleScannedCode(v);
+function stopScanner() {
+  const modal = $('scannerModal');
+  modal.classList.remove('show');
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  const v = $('scanVideo');
+  if (v) v.srcObject = null;
 }
 
-// ================================================================
-//  ОБРАБОТКА КОДА
-// ================================================================
 function handleScannedCode(v) {
-  v = String(v).trim();
+  v = v.trim();
   if (!v) return;
   let id = null;
   if (v.startsWith('game-')) id = v.slice(5);
   else if (v.startsWith('nfc-')) id = v.slice(4);
   else id = v;
-  // Убираем пробелы и мусор
-  id = id.replace(/[^a-zA-Z0-9]/g, '');
-  if (!id) { QRChat.showToast('Пустой код'); return; }
+  if (!id) { QRChat.showToast('Пустой QR'); return; }
 
   gameId = id;
   myRole = 'guest';
@@ -375,22 +330,26 @@ function handleScannedCode(v) {
   startGame();
 }
 
-// ================================================================
-//  INVITE QR (для хоста)
-// ================================================================
+function manualJoin() {
+  const v = $('manualCode').value.trim();
+  if (!v) return;
+  stopScanner();
+  handleScannedCode(v);
+}
+
 function showInviteQR() {
   const topic = topicFor(gameId);
   $('root').innerHTML = `
     <div class="lobby">
       <div class="header">
         <h1>🎮 Игра создана</h1>
-        <div class="subtitle">Покажи QR или скажи код сопернику</div>
+        <div class="subtitle">Покажи QR сопернику</div>
       </div>
       <div id="qrBox"></div>
-      <div class="code" id="codeDisplay">${topic}</div>
-      <button class="btn secondary full" onclick="copyCode()">📋 Копировать код</button>
-      <button class="btn secondary full" onclick="shareCode()">📤 Поделиться</button>
-      <button class="btn secondary full" onclick="toggleCodeVisibility()">👁 Показать/скрыть код</button>
+      <div class="code">${topic}</div>
+      <button class="btn secondary" style="width:100%;" onclick="copyCode()">📋 Копировать код</button>
+      <div style="height:8px;"></div>
+      <button class="btn secondary" style="width:100%;" onclick="shareCode()">📤 Поделиться</button>
       <div style="margin-top:20px; color:#94a3b8; font-size:13px;">
         <div class="spinner"></div>
         Ждём соперника…
@@ -398,6 +357,7 @@ function showInviteQR() {
       <div class="err" id="qrErr"></div>
     </div>
   `;
+
   const box = $('qrBox');
   if (typeof QRCode === 'undefined') {
     box.innerHTML = `<div class="placeholder">QR-библиотека не загрузилась.<br><br>
@@ -414,16 +374,15 @@ function showInviteQR() {
       box.innerHTML = `<div class="placeholder">Ошибка QR.<br>Код: <b>${topic}</b></div>`;
     }
   }
+
   connectToGame();
 }
-function toggleCodeVisibility() {
-  const el = $('codeDisplay');
-  if (el) el.classList.toggle('hidden');
-}
+
 async function copyCode() {
   await QRChat.setClipboard(topicFor(gameId));
   QRChat.showToast('Скопировано');
 }
+
 async function shareCode() {
   await QRChat.share({
     title: 'Крестики-нолики',
@@ -431,9 +390,6 @@ async function shareCode() {
   });
 }
 
-// ================================================================
-//  NETWORK
-// ================================================================
 function connectToGame() {
   if (es) { try { es.close(); } catch {} es = null; }
   const topic = topicFor(gameId);
@@ -450,12 +406,14 @@ function connectToGame() {
     handleGameEvent(msg);
   };
 }
+
 async function sendHello() {
   const now = Date.now();
   if (now - lastHelloSent < 3000) return;
   lastHelloSent = now;
-  await post({ type: 'hello', role: myRole, nick: me.nick, from: me.sid });
+  await post({ type: 'hello', role: myRole, nick: me ? me.nick : 'unknown', from: me ? me.sid : 'noid' });
 }
+
 async function post(obj) {
   const topic = topicFor(gameId);
   try {
@@ -466,9 +424,6 @@ async function post(obj) {
   } catch (e) {}
 }
 
-// ================================================================
-//  EVENTS
-// ================================================================
 function handleGameEvent(msg) {
   if (!msg || !msg.type) return;
   if (me && msg.from === me.sid) return;
@@ -482,6 +437,7 @@ function handleGameEvent(msg) {
     }
     return;
   }
+
   if (msg.type === 'move') {
     if (board[msg.cell] === '' && turn === msg.symbol) {
       board[msg.cell] = msg.symbol;
@@ -492,6 +448,7 @@ function handleGameEvent(msg) {
     }
     return;
   }
+
   if (msg.type === 'rematch') {
     resetBoard();
     turn = 'X';
@@ -502,21 +459,21 @@ function handleGameEvent(msg) {
   }
 }
 
-// ================================================================
-//  LOGIC
-// ================================================================
 async function cellClick(i) {
   if (gameOver) return;
   if (!gameStarted) { QRChat.showToast('Ждём соперника'); return; }
   if (turn !== mySymbol) { QRChat.showToast('Не твой ход'); return; }
   if (board[i] !== '') return;
+
   board[i] = mySymbol;
   checkWin();
   turn = turn === 'X' ? 'O' : 'X';
   QRChat.haptic(20);
   renderBoard();
+
   await post({ type: 'move', cell: i, symbol: mySymbol, from: me.sid });
 }
+
 function checkWin() {
   const lines = [
     [0,1,2],[3,4,5],[6,7,8],
@@ -525,20 +482,27 @@ function checkWin() {
   ];
   for (const l of lines) {
     if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[0]] === board[l[2]]) {
-      gameOver = true; winner = board[l[0]]; winLine = l;
+      gameOver = true;
+      winner = board[l[0]];
+      winLine = l;
       if (winner === mySymbol) { scores.me++; showResult('win'); }
       else { scores.opp++; showResult('lose'); }
       return;
     }
   }
   if (board.every(c => c)) {
-    gameOver = true; winner = 'draw'; showResult('draw');
+    gameOver = true;
+    winner = 'draw';
+    showResult('draw');
   }
 }
+
 function showResult(kind) {
   QRChat.haptic(kind === 'win' ? [100,50,100,50,100] : 200);
   setTimeout(() => {
-    const ov = $('resultOverlay'), t = $('resultTitle'), s = $('resultSub');
+    const ov = $('resultOverlay');
+    const t = $('resultTitle');
+    const s = $('resultSub');
     if (kind === 'win') { t.textContent = '🎉 Победа!'; s.textContent = 'Ты обыграл соперника'; }
     else if (kind === 'lose') { t.textContent = '😔 Проигрыш'; s.textContent = 'Соперник оказался сильнее'; }
     else { t.textContent = '🤝 Ничья'; s.textContent = 'Отличная игра!'; }
@@ -546,9 +510,6 @@ function showResult(kind) {
   }, 400);
 }
 
-// ================================================================
-//  RENDER BOARD
-// ================================================================
 function renderBoard() {
   $('root').innerHTML = `
     <div class="header">
@@ -565,6 +526,7 @@ function renderBoard() {
       <button class="btn secondary" onclick="leaveGame()">🚪 Выйти</button>
     </div>
   `;
+
   const boardEl = $('board');
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement('div');
@@ -578,6 +540,7 @@ function renderBoard() {
     cell.addEventListener('click', () => cellClick(i));
     boardEl.appendChild(cell);
   }
+
   const st = $('status');
   if (gameOver) {
     if (winner === mySymbol) { st.textContent = '🎉 Ты победил!'; st.className = 'status win'; }
@@ -591,6 +554,7 @@ function renderBoard() {
     st.textContent = '⏳ Ход соперника'; st.className = 'status waiting';
   }
 }
+
 async function doRematch() {
   $('resultOverlay').classList.remove('show');
   resetBoard();
@@ -599,29 +563,32 @@ async function doRematch() {
   renderBoard();
   await post({ type: 'rematch', from: me.sid });
 }
+
 function resetBoard() { board = Array(9).fill(''); }
+
 async function leaveGame() {
+  stopScanner();
   if (es) { try { es.close(); } catch {} es = null; }
   await post({ type: 'leave', from: me.sid });
   QRChat.close();
 }
+
 async function safeClose() {
-  try { await QRChat.close(); } catch { try { window.close(); } catch {} }
+  try { await QRChat.close(); } catch {}
 }
+
 function startGame() {
   gameStarted = false;
   renderBoard();
   QRChat.setTitle('❌⭕ Игра');
 }
 
-// ================================================================
-//  BOOT
-// ================================================================
 (async function boot() {
   try {
-    me = await resolveIdentity();
-    renderLobby();
+    me = await QRChat.getUser();
+    if (!me || !me.sid) throw new Error('SDK не отвечает');
     QRChat.setTitle('❌⭕ Крестики-нолики');
+    renderLobby();
   } catch (e) {
     $('root').innerHTML = `
       <div class="lobby">
@@ -629,22 +596,15 @@ function startGame() {
           <h1>⚠️ Ошибка</h1>
           <div class="subtitle" style="color:#f87171;">${e.message}</div>
         </div>
-        <button class="btn secondary" onclick="location.reload()">↻ Ещё раз</button>
+        <button class="btn secondary" onclick="location.reload()">↻ Попробовать снова</button>
       </div>
     `;
   }
 })();
 
-// Enter в поле ввода = submit
-document.addEventListener('DOMContentLoaded', () => {
-  const el = $('codeInput');
-  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); });
-});
-
 Object.assign(window, {
-  createGame, joinByQR, openCodeModal, closeCodeModal, submitCode,
-  copyCode, shareCode, cellClick, doRematch, leaveGame, safeClose,
-  toggleCodeVisibility
+  createGame, joinGame, copyCode, shareCode, cellClick,
+  doRematch, leaveGame, safeClose, stopScanner, manualJoin
 });
 </script>
 </body>
