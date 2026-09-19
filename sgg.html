@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>MediaOS SuperApp</title>
+  <style>
+    :root {
+      --bg-color: #0f0f13;
+      --panel-bg: rgba(22, 22, 29, 0.9);
+      --accent: #ff0055;
+      --text: #ffffff;
+      --subtext: #8a8a9e;
+      --border: #2a2a38;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* ОС Контейнер */
+    #os-root {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Верхний статус-бар */
+    .status-bar {
+      height: 35px;
+      background: var(--panel-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .status-indicators {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      background: #222;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--subtext);
+      border: 1px solid #333;
+    }
+
+    .badge.active {
+      color: #00ff66;
+      border-color: #00ff66;
+    }
+
+    /* Рабочий стол */
+    .desktop {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Виджет часов */
+    .clock-widget {
+      text-align: center;
+      margin-bottom: 20px;
+      pointer-events: none;
+    }
+
+    .clock-widget .time {
+      font-size: 5rem;
+      font-weight: 200;
+      letter-spacing: -2px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .clock-widget .date {
+      font-size: 1.1rem;
+      color: var(--subtext);
+    }
+
+    /* Окно активного сервиса */
+    .app-window {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color);
+      display: none;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .app-window.active {
+      display: flex;
+    }
+
+    .window-header {
+      height: 40px;
+      background: var(--panel-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .window-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .window-content {
+      flex: 1;
+      width: 100%;
+      height: calc(100% - 40px);
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Текстовые заметки */
+    textarea.notes-area {
+      width: 100%;
+      height: 100%;
+      background: #121217;
+      color: #fff;
+      border: none;
+      padding: 15px;
+      font-size: 16px;
+      resize: none;
+      outline: none;
+    }
+
+    /* Нижняя панель (Док) */
+    .dock {
+      height: 70px;
+      background: var(--panel-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .dock-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #252530;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .dock-icon:active {
+      transform: scale(0.9);
+      background: var(--accent);
+    }
+
+    /* Экран старта (Оверлей) */
+    #start-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 15, 19, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .start-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 18px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Оверлей активации режима -->
+  <div id="start-overlay">
+    <h1 style="margin-bottom: 20px;">MediaOS</h1>
+    <button class="start-btn" onclick="bootOS()">ЗАПУСТИТЬ СИСТЕМУ</button>
+  </div>
+
+  <div id="os-root">
+    <!-- Верхний бар -->
+    <div class="status-bar">
+      <div id="os-clock">00:00</div>
+      <div class="status-indicators">
+        <span id="wakelock-status" class="badge">WAKE LOCK: OFF</span>
+        <span id="fs-status" class="badge">FULLSCREEN</span>
+      </div>
+    </div>
+
+    <!-- Рабочий стол -->
+    <div class="desktop">
+      <div class="clock-widget">
+        <div class="time" id="widget-time">00:00</div>
+        <div class="date" id="widget-date">Понедельник, 1 января</div>
+      </div>
+
+      <!-- Окно приложения -->
+      <div id="app-window" class="app-window">
+        <div class="window-header">
+          <span class="window-title" id="window-title">Приложение</span>
+          <button class="close-btn" onclick="closeApp()">✕</button>
+        </div>
+        <div class="window-content" id="window-content"></div>
+      </div>
+    </div>
+
+    <!-- Нижняя панель быстрой локации -->
+    <div class="dock">
+      <div class="dock-icon" title="YouTube" onclick="openApp('YouTube', 'yt')">▶️</div>
+      <div class="dock-icon" title="YouTube Music" onclick="openApp('YT Music', 'ytmusic')">🎵</div>
+      <div class="dock-icon" title="Lofi Radio" onclick="openApp('Lofi Stream', 'lofi')">📻</div>
+      <div class="dock-icon" title="Заметки" onclick="openApp('Заметки', 'notes')">📝</div>
+      <div class="dock-icon" title="Заблокировать" onclick="toggleLock()">🔒</div>
+    </div>
+  </div>
+
+  <script>
+    let wakeLock = null;
+
+    // Обновление часов
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const timeStr = `${hours}:${minutes}`;
+
+      document.getElementById('os-clock').innerText = timeStr;
+      document.getElementById('widget-time').innerText = timeStr;
+
+      const options = { weekday: 'long', month: 'long', day: 'numeric' };
+      document.getElementById('widget-date').innerText = now.toLocaleDateString('ru-RU', options);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Блокировка отключения экрана
+    async function enableWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          const badge = document.getElementById('wakelock-status');
+          badge.innerText = 'WAKE LOCK: ON';
+          badge.classList.add('active');
+        }
+      } catch (err) {
+        console.error('WakeLock Error:', err);
+      }
+    }
+
+    // Запуск WebOS
+    function bootOS() {
+      // 1. Полноэкранный режим ОС
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen();
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      }
+
+      // 2. Блокировка сна
+      enableWakeLock();
+
+      // 3. Скрытие стартового экрана
+      document.getElementById('start-overlay').style.display = 'none';
+    }
+
+    // Открытие встроенных приложений
+    function openApp(name, type) {
+      const win = document.getElementById('app-window');
+      const title = document.getElementById('window-title');
+      const content = document.getElementById('window-content');
+
+      title.innerText = name;
+      content.innerHTML = '';
+
+      if (type === 'yt') {
+        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=PLw-VjHDlEOgv_6e1Mv2fN8bI-lqM6A5N_&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } else if (type === 'ytmusic') {
+        content.innerHTML = `<iframe src="https://music.youtube.com" allow="autoplay"></iframe>`;
+      } else if (type === 'lofi') {
+        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
+      } else if (type === 'notes') {
+        content.innerHTML = `<textarea class="notes-area" placeholder="Ваши заметки (сохраняются автоматически)..." id="notes-input" oninput="localStorage.setItem('webos_notes', this.value)"></textarea>`;
+        setTimeout(() => {
+          document.getElementById('notes-input').value = localStorage.getItem('webos_notes') || '';
+        }, 50);
+      }
+
+      win.classList.add('active');
+    }
+
+    function closeApp() {
+      const win = document.getElementById('app-window');
+      const content = document.getElementById('window-content');
+      win.classList.remove('active');
+      content.innerHTML = ''; // Очищаем ресурсы
+    }
+
+    function toggleLock() {
+      closeApp();
+    }
+
+    // Возврат Wake Lock если сворачивали браузер
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        await enableWakeLock();
+      }
+    });
+  </script>
+</body>
+</html>
