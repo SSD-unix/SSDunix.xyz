@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>MediaOS SuperApp</title>
+  <title>CyberOS SuperApp</title>
   <style>
     :root {
-      --bg-color: #0f0f13;
-      --panel-bg: rgba(22, 22, 29, 0.9);
+      --bg: #090a0f;
+      --card-bg: rgba(18, 20, 29, 0.75);
       --accent: #ff0055;
+      --accent-glow: rgba(255, 0, 85, 0.4);
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.3);
       --text: #ffffff;
-      --subtext: #8a8a9e;
-      --border: #2a2a38;
+      --subtext: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
     }
 
     * {
@@ -20,96 +23,169 @@
       box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body, html {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background-color: var(--bg-color);
+      background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* ОС Контейнер */
+    /* Фоновый неоновый градиент */
+    .bg-glow {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, rgba(0,0,0,0) 70%);
+      top: -100px;
+      left: -100px;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-glow-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--cyan-glow) 0%, rgba(0,0,0,0) 70%);
+      bottom: -150px;
+      right: -150px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
     #os-root {
       display: flex;
       flex-direction: column;
       height: 100vh;
       width: 100vw;
+      position: relative;
+      z-index: 1;
     }
 
     /* Верхний статус-бар */
     .status-bar {
-      height: 35px;
-      background: var(--panel-bg);
+      height: 40px;
+      background: rgba(10, 12, 18, 0.8);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 15px;
+      padding: 0 20px;
       font-size: 13px;
       border-bottom: 1px solid var(--border);
-      z-index: 100;
+    }
+
+    .time-badge {
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--cyan);
     }
 
     .status-indicators {
       display: flex;
       gap: 10px;
-      align-items: center;
     }
 
     .badge {
-      background: #222;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 11px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
       color: var(--subtext);
-      border: 1px solid #333;
+      border: 1px solid var(--border);
     }
 
     .badge.active {
-      color: #00ff66;
-      border-color: #00ff66;
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.1);
     }
 
     /* Рабочий стол */
     .desktop {
       flex: 1;
       position: relative;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 20px;
     }
 
     /* Виджет часов */
     .clock-widget {
       text-align: center;
-      margin-bottom: 20px;
-      pointer-events: none;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 25px 40px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
     .clock-widget .time {
-      font-size: 5rem;
+      font-size: 4rem;
       font-weight: 200;
       letter-spacing: -2px;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      background: linear-gradient(180deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .clock-widget .date {
-      font-size: 1.1rem;
-      color: var(--subtext);
+      font-size: 0.9rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 5px;
     }
 
-    /* Окно активного сервиса */
+    /* Быстрый контроллер плеера на рабочем столе */
+    .quick-player {
+      margin-top: 25px;
+      display: flex;
+      gap: 10px;
+      background: var(--card-bg);
+      padding: 10px 15px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(15px);
+    }
+
+    .qp-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .qp-btn:active {
+      transform: scale(0.85);
+      background: var(--accent);
+    }
+
+    /* Окно активных приложений */
     .app-window {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: var(--bg-color);
+      background: var(--bg);
       display: none;
       flex-direction: column;
       z-index: 10;
@@ -120,35 +196,37 @@
     }
 
     .window-header {
-      height: 40px;
-      background: var(--panel-bg);
+      height: 50px;
+      background: rgba(15, 17, 23, 0.95);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 10px;
+      padding: 0 15px;
       border-bottom: 1px solid var(--border);
     }
 
     .window-title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .close-btn {
       background: rgba(255, 255, 255, 0.1);
       border: none;
       color: var(--text);
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      font-weight: bold;
+      font-size: 16px;
       cursor: pointer;
     }
 
     .window-content {
       flex: 1;
       width: 100%;
-      height: calc(100% - 40px);
+      height: calc(100% - 50px);
+      position: relative;
     }
 
     iframe {
@@ -157,59 +235,97 @@
       border: none;
     }
 
-    /* Текстовые заметки */
-    textarea.notes-area {
-      width: 100%;
-      height: 100%;
-      background: #121217;
+    /* Поле ввода для замен URL / ID */
+    .custom-input-bar {
+      display: flex;
+      padding: 10px;
+      gap: 10px;
+      background: #111319;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .custom-input-bar input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
       color: #fff;
-      border: none;
-      padding: 15px;
-      font-size: 16px;
-      resize: none;
+      padding: 8px 12px;
+      border-radius: 8px;
       outline: none;
     }
 
-    /* Нижняя панель (Док) */
-    .dock {
-      height: 70px;
-      background: var(--panel-bg);
+    .custom-input-bar button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    /* Заметки */
+    textarea.notes-area {
+      width: 100%;
+      height: 100%;
+      background: #0d0e12;
+      color: #fff;
+      border: none;
+      padding: 20px;
+      font-size: 16px;
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+    }
+
+    /* Док-панель */
+    .dock-container {
+      padding: 0 15px 15px 15px;
       display: flex;
       justify-content: center;
+    }
+
+    .dock {
+      height: 65px;
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      display: flex;
       align-items: center;
-      gap: 15px;
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-      z-index: 100;
+      gap: 12px;
+      padding: 0 15px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
     .dock-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: #252530;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 20px;
       cursor: pointer;
       border: 1px solid var(--border);
-      transition: transform 0.1s, background 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .dock-icon:active {
-      transform: scale(0.9);
+      transform: scale(0.85);
       background: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
     }
 
-    /* Экран старта (Оверлей) */
+    /* Оверлей старта */
     #start-overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(15, 15, 19, 0.95);
+      background: var(--bg);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -217,31 +333,52 @@
       z-index: 1000;
     }
 
+    .start-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .start-subtitle {
+      color: var(--subtext);
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+
     .start-btn {
-      background: var(--accent);
+      background: linear-gradient(45deg, var(--accent), #d9004c);
       color: white;
       border: none;
-      padding: 18px 40px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 30px;
+      padding: 16px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 50px;
       cursor: pointer;
-      box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+      box-shadow: 0 10px 30px var(--accent-glow);
+      letter-spacing: 1px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Оверлей активации режима -->
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- Стартовый оверлей -->
   <div id="start-overlay">
-    <h1 style="margin-bottom: 20px;">MediaOS</h1>
+    <div class="start-title">CyberOS</div>
+    <div class="start-subtitle">Автономный Музыкальный Терминал</div>
     <button class="start-btn" onclick="bootOS()">ЗАПУСТИТЬ СИСТЕМУ</button>
   </div>
 
   <div id="os-root">
     <!-- Верхний бар -->
     <div class="status-bar">
-      <div id="os-clock">00:00</div>
+      <div class="time-badge" id="os-clock">00:00</div>
       <div class="status-indicators">
         <span id="wakelock-status" class="badge">WAKE LOCK: OFF</span>
         <span id="fs-status" class="badge">FULLSCREEN</span>
@@ -255,30 +392,43 @@
         <div class="date" id="widget-date">Понедельник, 1 января</div>
       </div>
 
+      <!-- Быстрое радио -->
+      <div class="quick-player">
+        <button class="qp-btn" onclick="openApp('Lofi Girl', 'lofi')" title="Включить Lofi Radio">📻</button>
+        <button class="qp-btn" onclick="openApp('Synthwave Radio', 'synth')" title="Включить Synthwave">🌃</button>
+        <button class="qp-btn" onclick="openApp('Заметки', 'notes')" title="Заметки">📝</button>
+      </div>
+
       <!-- Окно приложения -->
       <div id="app-window" class="app-window">
         <div class="window-header">
           <span class="window-title" id="window-title">Приложение</span>
           <button class="close-btn" onclick="closeApp()">✕</button>
         </div>
+        <div id="custom-bar" class="custom-input-bar" style="display:none;">
+          <input type="text" id="yt-id-input" placeholder="Вставь ID видео или плейлиста YouTube...">
+          <button onclick="loadCustomYT()">Загрузить</button>
+        </div>
         <div class="window-content" id="window-content"></div>
       </div>
     </div>
 
-    <!-- Нижняя панель быстрой локации -->
-    <div class="dock">
-      <div class="dock-icon" title="YouTube" onclick="openApp('YouTube', 'yt')">▶️</div>
-      <div class="dock-icon" title="YouTube Music" onclick="openApp('YT Music', 'ytmusic')">🎵</div>
-      <div class="dock-icon" title="Lofi Radio" onclick="openApp('Lofi Stream', 'lofi')">📻</div>
-      <div class="dock-icon" title="Заметки" onclick="openApp('Заметки', 'notes')">📝</div>
-      <div class="dock-icon" title="Заблокировать" onclick="toggleLock()">🔒</div>
+    <!-- Док-панель -->
+    <div class="dock-container">
+      <div class="dock">
+        <div class="dock-icon" title="Lofi Radio" onclick="openApp('Lofi Girl 24/7', 'lofi')">☕</div>
+        <div class="dock-icon" title="Synthwave" onclick="openApp('Synthwave Radio', 'synth')">🌆</div>
+        <div class="dock-icon" title="Кастомный Плейлист" onclick="openApp('YouTube Player', 'yt_custom')">▶️</div>
+        <div class="dock-icon" title="Заметки" onclick="openApp('Блокнот', 'notes')">📝</div>
+        <div class="dock-icon" title="Свернуть всё" onclick="closeApp()">🏠</div>
+      </div>
     </div>
   </div>
 
   <script>
     let wakeLock = null;
 
-    // Обновление часов
+    // Часы
     function updateClock() {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
@@ -288,13 +438,13 @@
       document.getElementById('os-clock').innerText = timeStr;
       document.getElementById('widget-time').innerText = timeStr;
 
-      const options = { weekday: 'long', month: 'long', day: 'numeric' };
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
       document.getElementById('widget-date').innerText = now.toLocaleDateString('ru-RU', options);
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Блокировка отключения экрана
+    // Фиксация экрана от отключения (Wake Lock)
     async function enableWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -308,9 +458,8 @@
       }
     }
 
-    // Запуск WebOS
+    // Запуск ОС
     function bootOS() {
-      // 1. Полноэкранный режим ОС
       const docEl = document.documentElement;
       if (docEl.requestFullscreen) {
         docEl.requestFullscreen();
@@ -318,50 +467,68 @@
         docEl.webkitRequestFullscreen();
       }
 
-      // 2. Блокировка сна
       enableWakeLock();
-
-      // 3. Скрытие стартового экрана
       document.getElementById('start-overlay').style.display = 'none';
     }
 
-    // Открытие встроенных приложений
+    // Загрузка приложений
     function openApp(name, type) {
       const win = document.getElementById('app-window');
       const title = document.getElementById('window-title');
       const content = document.getElementById('window-content');
+      const customBar = document.getElementById('custom-bar');
 
       title.innerText = name;
       content.innerHTML = '';
+      customBar.style.display = 'none';
 
-      if (type === 'yt') {
-        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=PLw-VjHDlEOgv_6e1Mv2fN8bI-lqM6A5N_&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-      } else if (type === 'ytmusic') {
-        content.innerHTML = `<iframe src="https://music.youtube.com" allow="autoplay"></iframe>`;
-      } else if (type === 'lofi') {
-        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
-      } else if (type === 'notes') {
-        content.innerHTML = `<textarea class="notes-area" placeholder="Ваши заметки (сохраняются автоматически)..." id="notes-input" oninput="localStorage.setItem('webos_notes', this.value)"></textarea>`;
+      if (type === 'lofi') {
+        // Гарантированно рабочий прямой Embed Lofi Girl 
+        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } 
+      else if (type === 'synth') {
+        // Гарантированно рабочий Embed Synthwave Radio
+        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/4xDzrJKXOOY?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } 
+      else if (type === 'yt_custom') {
+        customBar.style.display = 'flex';
+        // По умолчанию грузит классический Lofi плейлист
+        content.innerHTML = `<iframe id="custom-iframe" src="https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } 
+      else if (type === 'notes') {
+        content.innerHTML = `<textarea class="notes-area" placeholder="Ваши заметки сохраняются автоматически..." id="notes-input" oninput="localStorage.setItem('cyberos_notes', this.value)"></textarea>`;
         setTimeout(() => {
-          document.getElementById('notes-input').value = localStorage.getItem('webos_notes') || '';
+          document.getElementById('notes-input').value = localStorage.getItem('cyberos_notes') || '';
         }, 50);
       }
 
       win.classList.add('active');
     }
 
+    // Загрузка любого своего ID видео/плейлиста
+    function loadCustomYT() {
+      const input = document.getElementById('yt-id-input').value.trim();
+      const iframe = document.getElementById('custom-iframe');
+      if (!input || !iframe) return;
+
+      if (input.includes('list=')) {
+        const listId = input.split('list=')[1].split('&')[0];
+        iframe.src = `https://www.youtube-nocookie.com/embed/videoseries?list=${listId}&autoplay=1`;
+      } else if (input.includes('v=')) {
+        const videoId = input.split('v=')[1].split('&')[0];
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`;
+      } else {
+        iframe.src = `https://www.youtube-nocookie.com/embed/${input}?autoplay=1`;
+      }
+    }
+
     function closeApp() {
       const win = document.getElementById('app-window');
       const content = document.getElementById('window-content');
       win.classList.remove('active');
-      content.innerHTML = ''; // Очищаем ресурсы
+      content.innerHTML = '';
     }
 
-    function toggleLock() {
-      closeApp();
-    }
-
-    // Возврат Wake Lock если сворачивали браузер
     document.addEventListener('visibilitychange', async () => {
       if (wakeLock !== null && document.visibilityState === 'visible') {
         await enableWakeLock();
