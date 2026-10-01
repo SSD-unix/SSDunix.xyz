@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTSB Direct — Unfiltered Aviation Safety Database</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--text-main);
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-box {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+        }
+
+        .report-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .report-item {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.9rem;
+        }
+
+        .report-item:hover {
+            background-color: #334155;
+        }
+
+        .report-item.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .content-area {
+            flex: 1;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .status {
+            padding: 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            NTSB<span>// UNFILTERED ARCHIVE</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <sidebar>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск катастрофы..." oninput="filterReports()">
+            </div>
+            <ul class="report-list" id="reportList">
+                <div class="status" id="statusMsg">Загрузка базы данных...</div>
+            </ul>
+        </sidebar>
+
+        <main class="content-area">
+            <div id="placeholder" class="placeholder">Выберите расследование из списка слева</div>
+            <iframe id="reportFrame" style="display: none;"></iframe>
+        </main>
+    </div>
+
+    <script>
+        const REPO_OWNER = 'SSD-unix';
+        const REPO_NAME = 'SSDunix.xyz';
+        const PATH = 'ntsb/all';
+
+        // URL для получения файловой структуры репозитория
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PATH}`;
+        // Базовый URL для отображения raw HTML файлов
+        const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PATH}/`;
+
+        let allReports = [];
+
+        async function fetchReports() {
+            const statusMsg = document.getElementById('statusMsg');
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Ошибка обращения к GitHub API');
+                
+                const files = await response.json();
+                
+                // Фильтруем только .html файлы
+                allReports = files
+                    .filter(file => file.name.endsWith('.html'))
+                    .map(file => ({
+                        name: file.name,
+                        title: file.name.replace('.html', '').replaceAll('_', ' '),
+                        url: RAW_BASE_URL + file.name
+                    }));
+
+                if (allReports.length === 0) {
+                    statusMsg.innerText = 'Отчеты не найдены';
+                    return;
+                }
+
+                renderList(allReports);
+            } catch (err) {
+                console.error(err);
+                statusMsg.innerText = 'Не удалось загрузить список отчетов';
+            }
+        }
+
+        function renderList(reports) {
+            const listEl = document.getElementById('reportList');
+            listEl.innerHTML = '';
+
+            reports.forEach(report => {
+                const li = document.createElement('li');
+                li.className = 'report-item';
+                li.innerText = report.title;
+                li.onclick = () => loadReport(report, li);
+                listEl.appendChild(li);
+            });
+        }
+
+        function filterReports() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allReports.filter(r => r.title.toLowerCase().includes(query));
+            renderList(filtered);
+        }
+
+        function loadReport(report, element) {
+            document.querySelectorAll('.report-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            const placeholder = document.getElementById('placeholder');
+            const iframe = document.getElementById('reportFrame');
+
+            placeholder.style.display = 'none';
+            iframe.style.display = 'block';
+            iframe.src = report.url;
+        }
+
+        // Старт сканирования при загрузке
+        fetchReports();
+    </script>
+</body>
+</html>
