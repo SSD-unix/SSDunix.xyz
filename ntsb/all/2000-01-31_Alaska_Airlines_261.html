@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alaska Airlines Flight 261 — Jackscrew Assembly Failure & Loss of Control</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            padding: 2rem;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tag.danger {
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .tag.warning {
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .summary-box {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--danger);
+            padding: 1.5rem;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 1.5rem 0 2.5rem 0;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+            background: #000;
+        }
+
+        .photo-caption {
+            padding: 0.85rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .timeline-row {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .timeline-time {
+            background: #172554;
+            color: #60a5fa;
+            font-weight: bold;
+            padding: 0.75rem 1.2rem;
+            min-width: 110px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .timeline-desc {
+            padding: 0.75rem 1.2rem;
+            flex: 1;
+        }
+
+        .alert-row {
+            border-color: var(--danger);
+        }
+
+        .alert-row .timeline-time {
+            background: #450a0a;
+            color: var(--danger);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 2.5rem 0;
+            background: var(--card-bg);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.85rem 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: #0f172a;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.8rem;
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #f43f5e;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .callout-box {
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="meta-tags">
+            <span class="tag danger">88 FATALITIES</span>
+            <span class="tag danger">JACKSCREW THREAD STRIPPING</span>
+            <span class="tag">NTSB/AAR-02/01</span>
+            <span class="tag">DCA00MA023</span>
+            <span class="tag">JANUARY 31, 2000</span>
+            <span class="tag">MCDONNELL DOUGLAS MD-83</span>
+        </div>
+        <h1>Alaska Airlines Flight 261 — In-Flight Failure of the Horizontal Stabilizer Jackscrew Assembly</h1>
+        <p style="color: var(--text-muted);">A Comprehensive Technical Report on Mechanical Wear, Inadequate Maintenance Lubrication, and Inverted Recovery Attempt over Anacapa Island.</p>
+    </header>
+
+    <div class="summary-box">
+        <strong>Executive Overview:</strong> On January 31, 2000[cite: 107, 108], a McDonnell Douglas MD-83 (N963AS) operating as Alaska Airlines Flight 261 crashed into the Pacific Ocean approximately 2.7 miles north of Anacapa Island, California[cite: 107, 108]. The aircraft suffered a total loss of pitch control when the Acme nut threads of the horizontal stabilizer trim system jackscrew stripped out completely due to excessive wear and lack of effective lubrication[cite: 107]. Despite heroic efforts by the flight crew to maintain control, including rolling the aircraft inverted to counteract the violent dive[cite: 107], all 88 occupants (83 passengers and 5 crew members) were killed on impact[cite: 107, 108].
+    </div>
+
+    <h2>Wreckage Recovery & Evidence</h2>
+    <div class="photo-grid">
+        <div class="photo-card">
+            <img src="https://external-preview.redd.it/on-this-day-the-heartbreak-of-alaska-flight-261-v0-JncopRaG16XM8QuYWyNpyYvltlQROtT_hqhfHGOI83E.jpeg?auto=webp&s=4d3a499e3aa6e5dd158b3fe15125ec140f5a3290" alt="Recovered Jackscrew Assembly">
+            <div class="photo-caption">Recovered horizontal stabilizer jackscrew assembly[cite: 107]. The spiral wire wrapped around the steel acme screw consists of the sheared aluminum-bronze threads stripped from the stationary Acme nut[cite: 107].</div>
+        </div>
+        <div class="photo-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/US_Navy_personnel_recovering_a_piece_of_Alaska_Airlines_Flight_261_wreckage.jpg/250px-US_Navy_personnel_recovering_a_piece_of_Alaska_Airlines_Flight_261_wreckage.jpg" alt="Recovery Operations">
+            <div class="photo-caption">US Navy and salvage personnel recovering tail cone and fuselage sections from the Pacific Ocean off Anacapa Island[cite: 107].</div>
+        </div>
+    </div>
+
+    <h2>Aircraft, Crew & Operational Profile</h2>
+    <table class="data-table">
+        <tr>
+            <th>Aircraft Registration</th>
+            <td>N963AS (Serial No: 53077) — Delivered in 1992[cite: 107]</td>
+        </tr>
+        <tr>
+            <th>Model & Engines</th>
+            <td>McDonnell Douglas MD-83 equipped with 2x Pratt & Whitney JT8D-219 engines[cite: 107]</td>
+        </tr>
+        <tr>
+            <th>Airframe Stats</th>
+            <td>26,584 Flight Hours | 14,315 Cycles[cite: 107]</td>
+        </tr>
+        <tr>
+            <th>Flight Route</th>
+            <td>Puerto Vallarta (PVR) ➔ San Francisco (SFO) [stopover] ➔ Seattle-Tacoma (SEA)[cite: 107, 108]</td>
+        </tr>
+        <tr>
+            <th>Flight Crew</th>
+            <td>Captain Ted Thompson (53, 17,750 hrs)[cite: 107], First Officer William "Bill" Tansky (57, 8,060 hrs)[cite: 107]</td>
+        </tr>
+        <tr>
+            <th>Occupants & Fatalities</th>
+            <td>88 Total (83 Passengers, 5 Crew) | <strong>88 Fatalities, 0 Survivors</strong>[cite: 107, 108]</td>
+        </tr>
+    </table>
+
+    <h2>Cockpit Voice Recorder (CVR) & Flight Sequence</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">All times PST. Highlights the pilots' struggle to handle the jammed trim system and subsequent fatal structural failure[cite: 107].</p>
+
+    <div class="timeline">
+        <div class="timeline-row">
+            <div class="timeline-time">13:37</div>
+            <div class="timeline-desc">Flight 261 departs Puerto Vallarta and climbs to cruising altitude FL310[cite: 107].</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">15:49</div>
+            <div class="timeline-desc">Crew contacts Alaska Airlines dispatch and maintenance control regarding a jammed horizontal stabilizer trim system[cite: 107]. Pilots need to pull with ~10 lbf force on control yokes to hold level flight[cite: 107].</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">16:09</div>
+            <div class="timeline-desc">Using primary trim, the jammed stabilizer breaks free but immediately runs away to an extreme nose-down position[cite: 107]. Plane drops from 31,000 ft to 24,000 ft in 80 seconds[cite: 107]. Pilots pull with 130–140 lbf to arrest descent[cite: 107].</div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">16:11</div>
+            <div class="timeline-desc">Crew requests diversion to Los Angeles (LAX) and asks for block altitude over open water to configure aircraft[cite: 107].</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">16:19:21</div>
+            <div class="timeline-desc">Four distinct thumps followed 17 seconds later by an extremely loud structural noise[cite: 107]. The stripped Acme nut threads give way completely; jackscrew separates from nut[cite: 107]. Stabilizer moves to extreme 12.2° leading-edge-up position[cite: 107, 108, 109].</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">16:19:30</div>
+            <div class="timeline-desc">Aircraft pitches -70° into a steep dive while rolling left[cite: 107]. Captain commands: <i>"Push and roll, push and roll!"</i>[cite: 107]</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">16:20:00</div>
+            <div class="timeline-desc">Crew achieves inverted flight to stabilize pitch[cite: 107]: <i>"Got to get it over again... at least upside down we're flying."</i>[cite: 107] Descent rate slows, but altitude loss is irreversible[cite: 107].</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">16:21:00</div>
+            <div class="timeline-desc">Aircraft impacts the Pacific Ocean at high speed upside down north of Anacapa Island[cite: 107, 108]. Impact destroys airframe instantly[cite: 107].</div>
+        </div>
+    </div>
+
+    <h2>Technical Breakdown & Root Cause Analysis</h2>
+
+    <div class="callout-box">
+        <h3>1. Mechanical Principles of the MD-80 Jackscrew Assembly</h3>
+        <p>The MD-80 horizontal stabilizer trim system consists of an acme screw mounted inside the vertical stabilizer, driven by electric motors through a stationary Acme nut made of soft aluminum-bronze alloy[cite: 107, 108, 109]:</p>
+        <ul>
+            <li><strong>Single Point Failure Mode:</strong> The design assumed that regular thread inspections and lubrication would prevent complete thread loss[cite: 107, 111]. Consequently, no mechanical fail-safe (such as a redundant follower nut or mechanical stop) was included in the original certification[cite: 107, 111].</li>
+            <li><strong>Thread Stripping Mechanism:</strong> Approximately 90% of the Acme nut threads had worn away prior to the flight due to chronic lack of lubrication[cite: 107, 109]. During flight, aerodynamic loads sheared the remaining 10% of threads[cite: 107, 109], causing the screw to slip free until its lower stop slammed into the nut housing[cite: 109, 110].</li>
+            <li><strong>Torque Tube Fracture:</strong> Repeated dynamic hammering of the lower stop against the nut fractured the inner drive torque tube via low-cycle fatigue[cite: 110]. This allowed the entire assembly to disconnect, driving the horizontal stabilizer far beyond its aerodynamic design limits[cite: 107, 109, 110].</li>
+        </ul>
+    </div>
+
+    <div class="callout-box">
+        <h3>2. Maintenance Practices and Cost-Cutting Factors</h3>
+        <p>The NTSB highlighted severe systemic breakdowns in Alaska Airlines' maintenance program and FAA oversight[cite: 107]:</p>
+        <ul>
+            <li><strong>Extended Inspection Intervals:</strong> Between 1985 and 1996, Alaska Airlines extended the lubrication interval and the "end-play check" (wear measurement) interval from 2,000 hours to much longer C-check intervals without adequate technical justification[cite: 107].</li>
+            <li><strong>Inadequate End-Play Checks:</strong> Alaska Airlines utilized non-standard, custom-built measurement tools during end-play inspections that yielded inaccurate wear readings, masking the advanced destruction of the Acme nut[cite: 107].</li>
+            <li><strong>Improper Grease Usage:</strong> Alaska Airlines substituted Mobilgrease 28 (clay-based) with Aeroshell Grease 33 (lithium-soap based) without proper compatibility testing[cite: 107, 115, 116]. Combining incompatible greases caused breakdown in lubrication qualities, accelerating wear[cite: 107, 117].</li>
+        </ul>
+    </div>
+
+    <h2>NTSB Probable Cause & Regulatory Legacy</h2>
+    <ul>
+        <li><strong>Probable Cause:</strong> A loss of airplane pitch control resulting from the in-flight failure of the horizontal stabilizer trim system jackscrew assembly's Acme nut threads[cite: 107]. The thread failure was caused by excessive wear resulting from Alaska Airlines' insufficient lubrication of the jackscrew assembly[cite: 107].</li>
+        <li><strong>Redesigned Jackscrews:</strong> NASA and commercial aviation engineers designed a <strong>fail-safe redundant follower nut</strong> that automatically catches axial loads if the primary Acme nut fails[cite: 107].</li>
+        <li><strong>Strict Maintenance Oversight:</strong> The FAA revised Airworthiness Directives (AD 2000-15-15) mandating mandatory end-play inspections every 2,000 flight hours using validated measurement fixtures[cite: 107, 114].</li>
+        <li><strong>Pilot Heroism:</strong> Captain Ted Thompson and First Officer Bill Tansky were posthumously awarded the ALPA Gold Medal for Heroism for their extraordinary skill and courage in attempting to save the aircraft[cite: 107].</li>
+    </ul>
+
+</body>
+</html>
