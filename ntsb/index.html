@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,13 +13,14 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: #334155;
+            --danger: #ef4444;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
@@ -44,7 +45,7 @@
             font-weight: 800;
             font-size: 1.2rem;
             letter-spacing: 1px;
-            color: #ef4444;
+            color: var(--danger);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -53,7 +54,8 @@
         .logo span {
             color: var(--text-main);
             font-weight: 400;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            opacity: 0.8;
         }
 
         .main-container {
@@ -83,6 +85,7 @@
             border-radius: 4px;
             color: var(--text-main);
             outline: none;
+            font-size: 0.9rem;
         }
 
         .search-box input:focus {
@@ -96,11 +99,12 @@
         }
 
         .report-item {
-            padding: 0.8rem 1rem;
+            padding: 0.85rem 1rem;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
             transition: background 0.15s;
             font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         .report-item:hover {
@@ -109,7 +113,8 @@
 
         .report-item.active {
             background-color: var(--accent);
-            color: white;
+            color: #ffffff;
+            font-weight: 600;
         }
 
         .content-area {
@@ -117,22 +122,26 @@
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            background-color: #0f172a;
         }
 
         .placeholder {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100%;
             background-color: var(--bg-color);
             color: var(--text-muted);
-            font-size: 1.1rem;
+            font-size: 1rem;
+            gap: 10px;
         }
 
         .status {
@@ -147,22 +156,24 @@
 
     <header>
         <div class="logo">
-            NTSB<span>// UNFILTERED ARCHIVE</span>
+            NTSB <span>// UNFILTERED ARCHIVE</span>
         </div>
     </header>
 
     <div class="main-container">
         <sidebar>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Поиск катастрофы..." oninput="filterReports()">
+                <input type="text" id="searchInput" placeholder="Search investigation..." oninput="filterReports()">
             </div>
             <ul class="report-list" id="reportList">
-                <div class="status" id="statusMsg">Загрузка базы данных...</div>
+                <div class="status" id="statusMsg">Loading database...</div>
             </ul>
         </sidebar>
 
         <main class="content-area">
-            <div id="placeholder" class="placeholder">Выберите расследование из списка слева</div>
+            <div id="placeholder" class="placeholder">
+                <p>Select an investigation report from the list on the left.</p>
+            </div>
             <iframe id="reportFrame" style="display: none;"></iframe>
         </main>
     </div>
@@ -172,9 +183,9 @@
         const REPO_NAME = 'SSDunix.xyz';
         const PATH = 'ntsb/all';
 
-        // URL для получения файловой структуры репозитория
+        // GitHub REST API endpoint
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${PATH}`;
-        // Базовый URL для отображения raw HTML файлов
+        // Base raw URL for fetching HTML source
         const RAW_BASE_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${PATH}/`;
 
         let allReports = [];
@@ -183,34 +194,41 @@
             const statusMsg = document.getElementById('statusMsg');
             try {
                 const response = await fetch(API_URL);
-                if (!response.ok) throw new Error('Ошибка обращения к GitHub API');
+                if (!response.ok) {
+                    throw new Error(`GitHub API HTTP ${response.status}`);
+                }
                 
                 const files = await response.json();
                 
-                // Фильтруем только .html файлы
+                // Filter only .html files
                 allReports = files
-                    .filter(file => file.name.endsWith('.html'))
+                    .filter(file => file.name.toLowerCase().endsWith('.html'))
                     .map(file => ({
                         name: file.name,
-                        title: file.name.replace('.html', '').replaceAll('_', ' '),
-                        url: RAW_BASE_URL + file.name
+                        title: file.name.replace(/\.html$/i, '').replaceAll('_', ' '),
+                        rawUrl: RAW_BASE_URL + file.name
                     }));
 
                 if (allReports.length === 0) {
-                    statusMsg.innerText = 'Отчеты не найдены';
+                    statusMsg.innerText = 'No reports found.';
                     return;
                 }
 
                 renderList(allReports);
             } catch (err) {
                 console.error(err);
-                statusMsg.innerText = 'Не удалось загрузить список отчетов';
+                statusMsg.innerText = 'Failed to load report directory.';
             }
         }
 
         function renderList(reports) {
             const listEl = document.getElementById('reportList');
             listEl.innerHTML = '';
+
+            if (reports.length === 0) {
+                listEl.innerHTML = '<div class="status">No matching reports.</div>';
+                return;
+            }
 
             reports.forEach(report => {
                 const li = document.createElement('li');
@@ -222,12 +240,12 @@
         }
 
         function filterReports() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const filtered = allReports.filter(r => r.title.toLowerCase().includes(query));
             renderList(filtered);
         }
 
-        function loadReport(report, element) {
+        async function loadReport(report, element) {
             document.querySelectorAll('.report-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
 
@@ -236,10 +254,39 @@
 
             placeholder.style.display = 'none';
             iframe.style.display = 'block';
-            iframe.src = report.url;
+
+            try {
+                // Fetch full raw HTML text to bypass X-Frame-Options blocking
+                const res = await fetch(report.rawUrl);
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch file (HTTP ${res.status})`);
+                }
+
+                let htmlContent = await res.text();
+                
+                // Inject <base> tag so relative links and images render correctly
+                const baseTag = `<base href="${report.rawUrl}">`;
+                if (htmlContent.includes('<head>')) {
+                    htmlContent = htmlContent.replace('<head>', `<head>${baseTag}`);
+                } else {
+                    htmlContent = baseTag + htmlContent;
+                }
+
+                // Inject into iframe safely
+                iframe.srcdoc = htmlContent;
+
+            } catch (err) {
+                console.error(err);
+                iframe.srcdoc = `
+                    <body style="background:#0f172a; color:#f8fafc; font-family:sans-serif; padding:2rem;">
+                        <h2 style="color:#ef4444;">Error Loading Report</h2>
+                        <p style="margin-top:0.5rem; color:#94a3b8;">${err.message}</p>
+                    </body>
+                `;
+            }
         }
 
-        // Старт сканирования при загрузке
+        // Initialize scanning on load
         fetchReports();
     </script>
 </body>
