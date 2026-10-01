@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>United Airlines Flight 232 — Uncontained Engine Failure & Total Control Loss</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            padding: 2rem;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tag.danger {
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .tag.warning {
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .tag.success {
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .summary-box {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--warning);
+            padding: 1.5rem;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+
+        .video-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 4px;
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 1.5rem 0 2.5rem 0;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+            background: #000;
+        }
+
+        .photo-caption {
+            padding: 0.85rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .timeline-row {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .timeline-time {
+            background: #172554;
+            color: #60a5fa;
+            font-weight: bold;
+            padding: 0.75rem 1.2rem;
+            min-width: 110px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .timeline-desc {
+            padding: 0.75rem 1.2rem;
+            flex: 1;
+        }
+
+        .alert-row {
+            border-color: var(--danger);
+        }
+
+        .alert-row .timeline-time {
+            background: #450a0a;
+            color: var(--danger);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 2.5rem 0;
+            background: var(--card-bg);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.85rem 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: #0f172a;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.8rem;
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #f43f5e;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .callout-box {
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="meta-tags">
+            <span class="tag danger">112 FATALITIES</span>
+            <span class="tag success">184 SURVIVORS</span>
+            <span class="tag">NTSB/AAR-90/06</span>
+            <span class="tag">JULY 19, 1989</span>
+            <span class="tag">MCDONNELL DOUGLAS DC-10-10</span>
+        </div>
+        <h1>United Airlines Flight 232 — The Impossible Landing at Sioux City</h1>
+        <p style="color: var(--text-muted);">Uncontained Stage-1 Fan Disk Burst Leading to Complete Hydraulic System Loss and Pioneer Differential Thrust Control.</p>
+    </header>
+
+    <div class="summary-box">
+        <strong>Executive Overview:</strong> On July 19, 1989, a McDonnell Douglas DC-10-10 (N1819U) operating United Airlines Flight 232 from Denver to Chicago suffered a uncontained catastrophic failure of its tail-mounted #2 engine at FL370. High-velocity titanium fragments severed lines for <strong>all three independent hydraulic systems</strong>, leaving the primary flight controls completely inoperative. Through unprecedented ingenuity, Crew Resource Management (CRM), and differential engine thrust manipulation assisted by an off-duty check pilot, the crew steered the heavy widebody to Sioux Gateway Airport. Though the aircraft broke apart on impact due to high sink rates, <strong>184 of 296 occupants survived</strong>.
+    </div>
+
+    <h2>Crash Sequence Video Recording</h2>
+    <div class="video-container">
+        <div class="video-wrapper">
+            <iframe 
+                src="https://www.youtube.com/embed/3BQGyAPiXQw?si=_i-iN_tDYMvqMTHg" 
+                title="United Airlines Flight 232 Landing Sequence" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerpolicy="strict-origin-when-cross-origin" 
+                allowfullscreen>
+            </iframe>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem;">
+            <strong>KTIV Local News Recording:</strong> Raw broadcast footage of Flight 232 on final approach to closed Runway 22 at Sioux Gateway Airport. Shows severe phugoid oscillation, right wing drop right before touchdown, impact, cartwheel-like flipping, and fireball.
+        </p>
+    </div>
+
+    <h2>Wreckage & Component Evidence</h2>
+    <div class="photo-grid">
+        <div class="photo-card">
+            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/United_Airlines_Flight_232_Initial_Touchdown_Area.jpg/250px-United_Airlines_Flight_232_Initial_Touchdown_Area.jpg" alt="Touchdown Area Ground Marks">
+            <div class="photo-caption">Initial touchdown point on Runway 22 threshold showing wing tip and main landing gear impact furrows leading into the cornfield.</div>
+        </div>
+        <div class="photo-card">
+            <img src="https://i.redd.it/ojytmyc4pgc91.jpg" alt="Recovered Stage 1 Fan Disk">
+            <div class="photo-caption">Reconstructed Stage-1 titanium fan disk recovered from an Iowa cornfield. Arrow points to the fatigue origin area originating from a metallurgic hard-alpha inclusion.</div>
+        </div>
+    </div>
+
+    <h2>Aircraft, Crew & Operational Profile</h2>
+    <table class="data-table">
+        <tr>
+            <th>Aircraft Registration</th>
+            <td>N1819U — Age: 18 Years (Delivered in 1971)</td>
+        </tr>
+        <tr>
+            <th>Model & Engines</th>
+            <td>McDonnell Douglas DC-10-10 equipped with 3x General Electric CF6-6D high-bypass turbofans</td>
+        </tr>
+        <tr>
+            <th>Airframe Stats</th>
+            <td>43,401 Total Hours | 16,997 Flight Cycles</td>
+        </tr>
+        <tr>
+            <th>Flight Identifiers</th>
+            <td>Flight UA232 / Call Sign: "UNITED 232 HEAVY"</td>
+        </tr>
+        <tr>
+            <th>Flight Route</th>
+            <td>Stapleton Intl Airport (Denver, CO) ➔ O'Hare Intl Airport (Chicago, IL) ➔ Philadelphia, PA</td>
+        </tr>
+        <tr>
+            <th>Flight Crew</th>
+            <td>Captain Alfred C. "Al" Haynes (57), First Officer William R. "Bill" Records (48), Flight Engineer Dudley J. Dvorak (51), Passengers/Check Pilot Dennis E. "Denny" Fitch (46)</td>
+        </tr>
+        <tr>
+            <th>Occupants & Fatalities</th>
+            <td>296 Total (285 Passengers, 11 Crew) | <strong>112 Fatalities, 184 Survivors</strong> (13 uninjured)</td>
+        </tr>
+    </table>
+
+    <h2>Cockpit Voice Recorder (CVR) Transcript Highlights</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">All times CDT. Captures the famous composure and CRM exhibited by Captain Al Haynes and his crew.</p>
+
+    <div class="timeline">
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">15:16:10</div>
+            <div class="timeline-desc">Loud bang heard in cockpit followed by violent airframe shuddering. Engine #2 (tail) failed. Autopilot automatically disengages.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">15:16:25</div>
+            <div class="timeline-desc">First Officer Records notes flight control unresponsive: <i>"Al, I can't control the airplane!"</i> Control Yoke turned fully left and pulled back, yet aircraft banks right in a pitch-down roll.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">15:17:00</div>
+            <div class="timeline-desc">Flight Engineer Dvorak observes hydraulic pressure gauges for Systems 1, 2, and 3 all dropping to zero. Hydraulic quantity reads empty.</div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">15:29:00</div>
+            <div class="timeline-desc">DC-10 Check Pilot Denny Fitch enters cockpit to offer help. Captain Haynes assigns him control of engine throttles #1 and #3 to stabilize the phugoid mode.</div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">15:35:00</div>
+            <div class="timeline-desc"><strong>Sioux City Approach:</strong> <i>"United Two Thirty-Two Heavy... You're cleared to land on any runway."</i><br><strong>Captain Haynes:</strong> <i>"[Laughter] Roger. You want to be particular and make it a runway, huh?"</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">15:52:00</div>
+            <div class="timeline-desc">Approach controller asks if they want to keep clear of city buildings:<br><strong>Captain Haynes:</strong> <i>"Whatever you do, keep us away from the city."</i></div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">16:00:09</div>
+            <div class="timeline-desc"><strong>First Officer Records:</strong> <i>"Close 'em off."</i><br><strong>Check Pilot Fitch:</strong> <i>"Nah, I can't pull 'em off or we'll lose it, that's what's turning ya."</i><br><strong>Ground Proximity:</strong> <i>"WHOOP WHOOP PULL UP!"</i><br><strong>Captain Haynes:</strong> <i>"Everybody stay in brace!"</i> [Sound of Impact]</div>
+        </div>
+    </div>
+
+    <h2>Failure Physics & The Metallurgical Root Cause</h2>
+
+    <div class="callout-box">
+        <h3>1. The Metallurgical Origin: Hard-Alpha Inclusion</h3>
+        <p>The NTSB investigation revealed that the Stage-1 titanium fan disk of the GE CF6-6D engine failed due to a fatigue crack that began 18 years earlier during manufacturing in 1971:</p>
+        <ul>
+            <li><strong>Double Vacuum Arc Remelting (VAR) Defect:</strong> During ingot formation, nitrogen reacted with molten titanium, creating a brittle, nitrogen-rich impurity called a <strong>hard-alpha inclusion</strong>.</li>
+            <li><strong>Fatigue Growth:</strong> Over 15,503 operational cycles, micro-cracks around the inclusion grew slowly. Eventually, a 0.5-inch crack broke open, causing the 8-foot fan assembly to burst uncontainably at 37,000 feet.</li>
+            <li><strong>Inspection Failure:</strong> Post-crash dye analysis showed fluorescent dye inside the crack, proving it was present during 6 prior overhauls but went undetected by United Airlines inspectors due to human factors and inadequate non-destructive testing (NDT) procedures.</li>
+        </ul>
+    </div>
+
+    <div class="callout-box">
+        <h3>2. Triple Hydraulic System Destruction</h3>
+        <p>The DC-10 design depended entirely on powered hydraulic actuation with no manual mechanical linkages (manual reversion):</p>
+        <ul>
+            <li>System 1, 2, and 3 hydraulic lines converged in close physical proximity near the horizontal stabilizer and tail section.</li>
+            <li>High-energy fan disk shrapnel burst outwards, instantly slicing open lines for all three systems and dumping all hydraulic fluid into the atmosphere within seconds.</li>
+            <li>Without fluid pressure, elevators, rudders, ailerons, and spoilers were left completely limp and floating in the slipstream.</li>
+        </ul>
+    </div>
+
+    <div class="callout-box">
+        <h3>3. Steering via Differential Engine Thrust</h3>
+        <p>Left with zero control surfaces, Check Pilot Denny Fitch kneeled on the cockpit floor, holding one throttle lever in each hand to control the pitch and roll using engine thrust:</p>
+        <ul>
+            <li><strong>Roll/Heading Control:</strong> Increasing thrust on Engine #1 (left) banked the plane right; increasing thrust on Engine #3 (right) banked the plane left.</li>
+            <li><strong>Pitch Control & Phugoid Cycle:</strong> The plane established a 1,500 ft/min phugoid wave. Fitch adjusted both throttles together—throttling up during descents to pitch the nose up, and reducing power near wave peaks to drop the nose.</li>
+            <li><strong>Final Approach Challenge:</strong> Without flaps or slats, flight speed was 220 knots (vs 140 normal) with a sink rate of 1,850 ft/min (vs 300 normal). Milliseconds before touchdown, a phugoid wave dropped the right wing, causing initial ground impact.</li>
+        </ul>
+    </div>
+
+    <h2>Industry Impact & Regulatory Legacy</h2>
+    <ul>
+        <li><strong>Triple Melt VAR Standard:</strong> The aviation industry permanently transitioned from Double VAR to <strong>Triple Melt Vacuum Arc Remelting</strong> for all critical titanium engine rotors to eliminate hard-alpha gas inclusions.</li>
+        <li><strong>Hydraulic Fuses Introduced:</strong> Hydraulic fuses were retrofitted into the #3 system in all DC-10 aircraft below the #2 tail engine to automatically isolate severed lines and retain control fluid.</li>
+        <li><strong>Crew Resource Management (CRM):</strong> Flight 232 became the absolute gold-standard textbook example of CRM, shifting airline culture away from autocratic captains toward open teamwork, delegation, and clear communication.</li>
+        <li><strong>Child Restraints (Lap Children):</strong> The tragic death of a lap infant in the crash sparked decades-long campaigns led by senior attendant Jan Brown Lohr for mandatory child safety seats on commercial aircraft.</li>
+    </ul>
+
+</body>
+</html>
