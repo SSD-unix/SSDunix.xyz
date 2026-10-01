@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Airlines Flight 102 — Comprehensive NTSB Investigation Report</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            padding: 2rem;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tag.danger {
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .tag.warning {
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .summary-box {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--danger);
+            padding: 1.5rem;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+        }
+
+        .video-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        video {
+            width: 100%;
+            max-height: 520px;
+            border-radius: 4px;
+            background: #000;
+            outline: none;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 1.5rem 0 2.5rem 0;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+            background: #000;
+        }
+
+        .photo-caption {
+            padding: 0.85rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .timeline-row {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .timeline-time {
+            background: #172554;
+            color: #60a5fa;
+            font-weight: bold;
+            padding: 0.75rem 1.2rem;
+            min-width: 110px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .timeline-desc {
+            padding: 0.75rem 1.2rem;
+            flex: 1;
+        }
+
+        .alert-row {
+            border-color: var(--danger);
+        }
+
+        .alert-row .timeline-time {
+            background: #450a0a;
+            color: var(--danger);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 2.5rem 0;
+            background: var(--card-bg);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.85rem 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: #0f172a;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.8rem;
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #f43f5e;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .callout-box {
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="meta-tags">
+            <span class="tag danger">7 FATALITIES</span>
+            <span class="tag danger">CATASTROPHIC LOAD SHIFT</span>
+            <span class="tag">NTSB/AAR-15/01</span>
+            <span class="tag">DCA13MA081</span>
+            <span class="tag">APRIL 29, 2013</span>
+            <span class="tag">BOEING 747-428BCF</span>
+        </div>
+        <h1>National Airlines Flight 102 — Bagram Takeoff Crash</h1>
+        <p style="color: var(--text-muted);">Comprehensive Technical Report on the Uncontrolled Pitch-Up and Aerodynamic Stall Caused by Special Cargo Restraints Failure.</p>
+    </header>
+
+    <div class="summary-box">
+        <strong>Executive Overview:</strong> On April 29, 2013, at approximately 15:30 local time (10:56 UTC), a Boeing 747-400 Converted Freighter (N949CA) operated by National Air Cargo (dba National Airlines) crashed moments after rotation from Runway 03 at Bagram Airfield, Afghanistan. The aircraft pitched up uncontrollably to extreme attitudes exceeding 45°, suffered an aerodynamic stall, banked right, and impacted the ground within the airport perimeter. <strong>All 7 crew members were killed</strong>. The NTSB determined that an improperly restrained 12-ton M-ATV armored vehicle broke free during rotation, rolled backward into the empennage, penetrated the Aft Pressure Bulkhead (APB), severed Hydraulic Systems 1 and 2, and struck the horizontal stabilizer jackscrew drive mechanism, jamming the elevator trim in an irreversible steep climb configuration.
+    </div>
+
+    <h2>Crash Sequence Video Recording</h2>
+    <div class="video-container">
+        <video controls preload="metadata">
+            <source src="https://packaged-media.redd.it/9r54vvxuwglg1/pb/m2-res_360p.mp4?m=DASHPlaylist.mpd&var=sgpssan&v=1&e=1790874000&s=825631a83ef9a90ff3e009ea8b40074226bde899" type="video/mp4">
+            Your browser does not support the HTML5 video element.
+        </video>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem;">
+            <strong>Dashcam Recording (Perimeter Road):</strong> Captured from a vehicle near the Runway 21 threshold. Illustrates the abnormal steep pitch-up following liftoff, the subsequent aerodynamic stall at high altitude, a dramatic right-wing drop, partial level-off, and final impact fireball.
+        </p>
+    </div>
+
+    <h2>Crash Site Evidence & Wreckage Photos</h2>
+    <div class="photo-grid">
+        <div class="photo-card">
+            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/N949CA_Crash_Site_Aerial_View_%28cropped%29.jpg/250px-N949CA_Crash_Site_Aerial_View_%28cropped%29.jpg" alt="Aerial view of crash site">
+            <div class="photo-caption">Aerial overview of the impact crater and burn field off the departure end of Runway 03 at Bagram Airfield. Main wreckage was spread 394 ft along a heading of 075°.</div>
+        </div>
+        <div class="photo-card">
+            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/National_102_wreckage_2.jpg/250px-National_102_wreckage_2.jpg" alt="Separated Horizontal Stabilizer Wreckage">
+            <div class="photo-caption">Separated tail structure and horizontal stabilizer inverted at the site, showing the fractured jackscrew actuator assembly bent and severed on its lower end.</div>
+        </div>
+    </div>
+
+    <h2>Aircraft, Crew & Operational Profile</h2>
+    <table class="data-table">
+        <tr>
+            <th>Aircraft Registration</th>
+            <td>N949CA (Name: "Lori", S/N: 25630) — Manufactured 1993 (20 Years Old)</td>
+        </tr>
+        <tr>
+            <th>Model & Engines</th>
+            <td>Boeing 747-428BCF (Boeing Converted Freighter) equipped with 4x GE CF6-80C2B6F engines</td>
+        </tr>
+        <tr>
+            <th>Airframe Stats</th>
+            <td>76,940 Total Hours | 10,813 Flight Cycles</td>
+        </tr>
+        <tr>
+            <th>Operator & Contract</th>
+            <td>National Air Cargo, Inc. dba National Airlines (Part 121 Supplemental Cargo under US Air Mobility Command / TRANSCOM contract)</td>
+        </tr>
+        <tr>
+            <th>Flight Identifiers</th>
+            <td>Flight NCR102 / Call Sign: "ISAF 95 ALPHA QUEBEC"</td>
+        </tr>
+        <tr>
+            <th>Flight Route</th>
+            <td>Camp Bastion (Shorabak) ➔ Bagram Airfield (Refueling Stop) ➔ Al Maktoum International Airport, Dubai (DWC)</td>
+        </tr>
+        <tr>
+            <th>Cargo Manifest</th>
+            <td>5 Heavy MRAP Armored Vehicles: 2x Oshkosh M-ATVs (12 tons each) + 3x BAE Cougar MRAPs (18 tons each). Total weight: ~207,500 lbs (~94,120 kg)</td>
+        </tr>
+        <tr>
+            <th>Crew On Board</th>
+            <td>7 U.S. Citizens: Captain Brad Hasler (34), First Officer Jamie Brokaw (33), Augmented Captain Jeremy Lipka (37), Augmented FO Rinku Summan (32), Loadmaster Michael Sheets (36), Mechanics Gary Stockdale (51) & Tim Garrett (51).</td>
+        </tr>
+    </table>
+
+    <h2>Cockpit Voice Recorder (CVR) Transcript Highlights</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">All times are in UTC. Excerpts capture critical crew discussions regarding previous cargo movement on the ground in Bagram before takeoff.</p>
+
+    <div class="timeline">
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">09:57:39</div>
+            <div class="timeline-desc"><strong>First Officer:</strong> <i>"One of those # straps is busted."</i> (Noticing a broken tie-down strap on the main deck after landing from Camp Bastion).</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">09:58:13</div>
+            <div class="timeline-desc"><strong>First Officer:</strong> <i>"You know how that... went and looked at them now... all the ones they had a bunch like this, to keep them from movin' backwards... all the ones that were keepin' 'em from movin' backwards were all # loose."</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">09:58:53</div>
+            <div class="timeline-desc"><strong>Captain:</strong> <i>"I hope instead of rather than just replacing that strap, I hope he's beefing the straps up more."</i></div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">10:15:11</div>
+            <div class="timeline-desc"><strong>Captain:</strong> <i>"How far did it move... a couple of inches?"</i><br><strong>Loadmaster:</strong> <i>"Yeah, they just moved a couple inches... cause you know, it's nylon ya know, so."</i><br><strong>Captain:</strong> <i>"That's scary... without a lock for those big heavy things man I don't like that."</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">10:15:42</div>
+            <div class="timeline-desc"><strong>Loadmaster:</strong> <i>"They always move... Everything moves. If it's not strapped."</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">10:44:52</div>
+            <div class="timeline-desc"><strong>First Officer:</strong> <i>"Bagram ground, ISAF nine five alpha quebec is ready to taxi."</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">10:55:44</div>
+            <div class="timeline-desc"><strong>Tower:</strong> <i>"ISAF nine five alpha quebec, cleared for takeoff runway three."</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">10:56:21</div>
+            <div class="timeline-desc"><strong>Captain:</strong> <i>"Eighty knots, thrust set."</i></div>
+        </div>
+        <div class="timeline-row">
+            <div class="timeline-time">10:56:38</div>
+            <div class="timeline-desc"><strong>Captain:</strong> <i>"Rotate."</i> (Rotation initiated near Taxiway C intersection).</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">10:56:45</div>
+            <div class="timeline-desc"><strong>First Officer:</strong> <i>"Gear up."</i><br><strong>Captain:</strong> <i>"Keep on that (wing/weight/wait)..."</i><br><code>10:56:47 - CVR and FDR RECORDING STOPS ABRUPTLY</code> (The rear M-ATV crushes the E8 rack containing CVR/FDR power lines).</div>
+        </div>
+    </div>
+
+    <h2>Reconstructed Sequence of Failure</h2>
+    <div class="timeline">
+        <div class="timeline-row">
+            <div class="timeline-time">T+0.0s</div>
+            <div class="timeline-desc">Rotation initiated at ~140 knots groundspeed near Taxiway C. Aircraft lifts off normally at ~6,400 ft down Runway 03.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">T+2.0s</div>
+            <div class="timeline-desc">Pitch angle increases during climb. Acceleration forces cause the rear 12-ton Oshkosh M-ATV to snap its improperly installed 5,000-lb web straps. The vehicle breaks free from its floating G-code pallet.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">T+3.0s</div>
+            <div class="timeline-desc">The M-ATV rolls backward at high velocity, impacting the E8 equipment rack on the left side (severing CVR and FDR power) and smashing through the Aft Pressure Bulkhead (APB).</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">T+4.0s</div>
+            <div class="timeline-desc">Continuing aft into the tail compartment, the M-ATV severs hydraulic supply/return lines for <strong>Hydraulic Systems 1 and 2</strong> and slams into the horizontal stabilizer jackscrew assembly. The lower end of the jackscrew breaks off, jamming the stabilizer into a 5° leading-edge-down (extreme aircraft pitch-up) position.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">T+8.0s</div>
+            <div class="timeline-desc">Loss of pitch control is absolute: hydraulic failure disables elevator actuators, and the jammed jackscrew forces the nose upward beyond 45°. Forward control column inputs by the pilots have zero aerodynamic effect.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">T+15.0s</div>
+            <div class="timeline-desc">The Boeing 747 suffers a full aerodynamic stall at high altitude. The right wing drops violently as lift collapses.</div>
+        </div>
+        <div class="timeline-row alert-row">
+            <div class="timeline-time">T+30.0s</div>
+            <div class="timeline-desc">The aircraft levels slightly before impacting the ground 590 feet northeast of the departure end of Runway 03 in a nose-down attitude, triggering an immediate catastrophic post-impact fire.</div>
+        </div>
+    </div>
+
+    <h2>Technical Breakdown of Restraint Physics & Flaws</h2>
+    
+    <div class="callout-box">
+        <h3>1. The Math Behind the Flawed Tie-Down Method</h3>
+        <p>National Airlines used a fatally oversimplified calculation method designed by their chief loadmaster, completely ignoring Boeing and Telair Supplemental Type Certificate (STC) manuals:</p>
+        <ul>
+            <li><strong>The Flawed Rule:</strong> The loadmaster simply divided the vehicle weight by a reduced strap rating (5,000 lbs nominal reduced by 25% to 3,750 lbs allowable). For a 27,500-lb M-ATV, they calculated 12 straps forward and 12 straps aft were sufficient.</li>
+            <li><strong>Ignoring Vector Physics:</strong> Web straps lose load-carrying capacity based on their angle relative to the floor. Installed at shallow angles or angles exceeding 30°, a strap's actual forward restraint capacity drops dramatically.</li>
+            <li><strong>Seat Track Overload:</strong> Per Boeing's Weight and Balance Manual, the maximum load a single floor seat track point can react is <strong>2,769 lbs</strong>. National Airlines assumed every point could hold 3,750 lbs simultaneously in all 3 axes (forward, lateral, vertical), exceeding structural limits.</li>
+            <li><strong>Re-calculated Requirement:</strong> Correct Boeing engineering calculations proved that properly restraining ONE M-ATV on a floating pallet required a minimum of <strong>60 straps</strong> attached to specific reinforced airframe locations. Restraining a Cougar MRAP on floating pallets was completely impossible under aircraft floor strength limits.</li>
+        </ul>
+    </div>
+
+    <div class="callout-box">
+        <h3>2. Absence of Positive Mechanical Floor Locks</h3>
+        <p>In standard freighter operations, Unit Load Devices (ULDs) or rigid pallets are locked into the floor grid using retractable end stops, side rails, and bear traps. Because these MRAPs were oversized "special cargo" loaded on centerline floating pallets, <strong>no mechanical floor locks engaged the pallets</strong>. The 100+ ton payload relied 100% on friction and nylon straps.</p>
+    </div>
+
+    <div class="callout-box">
+        <h3>3. Structural Damage vs. Center of Gravity Shift</h3>
+        <p>Initial speculation suggested the crash was caused purely by an aft Center of Gravity (CG) shift. However, NTSB aerodynamic simulations proved:</p>
+        <ul>
+            <li>If all 5 vehicles shifted aft without damaging the aircraft, the flight crew could still return the aircraft to a level pitch attitude within 5 seconds using forward control column input.</li>
+            <li>The fatal cause was not just CG displacement, but the <strong>physical mechanical destruction</strong> of Hydraulic Systems 1 & 2 and the severance/jamming of the horizontal stabilizer jackscrew drive mechanism, making recovery physically impossible.</li>
+        </ul>
+    </div>
+
+    <h2>NTSB Findings & Regulatory Aftermath</h2>
+    <ul>
+        <li><strong>Probable Cause:</strong> National Airlines' inadequate procedures for restraining special cargo loads, which resulted in the loadmaster's improper restraint of the cargo, which moved aft and damaged hydraulic systems Nos. 1 and 2 and horizontal stabilizer drive mechanism components, rendering the airplane uncontrollable.</li>
+        <li><strong>Contributing Factor:</strong> The Federal Aviation Administration's (FAA) inadequate oversight of National Airlines' handling of special cargo loads.</li>
+        <li><strong>Lack of FAA Direct Oversight:</strong> FAA inspectors had never conducted direct surveillance on National Airlines' Bagram cargo operations due to U.S. State Department travel restrictions into warzones, allowing deficient cargo manuals to roll over continuously as "nonresourced" items.</li>
+        <li><strong>Industry Reforms:</strong> 
+            <ul>
+                <li>The FAA created the permanent <strong>Cargo Focus Team (CFT)</strong> to validate special cargo load procedures for all Part 121 operators.</li>
+                <li>Issued SAFO 13005 and SAFO 13008 banning oversimplified tie-down calculations.</li>
+                <li>Boeing updated all 747 freighter manuals with explicit seat track capacity limits and strict special cargo restrictions.</li>
+            </ul>
+        </li>
+    </ul>
+
+</body>
+</html>
