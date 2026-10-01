@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>National Airlines Flight 102 — Comprehensive NTSB Investigation Report</title>
+    <title>United Airlines Flight 232 — Uncontained Engine Failure & Total Control Loss</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -15,6 +15,7 @@
             --border: #334155;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --success: #10b981;
         }
 
         * {
@@ -68,6 +69,12 @@
             background: rgba(245, 158, 11, 0.1);
         }
 
+        .tag.success {
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
         h1 {
             font-size: 2.3rem;
             color: var(--text-main);
@@ -77,7 +84,7 @@
 
         .summary-box {
             background-color: var(--card-bg);
-            border-left: 4px solid var(--danger);
+            border-left: 4px solid var(--warning);
             padding: 1.5rem;
             border-radius: 0 6px 6px 0;
             margin-bottom: 2.5rem;
@@ -97,6 +104,32 @@
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
             font-size: 1.15rem;
+        }
+
+        .video-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 4px;
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
         }
 
         .photo-grid {
@@ -226,30 +259,31 @@
 
     <header>
         <div class="meta-tags">
-            <span class="tag danger">7 FATALITIES</span>
-            <span class="tag danger">CATASTROPHIC LOAD SHIFT</span>
-            <span class="tag">NTSB/AAR-15/01</span>
-            <span class="tag">DCA13MA081</span>
-            <span class="tag">APRIL 29, 2013</span>
-            <span class="tag">BOEING 747-428BCF</span>
+            <span class="tag danger">112 FATALITIES</span>
+            <span class="tag success">184 SURVIVORS</span>
+            <span class="tag">NTSB/AAR-90/06</span>
+            <span class="tag">JULY 19, 1989</span>
+            <span class="tag">MCDONNELL DOUGLAS DC-10-10</span>
         </div>
-        <h1>National Airlines Flight 102 — Bagram Takeoff Crash</h1>
-        <p style="color: var(--text-muted);">Comprehensive Technical Report on the Uncontrolled Pitch-Up and Aerodynamic Stall Caused by Special Cargo Restraints Failure.</p>
+        <h1>United Airlines Flight 232 — The Impossible Landing at Sioux City</h1>
+        <p style="color: var(--text-muted);">Uncontained Stage-1 Fan Disk Burst Leading to Complete Hydraulic System Loss and Pioneer Differential Thrust Control.</p>
     </header>
 
     <div class="summary-box">
-        <strong>Executive Overview:</strong> On April 29, 2013, at approximately 15:30 local time (10:56 UTC), a Boeing 747-400 Converted Freighter (N949CA) operated by National Air Cargo (dba National Airlines) crashed moments after rotation from Runway 03 at Bagram Airfield, Afghanistan. The aircraft pitched up uncontrollably to extreme attitudes exceeding 45°, suffered an aerodynamic stall, banked right, and impacted the ground within the airport perimeter. <strong>All 7 crew members were killed</strong>. The NTSB determined that an improperly restrained 12-ton M-ATV armored vehicle broke free during rotation, rolled backward into the empennage, penetrated the Aft Pressure Bulkhead (APB), severed Hydraulic Systems 1 and 2, and struck the horizontal stabilizer jackscrew drive mechanism, jamming the elevator trim in an irreversible steep climb configuration.
+        <strong>Executive Overview:</strong> On July 19, 1989, a McDonnell Douglas DC-10-10 (N1819U) operating United Airlines Flight 232 from Denver to Chicago suffered a uncontained catastrophic failure of its tail-mounted #2 engine at FL370. High-velocity titanium fragments severed lines for <strong>all three independent hydraulic systems</strong>, leaving the primary flight controls completely inoperative. Through unprecedented ingenuity, Crew Resource Management (CRM), and differential engine thrust manipulation assisted by an off-duty check pilot, the crew steered the heavy widebody to Sioux Gateway Airport. Though the aircraft broke apart on impact due to high sink rates, <strong>184 of 296 occupants survived</strong>.
     </div>
 
-    <h2>Crash Site Evidence & Wreckage Photos</h2>
+
+
+    <h2>Wreckage & Component Evidence</h2>
     <div class="photo-grid">
         <div class="photo-card">
-            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/N949CA_Crash_Site_Aerial_View_%28cropped%29.jpg/250px-N949CA_Crash_Site_Aerial_View_%28cropped%29.jpg" alt="Aerial view of crash site">
-            <div class="photo-caption">Aerial overview of the impact crater and burn field off the departure end of Runway 03 at Bagram Airfield. Main wreckage was spread 394 ft along a heading of 075°.</div>
+            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/United_Airlines_Flight_232_Initial_Touchdown_Area.jpg/250px-United_Airlines_Flight_232_Initial_Touchdown_Area.jpg" alt="Touchdown Area Ground Marks">
+            <div class="photo-caption">Initial touchdown point on Runway 22 threshold showing wing tip and main landing gear impact furrows leading into the cornfield.</div>
         </div>
         <div class="photo-card">
-            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/National_102_wreckage_2.jpg/250px-National_102_wreckage_2.jpg" alt="Separated Horizontal Stabilizer Wreckage">
-            <div class="photo-caption">Separated tail structure and horizontal stabilizer inverted at the site, showing the fractured jackscrew actuator assembly bent and severed on its lower end.</div>
+            <img src="https://i.redd.it/ojytmyc4pgc91.jpg" alt="Recovered Stage 1 Fan Disk">
+            <div class="photo-caption">Reconstructed Stage-1 titanium fan disk recovered from an Iowa cornfield. Arrow points to the fatigue origin area originating from a metallurgic hard-alpha inclusion.</div>
         </div>
     </div>
 
@@ -257,155 +291,106 @@
     <table class="data-table">
         <tr>
             <th>Aircraft Registration</th>
-            <td>N949CA (Name: "Lori", S/N: 25630) — Manufactured 1993 (20 Years Old)</td>
+            <td>N1819U — Age: 18 Years (Delivered in 1971)</td>
         </tr>
         <tr>
             <th>Model & Engines</th>
-            <td>Boeing 747-428BCF (Boeing Converted Freighter) equipped with 4x GE CF6-80C2B6F engines</td>
+            <td>McDonnell Douglas DC-10-10 equipped with 3x General Electric CF6-6D high-bypass turbofans</td>
         </tr>
         <tr>
             <th>Airframe Stats</th>
-            <td>76,940 Total Hours | 10,813 Flight Cycles</td>
-        </tr>
-        <tr>
-            <th>Operator & Contract</th>
-            <td>National Air Cargo, Inc. dba National Airlines (Part 121 Supplemental Cargo under US Air Mobility Command / TRANSCOM contract)</td>
+            <td>43,401 Total Hours | 16,997 Flight Cycles</td>
         </tr>
         <tr>
             <th>Flight Identifiers</th>
-            <td>Flight NCR102 / Call Sign: "ISAF 95 ALPHA QUEBEC"</td>
+            <td>Flight UA232 / Call Sign: "UNITED 232 HEAVY"</td>
         </tr>
         <tr>
             <th>Flight Route</th>
-            <td>Camp Bastion (Shorabak) ➔ Bagram Airfield (Refueling Stop) ➔ Al Maktoum International Airport, Dubai (DWC)</td>
+            <td>Stapleton Intl Airport (Denver, CO) ➔ O'Hare Intl Airport (Chicago, IL) ➔ Philadelphia, PA</td>
         </tr>
         <tr>
-            <th>Cargo Manifest</th>
-            <td>5 Heavy MRAP Armored Vehicles: 2x Oshkosh M-ATVs (12 tons each) + 3x BAE Cougar MRAPs (18 tons each). Total weight: ~207,500 lbs (~94,120 kg)</td>
+            <th>Flight Crew</th>
+            <td>Captain Alfred C. "Al" Haynes (57), First Officer William R. "Bill" Records (48), Flight Engineer Dudley J. Dvorak (51), Passengers/Check Pilot Dennis E. "Denny" Fitch (46)</td>
         </tr>
         <tr>
-            <th>Crew On Board</th>
-            <td>7 U.S. Citizens: Captain Brad Hasler (34), First Officer Jamie Brokaw (33), Augmented Captain Jeremy Lipka (37), Augmented FO Rinku Summan (32), Loadmaster Michael Sheets (36), Mechanics Gary Stockdale (51) & Tim Garrett (51).</td>
+            <th>Occupants & Fatalities</th>
+            <td>296 Total (285 Passengers, 11 Crew) | <strong>112 Fatalities, 184 Survivors</strong> (13 uninjured)</td>
         </tr>
     </table>
 
     <h2>Cockpit Voice Recorder (CVR) Transcript Highlights</h2>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">All times are in UTC. Excerpts capture critical crew discussions regarding previous cargo movement on the ground in Bagram before takeoff.</p>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">All times CDT. Captures the famous composure and CRM exhibited by Captain Al Haynes and his crew.</p>
 
     <div class="timeline">
         <div class="timeline-row alert-row">
-            <div class="timeline-time">09:57:39</div>
-            <div class="timeline-desc"><strong>First Officer:</strong> <i>"One of those # straps is busted."</i> (Noticing a broken tie-down strap on the main deck after landing from Camp Bastion).</div>
+            <div class="timeline-time">15:16:10</div>
+            <div class="timeline-desc">Loud bang heard in cockpit followed by violent airframe shuddering. Engine #2 (tail) failed. Autopilot automatically disengages.</div>
         </div>
         <div class="timeline-row alert-row">
-            <div class="timeline-time">09:58:13</div>
-            <div class="timeline-desc"><strong>First Officer:</strong> <i>"You know how that... went and looked at them now... all the ones they had a bunch like this, to keep them from movin' backwards... all the ones that were keepin' 'em from movin' backwards were all # loose."</i></div>
-        </div>
-        <div class="timeline-row">
-            <div class="timeline-time">09:58:53</div>
-            <div class="timeline-desc"><strong>Captain:</strong> <i>"I hope instead of rather than just replacing that strap, I hope he's beefing the straps up more."</i></div>
+            <div class="timeline-time">15:16:25</div>
+            <div class="timeline-desc">First Officer Records notes flight control unresponsive: <i>"Al, I can't control the airplane!"</i> Control Yoke turned fully left and pulled back, yet aircraft banks right in a pitch-down roll.</div>
         </div>
         <div class="timeline-row alert-row">
-            <div class="timeline-time">10:15:11</div>
-            <div class="timeline-desc"><strong>Captain:</strong> <i>"How far did it move... a couple of inches?"</i><br><strong>Loadmaster:</strong> <i>"Yeah, they just moved a couple inches... cause you know, it's nylon ya know, so."</i><br><strong>Captain:</strong> <i>"That's scary... without a lock for those big heavy things man I don't like that."</i></div>
+            <div class="timeline-time">15:17:00</div>
+            <div class="timeline-desc">Flight Engineer Dvorak observes hydraulic pressure gauges for Systems 1, 2, and 3 all dropping to zero. Hydraulic quantity reads empty.</div>
         </div>
         <div class="timeline-row">
-            <div class="timeline-time">10:15:42</div>
-            <div class="timeline-desc"><strong>Loadmaster:</strong> <i>"They always move... Everything moves. If it's not strapped."</i></div>
+            <div class="timeline-time">15:29:00</div>
+            <div class="timeline-desc">DC-10 Check Pilot Denny Fitch enters cockpit to offer help. Captain Haynes assigns him control of engine throttles #1 and #3 to stabilize the phugoid mode.</div>
         </div>
         <div class="timeline-row">
-            <div class="timeline-time">10:44:52</div>
-            <div class="timeline-desc"><strong>First Officer:</strong> <i>"Bagram ground, ISAF nine five alpha quebec is ready to taxi."</i></div>
+            <div class="timeline-time">15:35:00</div>
+            <div class="timeline-desc"><strong>Sioux City Approach:</strong> <i>"United Two Thirty-Two Heavy... You're cleared to land on any runway."</i><br><strong>Captain Haynes:</strong> <i>"[Laughter] Roger. You want to be particular and make it a runway, huh?"</i></div>
         </div>
         <div class="timeline-row">
-            <div class="timeline-time">10:55:44</div>
-            <div class="timeline-desc"><strong>Tower:</strong> <i>"ISAF nine five alpha quebec, cleared for takeoff runway three."</i></div>
-        </div>
-        <div class="timeline-row">
-            <div class="timeline-time">10:56:21</div>
-            <div class="timeline-desc"><strong>Captain:</strong> <i>"Eighty knots, thrust set."</i></div>
-        </div>
-        <div class="timeline-row">
-            <div class="timeline-time">10:56:38</div>
-            <div class="timeline-desc"><strong>Captain:</strong> <i>"Rotate."</i> (Rotation initiated near Taxiway C intersection).</div>
+            <div class="timeline-time">15:52:00</div>
+            <div class="timeline-desc">Approach controller asks if they want to keep clear of city buildings:<br><strong>Captain Haynes:</strong> <i>"Whatever you do, keep us away from the city."</i></div>
         </div>
         <div class="timeline-row alert-row">
-            <div class="timeline-time">10:56:45</div>
-            <div class="timeline-desc"><strong>First Officer:</strong> <i>"Gear up."</i><br><strong>Captain:</strong> <i>"Keep on that (wing/weight/wait)..."</i><br><code>10:56:47 - CVR and FDR RECORDING STOPS ABRUPTLY</code> (The rear M-ATV crushes the E8 rack containing CVR/FDR power lines).</div>
+            <div class="timeline-time">16:00:09</div>
+            <div class="timeline-desc"><strong>First Officer Records:</strong> <i>"Close 'em off."</i><br><strong>Check Pilot Fitch:</strong> <i>"Nah, I can't pull 'em off or we'll lose it, that's what's turning ya."</i><br><strong>Ground Proximity:</strong> <i>"WHOOP WHOOP PULL UP!"</i><br><strong>Captain Haynes:</strong> <i>"Everybody stay in brace!"</i> [Sound of Impact]</div>
         </div>
     </div>
 
-    <h2>Reconstructed Sequence of Failure</h2>
-    <div class="timeline">
-        <div class="timeline-row">
-            <div class="timeline-time">T+0.0s</div>
-            <div class="timeline-desc">Rotation initiated at ~140 knots groundspeed near Taxiway C. Aircraft lifts off normally at ~6,400 ft down Runway 03.</div>
-        </div>
-        <div class="timeline-row alert-row">
-            <div class="timeline-time">T+2.0s</div>
-            <div class="timeline-desc">Pitch angle increases during climb. Acceleration forces cause the rear 12-ton Oshkosh M-ATV to snap its improperly installed 5,000-lb web straps. The vehicle breaks free from its floating G-code pallet.</div>
-        </div>
-        <div class="timeline-row alert-row">
-            <div class="timeline-time">T+3.0s</div>
-            <div class="timeline-desc">The M-ATV rolls backward at high velocity, impacting the E8 equipment rack on the left side (severing CVR and FDR power) and smashing through the Aft Pressure Bulkhead (APB).</div>
-        </div>
-        <div class="timeline-row alert-row">
-            <div class="timeline-time">T+4.0s</div>
-            <div class="timeline-desc">Continuing aft into the tail compartment, the M-ATV severs hydraulic supply/return lines for <strong>Hydraulic Systems 1 and 2</strong> and slams into the horizontal stabilizer jackscrew assembly. The lower end of the jackscrew breaks off, jamming the stabilizer into a 5° leading-edge-down (extreme aircraft pitch-up) position.</div>
-        </div>
-        <div class="timeline-row alert-row">
-            <div class="timeline-time">T+8.0s</div>
-            <div class="timeline-desc">Loss of pitch control is absolute: hydraulic failure disables elevator actuators, and the jammed jackscrew forces the nose upward beyond 45°. Forward control column inputs by the pilots have zero aerodynamic effect.</div>
-        </div>
-        <div class="timeline-row alert-row">
-            <div class="timeline-time">T+15.0s</div>
-            <div class="timeline-desc">The Boeing 747 suffers a full aerodynamic stall at high altitude. The right wing drops violently as lift collapses.</div>
-        </div>
-        <div class="timeline-row alert-row">
-            <div class="timeline-time">T+30.0s</div>
-            <div class="timeline-desc">The aircraft levels slightly before impacting the ground 590 feet northeast of the departure end of Runway 03 in a nose-down attitude, triggering an immediate catastrophic post-impact fire.</div>
-        </div>
-    </div>
+    <h2>Failure Physics & The Metallurgical Root Cause</h2>
 
-    <h2>Technical Breakdown of Restraint Physics & Flaws</h2>
-    
     <div class="callout-box">
-        <h3>1. The Math Behind the Flawed Tie-Down Method</h3>
-        <p>National Airlines used a fatally oversimplified calculation method designed by their chief loadmaster, completely ignoring Boeing and Telair Supplemental Type Certificate (STC) manuals:</p>
+        <h3>1. The Metallurgical Origin: Hard-Alpha Inclusion</h3>
+        <p>The NTSB investigation revealed that the Stage-1 titanium fan disk of the GE CF6-6D engine failed due to a fatigue crack that began 18 years earlier during manufacturing in 1971:</p>
         <ul>
-            <li><strong>The Flawed Rule:</strong> The loadmaster simply divided the vehicle weight by a reduced strap rating (5,000 lbs nominal reduced by 25% to 3,750 lbs allowable). For a 27,500-lb M-ATV, they calculated 12 straps forward and 12 straps aft were sufficient.</li>
-            <li><strong>Ignoring Vector Physics:</strong> Web straps lose load-carrying capacity based on their angle relative to the floor. Installed at shallow angles or angles exceeding 30°, a strap's actual forward restraint capacity drops dramatically.</li>
-            <li><strong>Seat Track Overload:</strong> Per Boeing's Weight and Balance Manual, the maximum load a single floor seat track point can react is <strong>2,769 lbs</strong>. National Airlines assumed every point could hold 3,750 lbs simultaneously in all 3 axes (forward, lateral, vertical), exceeding structural limits.</li>
-            <li><strong>Re-calculated Requirement:</strong> Correct Boeing engineering calculations proved that properly restraining ONE M-ATV on a floating pallet required a minimum of <strong>60 straps</strong> attached to specific reinforced airframe locations. Restraining a Cougar MRAP on floating pallets was completely impossible under aircraft floor strength limits.</li>
+            <li><strong>Double Vacuum Arc Remelting (VAR) Defect:</strong> During ingot formation, nitrogen reacted with molten titanium, creating a brittle, nitrogen-rich impurity called a <strong>hard-alpha inclusion</strong>.</li>
+            <li><strong>Fatigue Growth:</strong> Over 15,503 operational cycles, micro-cracks around the inclusion grew slowly. Eventually, a 0.5-inch crack broke open, causing the 8-foot fan assembly to burst uncontainably at 37,000 feet.</li>
+            <li><strong>Inspection Failure:</strong> Post-crash dye analysis showed fluorescent dye inside the crack, proving it was present during 6 prior overhauls but went undetected by United Airlines inspectors due to human factors and inadequate non-destructive testing (NDT) procedures.</li>
         </ul>
     </div>
 
     <div class="callout-box">
-        <h3>2. Absence of Positive Mechanical Floor Locks</h3>
-        <p>In standard freighter operations, Unit Load Devices (ULDs) or rigid pallets are locked into the floor grid using retractable end stops, side rails, and bear traps. Because these MRAPs were oversized "special cargo" loaded on centerline floating pallets, <strong>no mechanical floor locks engaged the pallets</strong>. The 100+ ton payload relied 100% on friction and nylon straps.</p>
-    </div>
-
-    <div class="callout-box">
-        <h3>3. Structural Damage vs. Center of Gravity Shift</h3>
-        <p>Initial speculation suggested the crash was caused purely by an aft Center of Gravity (CG) shift. However, NTSB aerodynamic simulations proved:</p>
+        <h3>2. Triple Hydraulic System Destruction</h3>
+        <p>The DC-10 design depended entirely on powered hydraulic actuation with no manual mechanical linkages (manual reversion):</p>
         <ul>
-            <li>If all 5 vehicles shifted aft without damaging the aircraft, the flight crew could still return the aircraft to a level pitch attitude within 5 seconds using forward control column input.</li>
-            <li>The fatal cause was not just CG displacement, but the <strong>physical mechanical destruction</strong> of Hydraulic Systems 1 & 2 and the severance/jamming of the horizontal stabilizer jackscrew drive mechanism, making recovery physically impossible.</li>
+            <li>System 1, 2, and 3 hydraulic lines converged in close physical proximity near the horizontal stabilizer and tail section.</li>
+            <li>High-energy fan disk shrapnel burst outwards, instantly slicing open lines for all three systems and dumping all hydraulic fluid into the atmosphere within seconds.</li>
+            <li>Without fluid pressure, elevators, rudders, ailerons, and spoilers were left completely limp and floating in the slipstream.</li>
         </ul>
     </div>
 
-    <h2>NTSB Findings & Regulatory Aftermath</h2>
+    <div class="callout-box">
+        <h3>3. Steering via Differential Engine Thrust</h3>
+        <p>Left with zero control surfaces, Check Pilot Denny Fitch kneeled on the cockpit floor, holding one throttle lever in each hand to control the pitch and roll using engine thrust:</p>
+        <ul>
+            <li><strong>Roll/Heading Control:</strong> Increasing thrust on Engine #1 (left) banked the plane right; increasing thrust on Engine #3 (right) banked the plane left.</li>
+            <li><strong>Pitch Control & Phugoid Cycle:</strong> The plane established a 1,500 ft/min phugoid wave. Fitch adjusted both throttles together—throttling up during descents to pitch the nose up, and reducing power near wave peaks to drop the nose.</li>
+            <li><strong>Final Approach Challenge:</strong> Without flaps or slats, flight speed was 220 knots (vs 140 normal) with a sink rate of 1,850 ft/min (vs 300 normal). Milliseconds before touchdown, a phugoid wave dropped the right wing, causing initial ground impact.</li>
+        </ul>
+    </div>
+
+    <h2>Industry Impact & Regulatory Legacy</h2>
     <ul>
-        <li><strong>Probable Cause:</strong> National Airlines' inadequate procedures for restraining special cargo loads, which resulted in the loadmaster's improper restraint of the cargo, which moved aft and damaged hydraulic systems Nos. 1 and 2 and horizontal stabilizer drive mechanism components, rendering the airplane uncontrollable.</li>
-        <li><strong>Contributing Factor:</strong> The Federal Aviation Administration's (FAA) inadequate oversight of National Airlines' handling of special cargo loads.</li>
-        <li><strong>Lack of FAA Direct Oversight:</strong> FAA inspectors had never conducted direct surveillance on National Airlines' Bagram cargo operations due to U.S. State Department travel restrictions into warzones, allowing deficient cargo manuals to roll over continuously as "nonresourced" items.</li>
-        <li><strong>Industry Reforms:</strong> 
-            <ul>
-                <li>The FAA created the permanent <strong>Cargo Focus Team (CFT)</strong> to validate special cargo load procedures for all Part 121 operators.</li>
-                <li>Issued SAFO 13005 and SAFO 13008 banning oversimplified tie-down calculations.</li>
-                <li>Boeing updated all 747 freighter manuals with explicit seat track capacity limits and strict special cargo restrictions.</li>
-            </ul>
-        </li>
+        <li><strong>Triple Melt VAR Standard:</strong> The aviation industry permanently transitioned from Double VAR to <strong>Triple Melt Vacuum Arc Remelting</strong> for all critical titanium engine rotors to eliminate hard-alpha gas inclusions.</li>
+        <li><strong>Hydraulic Fuses Introduced:</strong> Hydraulic fuses were retrofitted into the #3 system in all DC-10 aircraft below the #2 tail engine to automatically isolate severed lines and retain control fluid.</li>
+        <li><strong>Crew Resource Management (CRM):</strong> Flight 232 became the absolute gold-standard textbook example of CRM, shifting airline culture away from autocratic captains toward open teamwork, delegation, and clear communication.</li>
+        <li><strong>Child Restraints (Lap Children):</strong> The tragic death of a lap infant in the crash sparked decades-long campaigns led by senior attendant Jan Brown Lohr for mandatory child safety seats on commercial aircraft.</li>
     </ul>
 
 </body>
