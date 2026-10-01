@@ -115,6 +115,22 @@
             color: var(--text-muted);
         }
 
+        .video-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        video {
+            width: 100%;
+            max-height: 480px;
+            border-radius: 4px;
+            background: #000;
+            outline: none;
+        }
+
         /* Timeline */
         .timeline {
             display: flex;
@@ -214,6 +230,17 @@
 
     <div class="summary-box">
         <strong>Accident Summary:</strong> On April 29, 2013, at 15:30 local time, a Boeing 747-400 Converted Freighter pitched up uncontrollably seconds after rotation from Runway 03 at Bagram Airfield, entered an aerodynamic stall, and slammed into the ground within the airport perimeter. <strong>All 7 crew members perished</strong>. Investigation proved an improperly secured 12-ton M-ATV broke free from tie-down straps, rolled aft, smashed through the Aft Pressure Bulkhead, severed hydraulic lines 1 and 2, and destroyed the horizontal stabilizer jackscrew drive mechanism, rendering pitch control impossible.
+    </div>
+
+    <h2>Crash Video Recording</h2>
+    <div class="video-container">
+        <video controls>
+            <source src="https://packaged-media.redd.it/9r54vvxuwglg1/pb/m2-res_360p.mp4?m=DASHPlaylist.mpd&var=sgpssan&v=1&e=1790874000&s=825631a83ef9a90ff3e009ea8b40074226bde899" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+            <strong>Dashcam Footage:</strong> Captured from a perimeter vehicle on Runway 03. Shows extreme pitch-up after liftoff, aerodynamic stall, right wing drop, and immediate impact fireball.
+        </p>
     </div>
 
     <h2>Crash Site Evidence & Wreckage Media</h2>
