@@ -1,7 +1,7 @@
 {
   "meta": {
-    "name": "MIGHT OS - Realtime Chat (pure JSON)",
-    "version": "4.0",
+    "name": "MIGHT OS - Pure JSON Realtime Chat",
+    "version": "4.1",
     "author": "Mark Benjamin Douglas"
   },
   "config": {
@@ -24,7 +24,7 @@
     },
 
     { "cmd": "SYS_SET", "var_name": "LAST_ID", "value": "" },
-    { "cmd": "SYS_SET", "var_name": "SEEN", "value": "" },
+    { "cmd": "SYS_SET", "var_name": "POLL_BODY", "value": "" },
 
     {
       "cmd": "NET_HTTP_POST",
@@ -54,14 +54,26 @@
             { "cmd": "SYS_JSON_GET", "var": "LINE", "path": "id",      "to": "MSG_ID"   },
             { "cmd": "SYS_JSON_GET", "var": "LINE", "path": "event",   "to": "MSG_EVT"  },
             { "cmd": "SYS_JSON_GET", "var": "LINE", "path": "message", "to": "MSG_TEXT" },
-            { "cmd": "SYS_SET", "var_name": "LAST_ID", "value": "${MSG_ID}" },
+
+            { "cmd": "SYS_COND_EXEC", "var": "MSG_ID", "not_empty": true, "then": [
+                { "cmd": "SYS_SET", "var_name": "LAST_ID", "value": "${MSG_ID}" }
+            ]},
 
             { "cmd": "SYS_COND_EXEC", "var": "MSG_TEXT", "not_empty": true, "then": [
-                { "cmd": "SYS_PRINT", "msg": "\r\u001b[K\u001b[1;32m[IN]\u001b[0m ${MSG_TEXT}" },
-                { "cmd": "SYS_PRINT", "msg": "\u001b[1;37m${USER_NICK} > \u001b[0m" }
+
+              { "cmd": "SYS_COND_CONTAINS", "var": "MSG_TEXT", "contains": "<${USER_NICK}>", "not": true, "then": [
+
+                { "cmd": "SYS_COND_CONTAINS", "var": "MSG_TEXT", "contains": "[SYS] ${USER_NICK}", "not": true, "then": [
+
+                  { "cmd": "SYS_PRINT", "msg": "\r\u001b[K\u001b[1;32m[IN]\u001b[0m ${MSG_TEXT}" },
+                  { "cmd": "SYS_PRINT", "msg": "\u001b[1;37m${USER_NICK} > \u001b[0m" }
+
+                ]}
+              ]}
             ]}
           ]
         },
+
         { "cmd": "SYS_SET", "var_name": "POLL_BODY", "value": "" },
 
         {
