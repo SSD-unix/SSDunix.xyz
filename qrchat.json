@@ -1,70 +1,44 @@
 {
   "meta": {
-    "name": "MIGHT OS - Realtime Interactive Messenger",
-    "version": "2.0-CPC",
-    "author": "Mark Benjamin Douglas",
-    "target_kernel": "MIGHT_OS_x86_64",
-    "protocol": "CPC_NTFY_BUS"
+    "name": "MIGHT OS - Realtime Chat",
+    "version": "3.0",
+    "author": "Mark Benjamin Douglas"
   },
   "config": {
     "endpoint": "https://ntfy.sh",
-    "topic": "might_os_chat_room_99",
-    "poll_interval_ms": 1000,
-    "buffer_size": 2048,
-    "max_history_mins": "15m",
-    "ansi_colors": true
+    "topic": "might_os_chat_room_99"
   },
   "pipeline": [
-    {
-      "cmd": "SYS_CLEAR_SCREEN"
-    },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\u001b[1;36m┌──────────────────────────────────────────────────────────┐\u001b[0m"
-    },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\u001b[1;36m│          MIGHT OS Interactive Messenger (CPC)            │\u001b[0m"
-    },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\u001b[1;36m└──────────────────────────────────────────────────────────┘\u001b[0m"
-    },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\u001b[1;33m[*] Initializing network stack and IPC buffers...\u001b[0m"
-    },
+    { "cmd": "SYS_CLEAR_SCREEN" },
+    { "cmd": "SYS_PRINT", "msg": "\u001b[1;36m==========================================================\u001b[0m" },
+    { "cmd": "SYS_PRINT", "msg": "\u001b[1;36m           MIGHT OS Realtime Chat (ntfy.sh)               \u001b[0m" },
+    { "cmd": "SYS_PRINT", "msg": "\u001b[1;36m==========================================================\u001b[0m" },
+    { "cmd": "SYS_PRINT", "msg": "\u001b[1;33m[*] Connecting to bus...\u001b[0m" },
+
     {
       "cmd": "SYS_PROMPT_INPUT",
       "var_name": "USER_NICK",
-      "prompt": "\u001b[1;35m[?] Enter your handle/nickname: \u001b[0m",
+      "prompt": "\u001b[1;35m[?] Nickname: \u001b[0m",
       "default": "MIGHT_User"
     },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\u001b[1;32m[+] Identity established. Connecting to ntfy bus...\u001b[0m\n"
-    },
+
     {
       "cmd": "NET_HTTP_POST",
       "url": "${config.endpoint}/${config.topic}",
-      "headers": {
-        "Title": "Node Joined",
-        "Tags": "incoming,computer"
-      },
-      "body": "\u001b[1;32m[SYS]\u001b[0m Node '${USER_NICK}' attached to CPC channel."
+      "headers": { "Title": "join", "Tags": "incoming" },
+      "body": "[SYS] ${USER_NICK} joined the channel"
     },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\u001b[1;34m=== LIVE STREAM START (Type ':q' to exit) ===\u001b[0m"
-    },
+
+    { "cmd": "SYS_PRINT", "msg": "\u001b[1;34m=== LIVE (type :q to quit) ===\u001b[0m" },
+
     {
       "cmd": "NET_START_SSE_THREAD",
-      "url": "${config.endpoint}/${config.topic}/raw?poll=0",
-      "on_message_cmd": "UI_RENDER_INCOMING"
+      "url": "${config.endpoint}/${config.topic}/raw?poll=0"
     },
+
     {
       "cmd": "SYS_EVENT_LOOP",
-      "label": "CHAT_MAIN_LOOP",
+      "label": "CHAT_LOOP",
       "actions": [
         {
           "cmd": "SYS_READ_LINE",
@@ -84,42 +58,23 @@
             {
               "cmd": "NET_HTTP_POST",
               "url": "${config.endpoint}/${config.topic}",
-              "headers": {
-                "Priority": "3"
-              },
-              "body": "\u001b[1;36m<${USER_NICK}>\u001b[0m ${OUTGOING_MSG}"
+              "headers": { "Priority": "3" },
+              "body": "<${USER_NICK}> ${OUTGOING_MSG}"
             }
           ]
         }
       ]
     },
-    {
-      "cmd": "NET_STOP_SSE_THREAD"
-    },
+
+    { "cmd": "NET_STOP_SSE_THREAD" },
+
     {
       "cmd": "NET_HTTP_POST",
       "url": "${config.endpoint}/${config.topic}",
-      "headers": {
-        "Title": "Node Left",
-        "Tags": "outgoing,computer"
-      },
-      "body": "\u001b[1;31m[SYS]\u001b[0m Node '${USER_NICK}' disconnected from CPC channel."
+      "headers": { "Title": "leave", "Tags": "outgoing" },
+      "body": "[SYS] ${USER_NICK} left the channel"
     },
-    {
-      "cmd": "SYS_PRINT",
-      "msg": "\n\u001b[1;33m[*] Stream stopped. Session terminated. Goodbye, ${USER_NICK}.\u001b[0m"
-    }
-  ],
-  "ui_handlers": {
-    "UI_RENDER_INCOMING": [
-      {
-        "cmd": "SYS_PRINT",
-        "msg": "\r\u001b[K\u001b[1;32m[IN]\u001b[0m ${MESSAGE_BODY}"
-      },
-      {
-        "cmd": "SYS_PRINT",
-        "msg": "\u001b[1;37m${USER_NICK} > \u001b[0m"
-      }
-    ]
-  }
+
+    { "cmd": "SYS_PRINT", "msg": "\n\u001b[1;33m[*] Bye, ${USER_NICK}.\u001b[0m" }
+  ]
 }
