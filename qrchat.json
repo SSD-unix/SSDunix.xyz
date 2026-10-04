@@ -1,12 +1,13 @@
 {
   "meta": {
-    "name": "MIGHT OS - Realtime Chat",
-    "version": "3.1",
+    "name": "MIGHT OS - Realtime Chat (pure JSON)",
+    "version": "4.0",
     "author": "Mark Benjamin Douglas"
   },
   "config": {
     "endpoint": "https://ntfy.sh",
-    "topic": "might_os_chat_room_99"
+    "topic": "might_os_chat_room_99",
+    "poll_ms": 1500
   },
   "pipeline": [
     { "cmd": "SYS_CLEAR_SCREEN" },
@@ -22,18 +23,23 @@
       "default": "MIGHT_User"
     },
 
+    { "cmd": "SYS_SET", "var_name": "LAST_ID", "value": "" },
+    { "cmd": "SYS_SET", "var_name": "SEEN", "value": "" },
+
     {
       "cmd": "NET_HTTP_POST",
       "url": "${config.endpoint}/${config.topic}",
       "headers": { "Title": "join", "Tags": "incoming" },
-      "body": "[SYS] ${USER_NICK} joined the channel"
+      "body": "[SYS] ${USER_NICK} joined"
     },
 
     { "cmd": "SYS_PRINT", "msg": "\u001b[1;34m=== LIVE (type :q to quit) ===\u001b[0m" },
 
     {
-      "cmd": "NET_START_SSE_THREAD",
-      "url": "${config.endpoint}/${config.topic}/raw?poll=0"
+      "cmd": "NET_POLL_THREAD",
+      "url": "${config.endpoint}/${config.topic}/json?poll=1&since=${LAST_ID}",
+      "into": "POLL_BODY",
+      "every_ms": 1500
     },
 
     {
@@ -41,38 +47,47 @@
       "label": "CHAT_LOOP",
       "actions": [
         {
+          "cmd": "SYS_FOREACH_LINE",
+          "var": "POLL_BODY",
+          "item_var": "LINE",
+          "do": [
+            { "cmd": "SYS_JSON_GET", "var": "LINE", "path": "id",      "to": "MSG_ID"   },
+            { "cmd": "SYS_JSON_GET", "var": "LINE", "path": "event",   "to": "MSG_EVT"  },
+            { "cmd": "SYS_JSON_GET", "var": "LINE", "path": "message", "to": "MSG_TEXT" },
+            { "cmd": "SYS_SET", "var_name": "LAST_ID", "value": "${MSG_ID}" },
+
+            { "cmd": "SYS_COND_EXEC", "var": "MSG_TEXT", "not_empty": true, "then": [
+                { "cmd": "SYS_PRINT", "msg": "\r\u001b[K\u001b[1;32m[IN]\u001b[0m ${MSG_TEXT}" },
+                { "cmd": "SYS_PRINT", "msg": "\u001b[1;37m${USER_NICK} > \u001b[0m" }
+            ]}
+          ]
+        },
+        { "cmd": "SYS_SET", "var_name": "POLL_BODY", "value": "" },
+
+        {
           "cmd": "SYS_READ_LINE",
           "var_name": "OUTGOING_MSG",
           "prompt": "\u001b[1;37m${USER_NICK} > \u001b[0m"
         },
-        {
-          "cmd": "SYS_COND_BREAK",
-          "var": "OUTGOING_MSG",
-          "equals": ":q"
-        },
-        {
-          "cmd": "SYS_COND_EXEC",
-          "var": "OUTGOING_MSG",
-          "not_empty": true,
-          "then": [
+        { "cmd": "SYS_COND_BREAK", "var": "OUTGOING_MSG", "equals": ":q" },
+        { "cmd": "SYS_COND_EXEC", "var": "OUTGOING_MSG", "not_empty": true, "then": [
             {
               "cmd": "NET_HTTP_POST",
               "url": "${config.endpoint}/${config.topic}",
               "headers": { "Priority": "3" },
               "body": "<${USER_NICK}> ${OUTGOING_MSG}"
             }
-          ]
-        }
+        ]}
       ]
     },
 
-    { "cmd": "NET_STOP_SSE_THREAD" },
+    { "cmd": "NET_STOP_POLL_THREAD" },
 
     {
       "cmd": "NET_HTTP_POST",
       "url": "${config.endpoint}/${config.topic}",
       "headers": { "Title": "leave", "Tags": "outgoing" },
-      "body": "[SYS] ${USER_NICK} left the channel"
+      "body": "[SYS] ${USER_NICK} left"
     },
 
     { "cmd": "SYS_PRINT", "msg": "\n\u001b[1;33m[*] Bye, ${USER_NICK}.\u001b[0m" }
