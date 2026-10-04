@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "name": "MIGHT OS - Remote Messenger",
+    "version": "1.0",
+    "author": "Mark Benjamin Douglas"
+  },
+  "pipeline": [
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;36m==========================================================\u001b[0m"
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;36m           MIGHT OS Remote Messenger Application          \u001b[0m"
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;36m==========================================================\u001b[0m"
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;33m[1/3] Connecting to ntfy pub/sub endpoint...\u001b[0m"
+    },
+    {
+      "cmd": "SYS_DELAY",
+      "ms": 500
+    },
+    {
+      "cmd": "NET_HTTP_POST",
+      "url": "https://ntfy.sh/nfc-a1b2c3d4",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "id": "msg_001",
+        "sid": "might_node_01",
+        "nick": "MIGHT_OS_Terminal",
+        "text": "Hello world from MIGHT OS RAM Execution Engine!"
+      }
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;32m[+] Message successfully pushed to cloud bus!\u001b[0m"
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;33m[2/3] Fetching latest messages from topic...\u001b[0m"
+    },
+    {
+      "cmd": "SYS_DELAY",
+      "ms": 500
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;35m--- Incoming Chat Stream (Last 5m) ---\u001b[0m"
+    },
+    {
+      "cmd": "NET_HTTP_GET",
+      "url": "https://ntfy.sh/nfc-a1b2c3d4/json?poll=1&since=5m"
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;35m--------------------------------------\u001b[0m"
+    },
+    {
+      "cmd": "SYS_PRINT",
+      "msg": "\u001b[1;32m[3/3] App execution completed successfully.\u001b[0m\n"
+    }
+  ]
+}
