@@ -1,12 +1,12 @@
 {
   "meta": {
     "name": "MIGHT OS - Pure JSON Realtime Chat",
-    "version": "4.1",
+    "version": "4.3",
     "author": "Mark Benjamin Douglas"
   },
   "config": {
     "endpoint": "https://ntfy.sh",
-    "topic": "might_os_chat_room_99",
+    "topic": "gago_chat_2026_x7k9",
     "poll_ms": 1500
   },
   "pipeline": [
@@ -23,8 +23,8 @@
       "default": "MIGHT_User"
     },
 
-    { "cmd": "SYS_SET", "var_name": "LAST_ID", "value": "" },
-    { "cmd": "SYS_SET", "var_name": "POLL_BODY", "value": "" },
+    { "cmd": "SYS_SET", "var_name": "LAST_ID",  "value": "" },
+    { "cmd": "SYS_SET", "var_name": "POLL_BODY","value": "" },
 
     {
       "cmd": "NET_HTTP_POST",
@@ -46,6 +46,7 @@
       "cmd": "SYS_EVENT_LOOP",
       "label": "CHAT_LOOP",
       "actions": [
+
         {
           "cmd": "SYS_FOREACH_LINE",
           "var": "POLL_BODY",
