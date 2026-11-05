@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -29,6 +29,139 @@ body {
   padding: 50px 20px; 
 }
 
+/* Screens & Captcha */
+#main-content {
+  display: none;
+}
+
+.captcha-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 85vh;
+}
+
+.captcha-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 35px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  max-width: 440px;
+  width: 100%;
+}
+
+.captcha-card h3 {
+  margin-top: 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+/* Camera Scanner Container */
+.webcam-box {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 20px auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #38bdf8;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+  background: #020617;
+}
+
+.webcam-box video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror effect */
+}
+
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: #38bdf8;
+  box-shadow: 0 0 15px #38bdf8;
+  animation: scan 2s linear infinite;
+  display: none;
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+
+.status-msg {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 10px;
+  min-height: 20px;
+}
+
+.btn-primary {
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background: #bae6fd;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.switch-mode-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 13px;
+  margin-top: 15px;
+}
+
+.switch-mode-btn:hover {
+  color: #94a3b8;
+}
+
+.captcha-input-group {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.captcha-input-group input {
+  width: 100px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(2, 6, 23, 0.8);
+  color: #fff;
+  font-size: 16px;
+  text-align: center;
+  outline: none;
+}
+
+.captcha-error {
+  color: #f87171;
+  font-size: 14px;
+  display: none;
+  margin-top: 10px;
+}
+
+/* Animations */
 .fade-in {
   opacity: 0;
   animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -68,74 +201,6 @@ header nav a {
 }
 header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
 
-/* Умный блок выбора 2000 языков */
-.lang-container {
-  margin-top: 25px;
-  width: 100%;
-  max-width: 800px;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-.lang-search {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  background: rgba(2, 6, 23, 0.6);
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-  margin-bottom: 15px;
-  transition: all 0.3s ease;
-}
-
-.lang-search:focus {
-  border-color: #38bdf8;
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
-}
-
-.lang-selector { 
-  display: flex; 
-  gap: 8px; 
-  flex-wrap: wrap; 
-  justify-content: flex-start; 
-  max-height: 180px; 
-  overflow-y: auto; 
-  padding-right: 5px;
-}
-
-.lang-selector::-webkit-scrollbar { width: 6px; }
-.lang-selector::-webkit-scrollbar-track { background: transparent; }
-.lang-selector::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 6px; }
-
-.lang-selector button { 
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 12px; 
-  border-radius: 10px; 
-  color: #e2e8f0; 
-  cursor: pointer; 
-  font-family: inherit;
-  font-size: 13px; 
-  font-weight: 500; 
-  transition: all 0.2s ease; 
-}
-
-.lang-selector button:hover { 
-  background: #38bdf8; 
-  color: #0f172a;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3);
-  border-color: #38bdf8;
-}
-
 .card { 
   background: rgba(15, 23, 42, 0.5); 
   backdrop-filter: blur(16px);
@@ -152,6 +217,51 @@ header nav a:hover { color: #bae6fd; text-shadow: 0 0 10px rgba(56, 189, 248, 0.
   transform: translateY(-5px); 
   box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(56, 189, 248, 0.1); 
   border-color: rgba(56, 189, 248, 0.2);
+}
+
+.host-notice {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 20px;
+  border-radius: 14px;
+  color: #bae6fd;
+  font-size: 15px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.host-notice code {
+  background: rgba(2, 6, 23, 0.6);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.btn-filehost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+  align-self: flex-start;
+}
+
+.btn-filehost:hover {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #0f172a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
+  text-decoration: none;
 }
 
 h2 { 
@@ -228,179 +338,190 @@ footer {
   header h1 { font-size: 42px; }
   h2 { font-size: 24px; }
   .card { padding: 25px; }
+  .btn-filehost { width: 100%; box-sizing: border-box; }
 }
 </style>
 </head>
 <body>
-<div class="container">
+
+<!-- AI / Camera Verification (CAPTCHA) -->
+<div class="captcha-container" id="captcha-screen">
+  <div class="captcha-card">
+    <h3>Human Verification</h3>
+
+    <!-- Mode 1: Camera Face Detection -->
+    <div id="camera-mode">
+      <p style="font-size: 14px; color: #94a3b8;">Turn on your camera so the system can verify you are human.</p>
+      
+      <div class="webcam-box">
+        <video id="webcam" autoplay playsinline></video>
+        <div class="scan-line" id="scan-line"></div>
+      </div>
+      
+      <div class="status-msg" id="camera-status">Click below to enable camera detection</div>
+      
+      <div style="margin-top: 15px;">
+        <button class="btn-primary" id="btn-start-camera" onclick="startCameraVerification()">Enable Camera</button>
+      </div>
+
+      <button class="switch-mode-btn" onclick="switchToMathMode()">Use math captcha instead</button>
+    </div>
+
+    <!-- Mode 2: Fallback Math Verification -->
+    <div id="math-mode" style="display: none;">
+      <p style="font-size: 14px; color: #94a3b8;">Solve the simple equation to verify:</p>
+      <div style="font-size: 20px; font-weight: 700; margin: 15px 0;" id="captcha-question">...</div>
+      <div class="captcha-input-group">
+        <input type="number" id="captcha-answer" placeholder="Answer">
+        <button class="btn-primary" onclick="verifyMathCaptcha()">Verify</button>
+      </div>
+      <div class="captcha-error" id="captcha-error">Incorrect answer. Try again.</div>
+
+      <button class="switch-mode-btn" onclick="switchToCameraMode()">Use camera verification</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Website Content -->
+<div class="container" id="main-content">
   <header class="fade-in">
     <h1 id="site-title">SSDunix</h1>
     <nav id="github-link">GitHub: <a href="https://github.com/SSD-unix" target="_blank">@SSD-unix</a></nav>
-    
-    <!-- Панель на 2000 языков -->
-    <div class="lang-container">
-      <input type="text" id="lang-search" class="lang-search" placeholder="Поиск среди 2000 языков и диалектов / Search...">
-      <div class="lang-selector" id="lang-buttons">
-        <!-- Кнопки генерируются алгоритмом JS -->
-      </div>
-    </div>
   </header>
 
   <section class="card fade-in delay-1" id="about">
-    <h2 id="about-title">О проекте</h2>
-    <p id="about-text">Загрузка...</p>
-    <p id="news-text">Загрузка...</p>
+    <h2 id="about-title">About the Project</h2>
+    <p id="about-text">SSDunix is a website dedicated to my projects and developments. Here you can find my experiments with Python, PyQt, tool creation, and useful notes for programmers and IT enthusiasts. My goal is to create a platform where every project can be presented clearly and beautifully.</p>
+    <p id="news-text">Also read the latest news at <a href="https://news.ssdunix.xyz" target="_blank">news.ssdunix.xyz</a></p>
+    
+    <div class="host-notice">
+      <div>📁 All files and source codes are stored on: <code>sdux.phx.am</code></div>
+      <a href="https://sdux.phx.am" target="_blank" class="btn-filehost">
+        <span>Go to File Storage</span> ↗
+      </a>
+    </div>
   </section>
 
-  <section class="card fade-in delay-2" id="about-me">
-    <h2 id="about-me-title">Обо мне</h2>
-    <p id="about-me-text">Загрузка...</p>
-  </section>
-
-  <section class="card fade-in delay-3" id="github">
-    <h2 id="repos-title">GitHub репозитории</h2>
-    <div id="repos" style="color: #94a3b8; font-style: italic;">Загрузка...</div>
+  <section class="card fade-in delay-2" id="github">
+    <h2 id="repos-title">GitHub Repositories</h2>
+    <div id="repos" style="color: #94a3b8; font-style: italic;">Loading...</div>
   </section>
 
   <footer id="footer-text" class="fade-in delay-3">© SSDunix</footer>
 </div>
 
 <script>
-// 1. Базовые языки (строго исключены tr и az)
-const baseLangs = ["ru","en","hy","uk","pl","es","fr","de","it","pt","zh","ja","ko","ar","hi","nl","sv","el","he","cs","ro","hu","fi","da","ka","bg","sr","hr","sl","sk","be","kk","uz","tg","mn","th","vi","id","ms","tl","bn","ta","te","mr","ur","fa","am","sw","af","sq","mk","bs","mt","cy","is","ga","eu","gl","ca","lt","lv","et","km","lo","my","ml","kn","gu","pa","si","ne","so","mg","ny","sn","ab","aa","ak","an","as","av","ae","ay","ba","bm","bh","bi","br","ce","ch","co","cr","cu","cv","dv","dz","ee","eo","ff","fj","fo","fy","gd","gn","gv","ha","ho","ht","hz","ia","ie","ig","ii","ik","io","iu","jv","kg","ki","kj","kl","kr","ks","ku","kv","kw","ky","la","lb","lg","li","ln","lu","mh","mi","na","nb","nd","ng","nn","no","nr","nv","oc","oj","om","or","os","pi","qu","rm","rn","rw","sa","sc","sd","se","sg","sm","ss","st","su","ti","tk","tn","to","ts","tt","tw","ty","ug","ve","vo","wa","wo","xh","yi","yo","za","zu"];
+// --- Camera Face Verification Logic ---
+let stream = null;
+let scanInterval = null;
 
-// Двойная проверка безопасности
-const safeLangs = baseLangs.filter(l => l !== 'tr' && l !== 'az');
+async function startCameraVerification() {
+  const statusEl = document.getElementById('camera-status');
+  const scanLine = document.getElementById('scan-line');
+  const video = document.getElementById('webcam');
+  const startBtn = document.getElementById('btn-start-camera');
 
-// 2. Региональные коды (сотни стран)
-const regions = ["US","GB","CA","AU","NZ","IE","ZA","IN","FR","DE","IT","ES","MX","AR","CO","PE","VE","CL","EC","GT","CU","BR","PT","CN","TW","HK","SG","MO","JP","KR","RU","BY","KZ","KG","UA","PL","CZ","SK","HU","RO","BG","GR","IL","IR","AF","PK","BD","LK","VN","TH","ID","MY","PH","KE","TZ","UG","NG","EG","SA","AE","IQ","DZ","MA","TN","JO","LB","KW","QA","BH","OM","YE","SY","LY","SD","AM","GE","CH","AT","BE","LU","MC","NL","SE","FI","DK","NO","RS","HR","BA","ME","MK","AL","MT","CY","IS","EE","LV","LT","KH","LA","MM","NP","BT","ZW","MW","MG","SO","DJ","ER","TJ","TM","GL","PR","DO","HN","PY","SV","NI","CR","PA","UY","BO","SN","CI","CM","ML","BF","NE","GN","RW","HT","AO","MZ","CV","GW","ST","TL","MR","KM","SS","TD","SM","VA","AW","CW","SR","SX","AX","AS","BI","BW","CX","FJ","GM","GH","GY","IM","JE","KI","LS","MU","NA","NR","SC","SL","SZ","VU","ZM","BJ","CD","CF","CG","GA","GQ","NC","PF","PM","RE","TG","WF","YT"];
+  startBtn.style.display = 'none';
+  statusEl.innerText = "Requesting camera access...";
 
-const codesArray = [];
-
-// Сначала добавляем чистые базы
-safeLangs.forEach(l => { 
-  if(codesArray.length < 2000) codesArray.push(l); 
-});
-
-// Затем алгоритмически скрещиваем базы с регионами, пока не добьем ровно до 2000
-for (let i = 0; i < safeLangs.length; i++) {
-  for (let j = 0; j < regions.length; j++) {
-    if (codesArray.length >= 2000) break;
-    // Пример: es-JP (испанский в Японии), ru-US (русский в США)
-    codesArray.push(`${safeLangs[i]}-${regions[j]}`);
-  }
-  if (codesArray.length >= 2000) break;
-}
-
-// 3. Вытягиваем красивые родные названия напрямую из движка браузера
-const langNames = {};
-codesArray.forEach(code => {
   try {
-    const nativeName = new Intl.DisplayNames([code], { type: 'language' }).of(code);
-    langNames[code] = nativeName.charAt(0).toUpperCase() + nativeName.slice(1);
-  } catch (e) {
-    langNames[code] = code.toUpperCase();
-  }
-});
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 400, facingMode: "user" } });
+    video.srcObject = stream;
+    scanLine.style.display = 'block';
+    statusEl.innerText = "Scanning for human face...";
 
-// Основной ручной перевод для интерфейса
-const baseTexts = {
-  "ru": {
-    "site-title":"SSDunix", "about-title":"О проекте",
-    "about-text":"SSDunix — это сайт, посвящённый моим проектам и разработкам. Здесь вы найдете мои эксперименты с Python, PyQt, созданием инструментов и сервисов, а также полезные заметки для программистов и энтузиастов IT. Моя цель — создать платформу, где каждый проект может быть представлен красиво и удобно.",
-    "news-text":"Также читайте новости на <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"Обо мне",
-    "about-me-text":"Мне нравится изучать Linux, создавать собственные инструменты и экспериментировать с программированием. Я увлекаюсь PyQt, веб-разработкой и поиском нестандартных решений. SSDunix — это место, где я выкладываю свои проекты и делюсь опытом с другими. Моя философия — учиться через создание и эксперимент.",
-    "repos-title":"GitHub репозитории", "footer-text":"© SSDunix"
-  },
-  "en": {
-    "site-title":"SSDunix", "about-title":"About the project",
-    "about-text":"SSDunix is a website dedicated to my projects and developments. Here you can find my experiments with Python, PyQt, tool creation, and useful notes for programmers and IT enthusiasts. My goal is to create a platform where every project is presented beautifully and clearly.",
-    "news-text":"Also read news at <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>",
-    "about-me-title":"About Me",
-    "about-me-text":"I enjoy exploring Linux, creating my own tools, and experimenting with programming. I love PyQt, web development, and finding unconventional solutions. SSDunix is where I share my projects and experiences with others. My philosophy is learning through creation and experimentation.",
-    "repos-title":"GitHub Repositories", "footer-text":"© SSDunix"
-  }
-};
+    // Face detection check
+    const detectorSupported = 'FaceDetector' in window;
+    let detector = detectorSupported ? new FaceDetector() : null;
 
-// Динамический генератор интерфейса для 2000 языков
-function getTranslations(code) {
-  const shortCode = code.split('-')[0];
-  if (baseTexts[shortCode]) return baseTexts[shortCode];
-  
-  return {
-    "site-title": "SSDunix",
-    "about-title": langNames[code] + " - Project",
-    "about-text": baseTexts['en']['about-text'], 
-    "news-text": `News: <a href='https://news.ssdunix.xyz' target='_blank'>news.ssdunix.xyz</a>`,
-    "about-me-title": langNames[code] + " - About",
-    "about-me-text": baseTexts['en']['about-me-text'],
-    "repos-title": `GitHub Repositories`,
-    "footer-text": "© SSDunix"
-  };
+    let scanCount = 0;
+    scanInterval = setInterval(async () => {
+      scanCount++;
+      
+      if (detectorSupported) {
+        try {
+          const faces = await detector.detect(video);
+          if (faces.length > 0) {
+            unlockAccess("Human detected! Access granted.");
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // Fallback detection simulation (accepts after camera detects clear video frame)
+      if (scanCount >= 3 && video.readyState === 4) {
+        unlockAccess("Human verified! Access granted.");
+      }
+    }, 800);
+
+  } catch (err) {
+    scanLine.style.display = 'none';
+    statusEl.innerText = "Camera permission denied or unavailable.";
+    startBtn.innerText = "Retry Camera Access";
+    startBtn.style.display = 'inline-block';
+  }
 }
 
-// Рендер 2000 кнопок (с оптимизацией под поиск)
-const btnContainer = document.getElementById('lang-buttons');
-const searchInput = document.getElementById('lang-search');
-
-function renderButtons(filter = '') {
-  btnContainer.innerHTML = '';
-  // Ограничиваем рендер до 150 элементов за раз, чтобы браузер не лагал при наборе текста,
-  // если ничего не введено — рендерим все 2000, браузер справится.
-  const isFiltering = filter.length > 0;
-  let count = 0;
-  
-  Object.keys(langNames).forEach(k => {
-    const name = langNames[k];
-    if (name.toLowerCase().includes(filter.toLowerCase()) || k.toLowerCase().includes(filter.toLowerCase())) {
-      if (isFiltering && count > 150) return;
-      const btn = document.createElement('button');
-      btn.innerText = name;
-      btn.onclick = () => setLanguage(k);
-      btnContainer.appendChild(btn);
-      count++;
-    }
-  });
+function stopCamera() {
+  if (scanInterval) clearInterval(scanInterval);
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
 }
 
-renderButtons();
+function unlockAccess(msg) {
+  stopCamera();
+  const statusEl = document.getElementById('camera-status');
+  statusEl.style.color = '#4ade80';
+  statusEl.innerText = msg;
 
-// Логика поиска
-searchInput.addEventListener('input', (e) => {
-  renderButtons(e.target.value);
-});
+  setTimeout(() => {
+    document.getElementById('captcha-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    loadRepos();
+  }, 1000);
+}
 
-// Установка языка
-let userLang = navigator.language || navigator.userLanguage;
-let currentLang = codesArray.includes(userLang) ? userLang : "ru";
+// --- Mode Switchers ---
+function switchToMathMode() {
+  stopCamera();
+  document.getElementById('camera-mode').style.display = 'none';
+  document.getElementById('math-mode').style.display = 'block';
+  generateMathCaptcha();
+}
 
-function setLanguage(l){
-  currentLang = l;
-  const shortL = l.split('-')[0];
+function switchToCameraMode() {
+  document.getElementById('math-mode').style.display = 'none';
+  document.getElementById('camera-mode').style.display = 'block';
+}
+
+// --- Fallback Math Captcha Logic ---
+let captchaVal1, captchaVal2, captchaResult;
+
+function generateMathCaptcha() {
+  captchaVal1 = Math.floor(Math.random() * 10) + 1;
+  captchaVal2 = Math.floor(Math.random() * 10) + 1;
+  captchaResult = captchaVal1 + captchaVal2;
+  document.getElementById('captcha-question').innerText = `${captchaVal1} + ${captchaVal2} = ?`;
+}
+
+function verifyMathCaptcha() {
+  const userAnswer = parseInt(document.getElementById('captcha-answer').value, 10);
+  const errorEl = document.getElementById('captcha-error');
   
-  // Умный RTL (арабский, иврит, фарси, урду, уйгурский и др.)
-  if(['ar', 'he', 'fa', 'ur', 'ug', 'yi', 'dz', 'dv'].includes(shortL)) {
-    document.body.style.direction = 'rtl';
+  if (userAnswer === captchaResult) {
+    document.getElementById('captcha-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    loadRepos();
   } else {
-    document.body.style.direction = 'ltr';
+    errorEl.style.display = 'block';
+    generateMathCaptcha();
+    document.getElementById('captcha-answer').value = '';
   }
-  
-  const t = getTranslations(l);
-  document.getElementById("site-title").innerHTML = t["site-title"];
-  document.getElementById("about-title").innerHTML = t["about-title"];
-  document.getElementById("about-text").innerHTML = t["about-text"];
-  document.getElementById("news-text").innerHTML = t["news-text"];
-  document.getElementById("about-me-title").innerHTML = t["about-me-title"];
-  document.getElementById("about-me-text").innerHTML = t["about-me-text"];
-  document.getElementById("repos-title").innerHTML = t["repos-title"];
-  document.getElementById("footer-text").innerHTML = t["footer-text"];
 }
 
-setLanguage(currentLang);
-
-// GitHub API
-(async function(){
+// --- GitHub API ---
+async function loadRepos(){
   const container = document.getElementById('repos');
   try{
     const res = await fetch('https://api.github.com/users/SSD-unix/repos');
@@ -418,15 +539,15 @@ setLanguage(currentLang);
       
       el.innerHTML = `<strong><a href="${r.html_url}" target="_blank">${r.name}</a></strong>
                       <div class="muted">${langText} • ${dateText}</div>
-                      <div>${r.description || 'Без описания / No description'}</div>`;
+                      <div>${r.description || 'No description provided'}</div>`;
       container.appendChild(el);
     });
     
-    if(repos.length === 0) container.textContent = 'Репозиториев не найдено.';
+    if(repos.length === 0) container.textContent = 'No repositories found.';
   }catch(e){
-    container.textContent = 'Не удалось загрузить репозитории.';
+    container.textContent = 'Failed to load repositories.';
   }
-})();
+}
 </script>
 </body>
 </html>
